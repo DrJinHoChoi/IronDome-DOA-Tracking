@@ -163,7 +163,7 @@ def main():
     for i, ed_rad in enumerate(est_doas):
         idx = np.argmin(np.abs(scan_angles - ed_rad))
         ed = np.degrees(ed_rad)
-        ax2.plot(ed, P_db[idx], 'v', color='#DD0000', markersize=14,
+        ax2.plot(ed, P_db[idx], '^', color='#DD0000', markersize=14,
                  markeredgecolor='black', markeredgewidth=1.0, zorder=6)
 
     # Draw matching lines between true (bottom) and estimated (peak)
@@ -181,7 +181,7 @@ def main():
         Line2D([0], [0], marker='o', color='w', markerfacecolor='#00AA00',
                markeredgecolor='darkgreen', markersize=10,
                label=f'True DOAs (K={K})'),
-        Line2D([0], [0], marker='v', color='w', markerfacecolor='#DD0000',
+        Line2D([0], [0], marker='^', color='w', markerfacecolor='#DD0000',
                markeredgecolor='black', markersize=12,
                label=f'Estimated DOAs ({n_correct}/{K} correct)'),
     ]
@@ -290,7 +290,7 @@ def generate_improved_fig0a():
     # Estimated DOAs: RED inverted triangles on spectrum
     for i, cd in enumerate(cop_doas):
         idx = np.argmin(np.abs(scan_angles - cd))
-        ax2.plot(np.degrees(cd), cop_db[idx], 'v', color='#DD0000',
+        ax2.plot(np.degrees(cd), cop_db[idx], '^', color='#DD0000',
                  markersize=14, markeredgecolor='black', markeredgewidth=1.0, zorder=6)
 
     # Annotate true DOA values
@@ -305,7 +305,7 @@ def generate_improved_fig0a():
         Line2D([0], [0], marker='o', color='w', markerfacecolor='#00AA00',
                markeredgecolor='darkgreen', markersize=10,
                label=f'True DOAs (K={K})'),
-        Line2D([0], [0], marker='v', color='w', markerfacecolor='#DD0000',
+        Line2D([0], [0], marker='^', color='w', markerfacecolor='#DD0000',
                markeredgecolor='black', markersize=12,
                label=f'Estimated DOAs ({len(cop_doas)}/{K})'),
     ]
@@ -387,7 +387,7 @@ def generate_improved_fig0b():
         # Estimated DOAs: colored inverted triangles on spectrum
         for ed_rad in est_doas_rad:
             idx = np.argmin(np.abs(scan_angles - ed_rad))
-            ax.plot(np.degrees(ed_rad), spec_db[idx], 'v', color=color_est,
+            ax.plot(np.degrees(ed_rad), spec_db[idx], '^', color=color_est,
                     markersize=12, markeredgecolor='black', markeredgewidth=0.8, zorder=6)
 
     # == (a) COP ==
@@ -398,7 +398,7 @@ def generate_improved_fig0b():
         Line2D([0], [0], color='#0055CC', linewidth=2.5, label='COP-4th Spectrum'),
         Line2D([0], [0], marker='o', color='w', markerfacecolor='#00AA00',
                markeredgecolor='darkgreen', markersize=9, label=f'True DOAs (K={K})'),
-        Line2D([0], [0], marker='v', color='w', markerfacecolor='#DD0000',
+        Line2D([0], [0], marker='^', color='w', markerfacecolor='#DD0000',
                markeredgecolor='black', markersize=11,
                label=f'Estimated ({cop_ok}/{K} correct)'),
     ]
@@ -418,7 +418,7 @@ def generate_improved_fig0b():
         Line2D([0], [0], color='#DD0000', linewidth=2.5, label='T-COP Spectrum (10 scans)'),
         Line2D([0], [0], marker='o', color='w', markerfacecolor='#00AA00',
                markeredgecolor='darkgreen', markersize=9, label=f'True DOAs (K={K})'),
-        Line2D([0], [0], marker='v', color='w', markerfacecolor='#0055CC',
+        Line2D([0], [0], marker='^', color='w', markerfacecolor='#0055CC',
                markeredgecolor='black', markersize=11,
                label=f'Estimated ({tcop_ok}/{K} correct)'),
     ]
@@ -440,14 +440,14 @@ def generate_improved_fig0b():
              markeredgewidth=0.7, zorder=5, clip_on=False)
     for ed_rad in sdcop_doas:
         idx = np.argmin(np.abs(scan_angles - ed_rad))
-        ax3.plot(np.degrees(ed_rad), sdcop_db[idx], 'v', color='#9900CC',
+        ax3.plot(np.degrees(ed_rad), sdcop_db[idx], '^', color='#9900CC',
                  markersize=12, markeredgecolor='black', markeredgewidth=0.8, zorder=6)
 
     legend3 = [
         Line2D([0], [0], color='#00AA00', linewidth=2.5, label='SD-COP Spectrum'),
         Line2D([0], [0], marker='o', color='w', markerfacecolor='#00AA00',
                markeredgecolor='darkgreen', markersize=9, label=f'True DOAs (K={K})'),
-        Line2D([0], [0], marker='v', color='w', markerfacecolor='#9900CC',
+        Line2D([0], [0], marker='^', color='w', markerfacecolor='#9900CC',
                markeredgecolor='black', markersize=11,
                label=f'Estimated ({sdcop_ok}/{K} correct)'),
     ]

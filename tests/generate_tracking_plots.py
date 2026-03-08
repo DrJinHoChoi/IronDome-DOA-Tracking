@@ -118,7 +118,7 @@ def plot_birth_death():
     # Estimated DOAs: RED inverted triangles (consistent with spectrum plots)
     for i, ed in enumerate(est_history):
         for d in ed:
-            ax1.plot(i + 1, np.degrees(d), 'v', color='#DD0000', markersize=9,
+            ax1.plot(i + 1, np.degrees(d), '^', color='#DD0000', markersize=9,
                      alpha=0.8, markeredgecolor='black', markeredgewidth=0.8, zorder=5)
 
     ax1.set_ylabel('DOA (degrees)')
@@ -127,7 +127,7 @@ def plot_birth_death():
         Line2D([0], [0], marker='o', color='w', markerfacecolor='#00AA00',
                markeredgecolor='darkgreen', markersize=12, markeredgewidth=1.2,
                label='True DOA'),
-        Line2D([0], [0], marker='v', color='w', markerfacecolor='#DD0000',
+        Line2D([0], [0], marker='^', color='w', markerfacecolor='#DD0000',
                markeredgecolor='black', markersize=10, markeredgewidth=0.8,
                label='Estimated DOA'),
     ]
