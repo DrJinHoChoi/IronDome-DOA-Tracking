@@ -137,7 +137,15 @@ where $\mat{U}_s \in \C^{M_v \times K}$ and $\mat{U}_n \in \C^{M_v \times (M_v -
 P_{\mathrm{COP}}(\theta) = \frac{\mat{a}_v^H(\theta)\,\mat{U}_s\mat{U}_s^H\,\mat{a}_v(\theta)}{\mat{a}_v^H(\theta)\,\mat{U}_n\mat{U}_n^H\,\mat{a}_v(\theta)}
 \label{eq:cop_spectrum}
 \end{equation}
-which simultaneously maximizes the signal subspace projection (numerator) and minimizes the noise subspace projection (denominator). The DOA estimates $\{\hat{\theta}_k\}_{k=1}^K$ are the $K$ highest peaks of $P_{\mathrm{COP}}(\theta)$.
+which simultaneously maximizes the signal subspace projection (numerator) and minimizes the noise subspace projection (denominator).
+
+\textbf{Peak detection.}
+The DOA estimates are extracted from $P_{\mathrm{COP}}(\theta)$ via local maximum finding with minimum-separation gating. Specifically, a scan angle $\theta_i$ is identified as a \emph{local peak} if
+\begin{equation}
+P_{\mathrm{COP}}(\theta_i) > P_{\mathrm{COP}}(\theta_{i-1}) \;\;\text{and}\;\; P_{\mathrm{COP}}(\theta_i) > P_{\mathrm{COP}}(\theta_{i+1}).
+\label{eq:local_peak}
+\end{equation}
+All local peaks are ranked by descending amplitude, and the top $K$ peaks are selected subject to a minimum angular separation constraint $|\hat{\theta}_j - \hat{\theta}_k| > \delta_{\min}$ for all previously selected estimates, where $\delta_{\min} = 1^\circ$ prevents multiple detections from the same mainlobe. The resulting DOA estimates $\{\hat{\theta}_k\}_{k=1}^K$ are sorted in ascending order.
 
 \subsection{Temporal COP (T-COP)}
 \label{sec:tcop}
