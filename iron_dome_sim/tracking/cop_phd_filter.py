@@ -73,7 +73,8 @@ class COPPHD:
                  survival_prob=0.95, detection_prob=0.90,
                  clutter_rate=2.0, fov_range=(-np.pi / 2, np.pi / 2),
                  birth_weight=0.1, prune_threshold=1e-5,
-                 merge_threshold=4.0, max_components=100):
+                 merge_threshold=4.0, max_components=100,
+                 birth_pos_std_deg=2.0, birth_vel_std_deg=5.0):
 
         self.model = motion_model
         self.cop_estimator = cop_estimator
@@ -88,6 +89,10 @@ class COPPHD:
         self.prune_threshold = prune_threshold
         self.merge_threshold = merge_threshold
         self.max_components = max_components
+
+        # Birth covariance parameters (degrees)
+        self.birth_pos_std = np.radians(birth_pos_std_deg)
+        self.birth_vel_std = np.radians(birth_vel_std_deg)
 
         # GM-PHD state: list of GaussianComponents
         self.gm_components = []
@@ -156,15 +161,17 @@ class COPPHD:
         return estimates, doa_measurements, spectrum
 
     def _cop_spectrum_birth(self, spectrum, scan_angles, doa_measurements):
-        """Generate birth components from COP spatial spectrum.
+        """Generate birth components from COP spatial spectrum (gated).
 
         Novel contribution: Uses the COP spectrum shape to determine
         birth component weights and positions. Higher spectrum values
         at a DOA indicate stronger evidence for a new target.
 
-        This replaces the fixed birth model in standard GM-PHD with
-        an adaptive, data-driven birth process informed by higher-order
-        statistics.
+        Gated birth: If a measurement DOA is close to an existing
+        confirmed component, no birth is created (the existing track
+        handles it). Only DOAs far from existing tracks create births.
+
+        This prevents duplicate components and reduces false targets.
 
         Args:
             spectrum: COP spatial spectrum (normalized to [0, 1]).
@@ -176,7 +183,18 @@ class COPPHD:
         """
         birth = []
 
+        # Gating: find DOAs already covered by existing components
+        existing_doas = [c.mean[0] for c in self.gm_components
+                         if c.weight >= 0.3]
+        gate_threshold = np.radians(5.0)  # 5 deg gate
+
         for doa in doa_measurements:
+            # Check if this DOA is near an existing track (gated birth)
+            if len(existing_doas) > 0:
+                min_dist = np.min(np.abs(np.array(existing_doas) - doa))
+                if min_dist < gate_threshold:
+                    continue  # Skip: existing track handles this DOA
+
             # Find spectrum value at this DOA
             idx = np.argmin(np.abs(scan_angles - doa))
             spec_val = spectrum[idx] if idx < len(spectrum) else 0.5
@@ -191,14 +209,15 @@ class COPPHD:
             mean[0] = doa  # azimuth
             mean[1] = 0.0  # elevation (ULA: unknown)
 
-            # Initial covariance: tight in angle, loose in velocity
+            # Initial covariance: tight in angle, wide in velocity
+            # Velocity covariance must cover plausible angular rates
             P = np.eye(dim)
-            P[0, 0] = np.radians(2.0) ** 2   # azimuth: 2 deg std
-            P[1, 1] = np.radians(5.0) ** 2   # elevation: 5 deg std
+            P[0, 0] = self.birth_pos_std ** 2   # azimuth position
+            P[1, 1] = np.radians(5.0) ** 2      # elevation (ULA: unobservable)
             if dim > 2:
-                P[2, 2] = np.radians(1.0) ** 2  # azimuth rate
+                P[2, 2] = self.birth_vel_std ** 2  # azimuth rate
             if dim > 3:
-                P[3, 3] = np.radians(1.0) ** 2  # elevation rate
+                P[3, 3] = self.birth_vel_std ** 2  # elevation rate
 
             label = self._next_label
             self._next_label += 1
@@ -400,20 +419,47 @@ class COPPHD:
         Each component with weight w contributes round(w) targets
         (for w > threshold).
 
+        Post-extraction deduplication removes estimates that are too
+        close together (within 3 degrees), keeping the higher-weight one.
+
         Returns:
             List of (state, covariance, weight) tuples.
         """
-        estimates = []
+        raw_estimates = []
 
         for comp in self.gm_components:
             if comp.weight >= threshold:
                 n_targets = max(1, int(round(comp.weight)))
                 for _ in range(n_targets):
-                    estimates.append((
+                    raw_estimates.append((
                         comp.mean.copy(),
                         comp.covariance.copy(),
                         comp.weight
                     ))
+
+        if len(raw_estimates) <= 1:
+            return raw_estimates
+
+        # Deduplicate: remove estimates within 3 degrees of each other
+        # Keep the one with higher weight
+        dedup_threshold = np.radians(3.0)
+        raw_estimates.sort(key=lambda e: e[2], reverse=True)  # Sort by weight desc
+
+        estimates = []
+        used = [False] * len(raw_estimates)
+
+        for i in range(len(raw_estimates)):
+            if used[i]:
+                continue
+            estimates.append(raw_estimates[i])
+            used[i] = True
+            # Mark nearby lower-weight estimates as used
+            for j in range(i + 1, len(raw_estimates)):
+                if used[j]:
+                    continue
+                dist = abs(raw_estimates[i][0][0] - raw_estimates[j][0][0])
+                if dist < dedup_threshold:
+                    used[j] = True
 
         return estimates
 
@@ -445,6 +491,23 @@ class COPPHD:
         """Get current DOA estimates from confirmed tracks."""
         estimates = self._extract_states()
         return np.array([est[0][0] for est in estimates]) if estimates else np.array([])
+
+    def get_track_states(self):
+        """Get current track states with labels for track identification.
+
+        Returns dict mapping label -> (state_mean, state_cov, weight).
+        This enables per-track visualization and analysis.
+        """
+        tracks = {}
+        for comp in self.gm_components:
+            if comp.weight >= 0.5:
+                if comp.label not in tracks or comp.weight > tracks[comp.label][2]:
+                    tracks[comp.label] = (
+                        comp.mean.copy(),
+                        comp.covariance.copy(),
+                        comp.weight
+                    )
+        return tracks
 
     def reset(self):
         """Reset filter state."""

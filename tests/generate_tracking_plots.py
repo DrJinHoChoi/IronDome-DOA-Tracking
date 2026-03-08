@@ -52,9 +52,16 @@ def plot_birth_death():
     n_scans = 25
 
     cop = SubspaceCOP(array, rho=2, spectrum_type="combined")
-    model = ConstantVelocity(dt=0.1, process_noise_std=0.01)
-    phd = COPPHD(model, cop, survival_prob=0.90, detection_prob=0.90,
-                 birth_weight=0.2, clutter_rate=1.0)
+    model = ConstantVelocity(dt=1.0, process_noise_std=np.radians(1.0))
+    phd = COPPHD(model, cop,
+                 survival_prob=0.95,
+                 detection_prob=0.95,
+                 birth_weight=0.3,
+                 clutter_rate=0.5,
+                 prune_threshold=1e-3,
+                 merge_threshold=2.0,
+                 birth_pos_std_deg=2.0,
+                 birth_vel_std_deg=3.0)
 
     true_history = []
     est_history = []
@@ -145,9 +152,16 @@ def plot_tcop_phd_feedback():
         ('T-COP + PHD', TemporalCOP, dict(rho=2, num_sources=K, alpha=0.85, prior_weight=0.2)),
     ]:
         cop = cop_cls(array, **cop_kwargs)
-        model = ConstantVelocity(dt=0.1, process_noise_std=0.01)
-        phd = COPPHD(model, cop, survival_prob=0.95, detection_prob=0.90,
-                     birth_weight=0.15)
+        model = ConstantVelocity(dt=1.0, process_noise_std=np.radians(1.0))
+        phd = COPPHD(model, cop,
+                     survival_prob=0.98,
+                     detection_prob=0.95,
+                     birth_weight=0.3,
+                     clutter_rate=0.5,
+                     prune_threshold=1e-3,
+                     merge_threshold=2.0,
+                     birth_pos_std_deg=2.0,
+                     birth_vel_std_deg=3.0)
 
         pds, rmses = [], []
         for scan_i in range(n_scans):
@@ -287,7 +301,15 @@ def plot_algorithm_overview():
 
 
 def plot_moving_targets():
-    """Fig 9: Moving target tracking with COP-RFS."""
+    """Fig 9: Moving target tracking with COP-RFS.
+
+    Key parameter choices:
+    - dt=1.0: Each scan is one time step (scan-by-scan tracking)
+    - process_noise_std: Must cover target maneuver range (~2-3 deg/scan)
+    - birth_vel_std_deg=5: Initial velocity uncertainty covers +-5 deg/scan
+    - survival_prob=0.98: Targets persist across scans with high probability
+    - detection_prob=0.95: COP is reliable at SNR=15dB
+    """
     print("Generating Fig 9: Moving target tracking...")
 
     M = 8
@@ -297,19 +319,32 @@ def plot_moving_targets():
     T = 256
     scan_angles = np.linspace(-np.pi / 2, np.pi / 2, 1801)
     n_scans = 25
-    dt = 0.1
+    dt = 1.0  # One scan = one time step
 
-    tcop = TemporalCOP(array, rho=2, num_sources=K, alpha=0.85,
-                        prior_weight=0.2)
-    model = ConstantVelocity(dt=dt, process_noise_std=0.01)
-    phd = COPPHD(model, tcop, survival_prob=0.95, detection_prob=0.90,
-                 birth_weight=0.15, clutter_rate=1.0)
+    # Use standard COP (NOT T-COP) for moving targets.
+    # T-COP's temporal accumulation smears the spectrum for moving targets
+    # (alpha=0.85 => ~7 scan memory, 2 deg/scan => 14 deg smear).
+    # Standard COP gives per-scan DOA; PHD filter handles the tracking.
+    cop = SubspaceCOP(array, rho=2, num_sources=K, spectrum_type="combined")
+    # dt=1.0: velocity in rad/scan, process_noise covers maneuvers
+    model = ConstantVelocity(dt=dt, process_noise_std=np.radians(1.0))
+    phd = COPPHD(model, cop,
+                 survival_prob=0.98,
+                 detection_prob=0.95,
+                 birth_weight=0.3,
+                 clutter_rate=0.5,
+                 prune_threshold=1e-3,
+                 merge_threshold=2.0,
+                 birth_pos_std_deg=2.0,
+                 birth_vel_std_deg=5.0)
 
     base_doas = np.radians([-50, -20, 10, 40])
-    rates = np.radians([2.0, -1.5, 1.0, -2.5])
+    rates = np.radians([2.0, -1.5, 1.0, -2.5])  # deg/scan
 
     true_tracks = []
     est_tracks = []
+    track_label_history = []  # Per-scan: dict {label: doa}
+    rmse_per_scan = []
 
     for scan_i in range(n_scans):
         true_doas = base_doas + rates * scan_i
@@ -320,41 +355,118 @@ def plot_moving_targets():
         phd.process_scan(X, scan_angles)
         est_doas = phd.get_doa_estimates()
 
+        # Get per-track states with labels for identification
+        track_states = phd.get_track_states()
+        track_label_history.append(track_states)
+
         true_tracks.append(true_doas)
         est_tracks.append(est_doas)
 
+        if len(est_doas) > 0:
+            r, _ = rmse_doa(est_doas, true_doas)
+            rmse_per_scan.append(np.degrees(r))
+        else:
+            rmse_per_scan.append(90.0)
+
+    # === Track-to-source identification ===
+    # Assign each PHD track label to the nearest true source (Hungarian-like)
+    # Use the first few scans to establish the mapping
+    from scipy.optimize import linear_sum_assignment
+
+    # Build label-to-source mapping from scan 3 (after warmup)
+    all_labels = set()
+    for tlh in track_label_history:
+        all_labels.update(tlh.keys())
+    all_labels = sorted(all_labels)
+
+    # For each label, find which true source it's closest to (averaged)
+    label_to_source = {}
+    for label in all_labels:
+        # Collect all DOAs for this label across scans
+        doas_for_label = []
+        scan_indices = []
+        for scan_i, tlh in enumerate(track_label_history):
+            if label in tlh:
+                doas_for_label.append(tlh[label][0][0])  # azimuth
+                scan_indices.append(scan_i)
+        if len(doas_for_label) == 0:
+            continue
+
+        # Find best matching source based on average distance
+        best_source = -1
+        best_dist = float('inf')
+        for k in range(K):
+            distances = []
+            for doa, si in zip(doas_for_label, scan_indices):
+                true_doa = base_doas[k] + rates[k] * si
+                true_doa = np.clip(true_doa, -np.pi/2 + 0.05, np.pi/2 - 0.05)
+                distances.append(abs(doa - true_doa))
+            avg_dist = np.mean(distances)
+            if avg_dist < best_dist:
+                best_dist = avg_dist
+                best_source = k
+        label_to_source[label] = best_source
+
     # Plot
-    fig, ax = plt.subplots(figsize=(10, 6))
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), height_ratios=[3, 1])
     scans = np.arange(1, n_scans + 1)
 
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
+    markers = ['o', 's', 'D', '^']
+
+    # Plot true tracks (solid lines)
     for k in range(K):
         true_doas_k = [np.degrees(true_tracks[i][k]) for i in range(n_scans)]
-        ax.plot(scans, true_doas_k, '-', color=colors[k], linewidth=2,
-                label=f'True target {k+1}' if k == 0 else None)
+        ax1.plot(scans, true_doas_k, '-', color=colors[k], linewidth=2.5,
+                 alpha=0.8, label=f'True target {k+1}')
 
-    # Plot all estimated DOAs
-    for i in range(n_scans):
-        for d in est_tracks[i]:
-            ax.plot(i + 1, np.degrees(d), 'rx', markersize=6, alpha=0.7)
+    # Plot identified track estimates with matching colors
+    for scan_i, tlh in enumerate(track_label_history):
+        for label, (state, cov, w) in tlh.items():
+            doa_deg = np.degrees(state[0])
+            source_id = label_to_source.get(label, -1)
+            if source_id >= 0 and source_id < K:
+                c = colors[source_id]
+                m = markers[source_id]
+            else:
+                c = 'gray'
+                m = 'x'
+            ax1.plot(scan_i + 1, doa_deg, m, color=c, markersize=8,
+                    markeredgecolor='black', markeredgewidth=0.5, alpha=0.85)
 
     # Legend
     from matplotlib.lines import Line2D
-    legend_elements = [
-        Line2D([0], [0], color='gray', linewidth=2, label='True tracks'),
-        Line2D([0], [0], marker='x', color='red', linewidth=0,
-               markersize=6, label='T-COP + PHD estimates'),
-    ]
-    ax.legend(handles=legend_elements, loc='upper right')
+    legend_elements = []
+    for k in range(K):
+        legend_elements.append(
+            Line2D([0], [0], color=colors[k], linewidth=2.5,
+                   marker=markers[k], markersize=8,
+                   markeredgecolor='black', markeredgewidth=0.5,
+                   label=f'Target {k+1} (true + est)'))
+    legend_elements.append(
+        Line2D([0], [0], marker='x', color='gray', linewidth=0,
+               markersize=7, label='Unassigned'))
+    ax1.legend(handles=legend_elements, loc='upper right', fontsize=9)
+    ax1.set_ylabel('DOA (degrees)', fontsize=13)
+    ax1.set_title('COP-RFS Moving Target Tracking with Track Identification\n'
+                  'M=8, K=4 targets, SNR=15dB',
+                  fontsize=14, fontweight='bold')
 
-    ax.set_xlabel('Scan')
-    ax.set_ylabel('DOA (degrees)')
-    ax.set_title('T-COP + PHD Moving Target Tracking\n'
-                 'M=8, K=4 targets, SNR=15dB')
+    # RMSE subplot
+    ax2.plot(scans, rmse_per_scan, 'b-o', markersize=4, linewidth=1.5)
+    ax2.set_xlabel('Scan', fontsize=13)
+    ax2.set_ylabel('RMSE (deg)', fontsize=13)
+    ax2.set_title('Tracking RMSE per Scan', fontsize=12)
+    ax2.set_ylim([0, max(max(rmse_per_scan) * 1.2, 5)])
+    avg_rmse = np.mean(rmse_per_scan[3:])  # Skip warmup
+    ax2.axhline(y=avg_rmse, color='red', linestyle='--', alpha=0.7,
+                label=f'Avg RMSE (after warmup): {avg_rmse:.2f} deg')
+    ax2.legend(fontsize=9)
+
     fig.tight_layout()
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig9_moving_targets.png'))
     plt.close(fig)
-    print("  Saved fig9_moving_targets.png")
+    print(f"  Saved fig9_moving_targets.png (avg RMSE={avg_rmse:.2f} deg)")
 
 
 if __name__ == "__main__":
