@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """Generate publication-quality benchmark plots for COP family algorithms.
 
-Generates 6 figures:
-  Fig 1: K Scaling - Pd vs K (underdetermined capability)
+Generates 8 figures:
+  Fig 1: K Scaling - Pd vs K (underdetermined capability, K=3~20)
   Fig 2: K Scaling - RMSE vs K
-  Fig 3: SNR Robustness - Pd vs SNR (T-COP temporal accumulation)
+  Fig 3: SNR Robustness - Pd vs SNR (includes SD-COP)
   Fig 4: SNR Robustness - RMSE vs SNR
   Fig 5: Close-Spacing Resolution - Pd vs spacing
   Fig 6: Snapshot Efficiency - RMSE vs T
+  Fig 11: Extended K Scaling (K=14~25) - SD-COP vs COP capacity limit
+  Fig 12: SD-COP Deflation Stage Analysis
 """
 
 import sys
@@ -19,6 +21,7 @@ import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 from matplotlib.lines import Line2D
+from matplotlib.patches import FancyArrowPatch
 
 from iron_dome_sim.signal_model.array import UniformLinearArray
 from iron_dome_sim.signal_model.signal_generator import generate_snapshots
@@ -112,8 +115,8 @@ def get_n_scans(name):
 # ============================================================
 
 def collect_k_scaling():
-    """Collect K scaling data."""
-    print("Collecting K scaling data...")
+    """Collect K scaling data - EXTENDED to K=20 for SD-COP."""
+    print("Collecting K scaling data (extended to K=20)...")
     M = 8
     array = UniformLinearArray(M=M, d=0.5)
     snr_db = 15
@@ -121,13 +124,14 @@ def collect_k_scaling():
     scan_angles = np.linspace(-np.pi / 2, np.pi / 2, 1801)
     n_trials = 10
 
-    K_values = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14]
+    # Extended K range: 3 to 20 (beyond COP limit of 14)
+    K_values = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
     alg_names = ['MUSIC', 'ESPRIT', 'Capon', 'COP', 'T-COP(5)', 'SD-COP']
 
     results = {name: {'pd': [], 'rmse': []} for name in alg_names}
 
     for K in K_values:
-        true_doas = np.radians(np.linspace(-55, 55, K))
+        true_doas = np.radians(np.linspace(-60, 60, K))
         print(f"  K={K}...", end=' ', flush=True)
 
         for name in alg_names:
@@ -151,8 +155,8 @@ def collect_k_scaling():
 
 
 def collect_snr():
-    """Collect SNR robustness data."""
-    print("Collecting SNR data...")
+    """Collect SNR robustness data - NOW INCLUDES SD-COP."""
+    print("Collecting SNR data (with SD-COP)...")
     M = 8
     K = 8
     array = UniformLinearArray(M=M, d=0.5)
@@ -162,7 +166,7 @@ def collect_snr():
     true_doas = np.radians(np.linspace(-50, 50, K))
 
     snr_values = [-10, -5, 0, 5, 10, 15, 20]
-    alg_names = ['MUSIC', 'COP', 'T-COP(1)', 'T-COP(5)', 'T-COP(10)']
+    alg_names = ['MUSIC', 'COP', 'T-COP(1)', 'T-COP(5)', 'T-COP(10)', 'SD-COP']
 
     results = {name: {'pd': [], 'rmse': []} for name in alg_names}
 
@@ -190,8 +194,8 @@ def collect_snr():
 
 
 def collect_resolution():
-    """Collect close-spacing resolution data."""
-    print("Collecting resolution data...")
+    """Collect close-spacing resolution data - NOW INCLUDES SD-COP."""
+    print("Collecting resolution data (with SD-COP)...")
     M = 8
     K = 3
     array = UniformLinearArray(M=M, d=0.5)
@@ -201,7 +205,7 @@ def collect_resolution():
     n_trials = 10
 
     spacing_values = [15, 10, 7, 5, 3, 2, 1]
-    alg_names = ['MUSIC', 'Capon', 'COP', 'T-COP(5)']
+    alg_names = ['MUSIC', 'Capon', 'COP', 'T-COP(5)', 'SD-COP']
 
     results = {name: {'pd': [], 'rmse': []} for name in alg_names}
 
@@ -230,8 +234,8 @@ def collect_resolution():
 
 
 def collect_snapshots():
-    """Collect snapshot efficiency data."""
-    print("Collecting snapshot data...")
+    """Collect snapshot efficiency data - NOW INCLUDES SD-COP."""
+    print("Collecting snapshot data (with SD-COP)...")
     M = 8
     K = 6
     array = UniformLinearArray(M=M, d=0.5)
@@ -241,7 +245,7 @@ def collect_snapshots():
     true_doas = np.radians(np.linspace(-40, 40, K))
 
     T_values = [32, 64, 128, 256, 512, 1024]
-    alg_names = ['MUSIC', 'COP', 'T-COP(5)']
+    alg_names = ['MUSIC', 'COP', 'T-COP(5)', 'SD-COP']
 
     results = {name: {'pd': [], 'rmse': []} for name in alg_names}
 
@@ -268,12 +272,100 @@ def collect_snapshots():
     return T_values, results
 
 
+def collect_extended_k():
+    """Collect EXTENDED K scaling specifically for SD-COP (K=10~25).
+
+    This benchmark focuses on the super-underdetermined regime where
+    K exceeds the single-stage COP capacity rho*(M-1)=14.
+    """
+    print("Collecting extended K data (K=10~25, SD-COP focus)...")
+    M = 8
+    array = UniformLinearArray(M=M, d=0.5)
+    snr_db = 15
+    T = 512  # More snapshots for harder scenarios
+    scan_angles = np.linspace(-np.pi / 2, np.pi / 2, 1801)
+    n_trials = 8
+
+    K_values = [10, 12, 14, 15, 16, 17, 18, 19, 20, 21, 22, 24]
+    alg_names = ['COP', 'SD-COP', 'T-COP(5)']
+
+    results = {name: {'pd': [], 'rmse': []} for name in alg_names}
+
+    for K in K_values:
+        true_doas = np.radians(np.linspace(-65, 65, K))
+        print(f"  K={K}...", end=' ', flush=True)
+
+        for name in alg_names:
+            pds, rmses = [], []
+            for trial in range(n_trials):
+                np.random.seed(trial * 100 + K)
+                X, _, _ = generate_snapshots(array, true_doas, snr_db, T,
+                                             "non_stationary")
+                alg = make_alg(name, array, K, snr_db)
+                pd, rmse = run_trial(alg, X, scan_angles, true_doas,
+                                     n_scans=get_n_scans(name), snr_db=snr_db)
+                pds.append(pd)
+                rmses.append(rmse)
+
+            results[name]['pd'].append(np.mean(pds))
+            results[name]['rmse'].append(np.mean(rmses))
+
+        print("done")
+
+    return K_values, results
+
+
+def collect_sdcop_stages():
+    """Collect SD-COP deflation stage analysis data.
+
+    Shows how many deflation stages SD-COP uses and per-stage
+    performance for varying K.
+    """
+    print("Collecting SD-COP stage analysis data...")
+    M = 8
+    array = UniformLinearArray(M=M, d=0.5)
+    snr_db = 15
+    T = 512
+    scan_angles = np.linspace(-np.pi / 2, np.pi / 2, 1801)
+
+    K_values = [8, 10, 12, 14, 16, 18, 20, 22]
+    results = {'K': K_values, 'n_stages': [], 'pd': [], 'rmse': [],
+               'stage_doas': [], 'energy_ratios': []}
+
+    for K in K_values:
+        true_doas = np.radians(np.linspace(-60, 60, K))
+        print(f"  K={K}...", end=' ', flush=True)
+
+        np.random.seed(42)
+        X, _, _ = generate_snapshots(array, true_doas, snr_db, T,
+                                     "non_stationary")
+        alg = SequentialDeflationCOP(array, rho=2, num_sources=K)
+        doa_est, _ = alg.estimate(X, scan_angles)
+
+        n_stages = len(alg.stage_results)
+        stage_n_doas = [s['n_detected'] for s in alg.stage_results]
+        energy_ratios = [s['energy_ratio'] for s in alg.stage_results]
+
+        rmse_val, _ = rmse_doa(doa_est, true_doas)
+        pd, _ = detection_rate(doa_est, true_doas)
+
+        results['n_stages'].append(n_stages)
+        results['pd'].append(pd)
+        results['rmse'].append(np.degrees(rmse_val))
+        results['stage_doas'].append(stage_n_doas)
+        results['energy_ratios'].append(energy_ratios)
+
+        print(f"stages={n_stages}, Pd={pd:.2f}, RMSE={np.degrees(rmse_val):.1f}")
+
+    return results
+
+
 # ============================================================
 # Plotting Functions
 # ============================================================
 
 def plot_k_scaling(K_values, results):
-    """Fig 1 & 2: K Scaling with underdetermined region annotation."""
+    """Fig 1 & 2: K Scaling with THREE regions (determined/underdetermined/super-underdetermined)."""
     M = 8
     max_conv = M - 1   # Conventional limit (MUSIC/ESPRIT/Capon)
     max_cop = 14        # COP limit = rho*(M-1) for rho=2
@@ -286,18 +378,19 @@ def plot_k_scaling(K_values, results):
          'RMSE vs Source Count', None, 'upper left',
          'fig2_k_scaling_rmse.png'),
     ]:
-        fig, ax = plt.subplots(figsize=(9, 5.5))
+        fig, ax = plt.subplots(figsize=(10, 6))
 
-        # Shaded regions
+        # THREE shaded regions
         ax.axvspan(min(K_values) - 0.5, max_conv + 0.5,
                    alpha=0.08, color='green', zorder=0)
         ax.axvspan(max_conv + 0.5, max_cop + 0.5,
                    alpha=0.08, color='blue', zorder=0)
+        ax.axvspan(max_cop + 0.5, max(K_values) + 0.5,
+                   alpha=0.08, color='red', zorder=0)
 
         # Vertical boundary lines
         ax.axvline(x=max_conv, color='green', linestyle='--',
                    alpha=0.6, linewidth=1.5)
-        ax.axvline(x=M, color='gray', linestyle=':', alpha=0.4, linewidth=1)
         ax.axvline(x=max_cop, color='blue', linestyle='--',
                    alpha=0.6, linewidth=1.5)
 
@@ -313,11 +406,18 @@ def plot_k_scaling(K_values, results):
                           alpha=0.8, edgecolor='green'))
 
         ax.text((max_conv + max_cop) / 2 + 0.5, y_label,
-                'Underdetermined\n(M-1 < K < COP limit)',
+                'Underdetermined\n(M-1 < K <= COP limit)',
                 fontsize=8, ha='center', va='top',
                 color='blue', fontstyle='italic',
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
                           alpha=0.8, edgecolor='blue'))
+
+        ax.text((max_cop + max(K_values)) / 2, y_label,
+                'Super-Underdetermined\n(K > COP limit)\nSD-COP only',
+                fontsize=8, ha='center', va='top',
+                color='red', fontstyle='italic',
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
+                          alpha=0.8, edgecolor='red'))
 
         # Boundary annotations
         if metric == 'pd':
@@ -340,7 +440,7 @@ def plot_k_scaling(K_values, results):
                      f'M={M} sensors, SNR=15dB, T=256 snapshots')
         if ylim:
             ax.set_ylim(ylim)
-        ax.set_xticks(K_values)
+        ax.set_xticks(K_values[::2])  # Show every other tick for readability
         ax.legend(loc=loc, framealpha=0.95, fontsize=8)
         fig.tight_layout()
         fig.savefig(os.path.join(OUTPUT_DIR, fname))
@@ -349,7 +449,7 @@ def plot_k_scaling(K_values, results):
 
 
 def plot_snr(snr_values, results):
-    """Fig 3 & 4: SNR Robustness."""
+    """Fig 3 & 4: SNR Robustness (now includes SD-COP)."""
     # Fig 3: Pd vs SNR
     fig, ax = plt.subplots(figsize=(8, 5))
     for name, data in results.items():
@@ -386,7 +486,7 @@ def plot_snr(snr_values, results):
 
 
 def plot_resolution(spacing_values, results):
-    """Fig 5: Close-spacing resolution."""
+    """Fig 5: Close-spacing resolution (now includes SD-COP)."""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
 
     for name, data in results.items():
@@ -418,7 +518,7 @@ def plot_resolution(spacing_values, results):
 
 
 def plot_snapshots(T_values, results):
-    """Fig 6: Snapshot efficiency."""
+    """Fig 6: Snapshot efficiency (now includes SD-COP)."""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
 
     for name, data in results.items():
@@ -451,6 +551,138 @@ def plot_snapshots(T_values, results):
     print(f"  Saved fig6_snapshots.png")
 
 
+def plot_extended_k(K_values, results):
+    """Fig 11: Extended K scaling - SD-COP beyond COP capacity limit."""
+    max_cop = 14
+
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5.5))
+
+    for ax, metric, ylabel, ylim in [
+        (ax1, 'pd', 'Detection Rate (Pd)', [-0.05, 1.05]),
+        (ax2, 'rmse', 'RMSE (degrees)', None),
+    ]:
+        # Shaded regions
+        ax.axvspan(min(K_values) - 0.5, max_cop + 0.5,
+                   alpha=0.06, color='blue', zorder=0)
+        ax.axvspan(max_cop + 0.5, max(K_values) + 0.5,
+                   alpha=0.06, color='red', zorder=0)
+        ax.axvline(x=max_cop, color='blue', linestyle='--',
+                   alpha=0.7, linewidth=2)
+
+        # Region labels
+        if metric == 'pd':
+            ax.text(12, 0.08, 'COP\nCapacity',
+                    fontsize=8, ha='center', color='blue', fontstyle='italic')
+            ax.text(19, 0.08, 'Beyond COP Limit\n(SD-COP deflation)',
+                    fontsize=8, ha='center', color='red', fontstyle='italic')
+
+        for name, data in results.items():
+            s = ALG_STYLES[name]
+            ax.plot(K_values, data[metric], color=s[0], marker=s[1],
+                    linestyle=s[2], label=s[3], linewidth=2.5, markersize=8)
+
+        ax.set_xlabel('Number of Sources (K)')
+        ax.set_ylabel(ylabel)
+        if ylim:
+            ax.set_ylim(ylim)
+        ax.set_xticks(K_values[::2])
+        ax.legend(loc='lower left' if metric == 'pd' else 'upper left',
+                  framealpha=0.95, fontsize=9)
+
+    fig.suptitle('Extended K Scaling: SD-COP Beyond COP Capacity Limit\n'
+                 'M=8 sensors, SNR=15dB, T=512 | COP limit = rho*(M-1) = 14',
+                 fontsize=14, fontweight='bold')
+    fig.tight_layout(rect=[0, 0, 1, 0.92])
+    fig.savefig(os.path.join(OUTPUT_DIR, 'fig11_extended_k.png'))
+    plt.close(fig)
+    print(f"  Saved fig11_extended_k.png")
+
+
+def plot_sdcop_stages(stage_data):
+    """Fig 12: SD-COP deflation stage analysis."""
+    K_values = stage_data['K']
+    n_stages = stage_data['n_stages']
+    pd_vals = stage_data['pd']
+    rmse_vals = stage_data['rmse']
+    stage_doas = stage_data['stage_doas']
+
+    fig, axes = plt.subplots(2, 2, figsize=(12, 9))
+
+    # (0,0) Number of deflation stages vs K
+    ax = axes[0, 0]
+    colors = ['#2ca02c' if k <= 14 else '#d62728' for k in K_values]
+    ax.bar(K_values, n_stages, color=colors, edgecolor='black', alpha=0.7, width=1.5)
+    ax.axhline(y=1, color='gray', linestyle='--', alpha=0.5, label='Single stage (no deflation)')
+    ax.axvline(x=14, color='blue', linestyle='--', alpha=0.7, linewidth=2,
+               label='COP limit (K=14)')
+    ax.set_xlabel('Number of Sources (K)')
+    ax.set_ylabel('Number of Deflation Stages')
+    ax.set_title('(a) Deflation Stages Required')
+    ax.set_xticks(K_values)
+    ax.legend(fontsize=8)
+
+    # (0,1) DOAs detected per stage (stacked bar)
+    ax = axes[0, 1]
+    max_n_stages = max(n_stages)
+    bottoms = [0] * len(K_values)
+    stage_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+    for s_idx in range(max_n_stages):
+        heights = []
+        for i, sd in enumerate(stage_doas):
+            if s_idx < len(sd):
+                heights.append(sd[s_idx])
+            else:
+                heights.append(0)
+        label = f'Stage {s_idx+1}'
+        c = stage_colors[s_idx % len(stage_colors)]
+        ax.bar(K_values, heights, bottom=bottoms, color=c, edgecolor='black',
+               alpha=0.7, width=1.5, label=label)
+        bottoms = [b + h for b, h in zip(bottoms, heights)]
+
+    # True K reference line
+    ax.plot(K_values, K_values, 'k--', linewidth=1.5, label='True K', alpha=0.6)
+    ax.axvline(x=14, color='blue', linestyle='--', alpha=0.5, linewidth=1.5)
+    ax.set_xlabel('Number of Sources (K)')
+    ax.set_ylabel('DOAs Detected')
+    ax.set_title('(b) DOAs Detected per Stage')
+    ax.set_xticks(K_values)
+    ax.legend(fontsize=7, loc='upper left')
+
+    # (1,0) Pd vs K
+    ax = axes[1, 0]
+    ax.plot(K_values, pd_vals, 'o-', color='#2ca02c', linewidth=2.5, markersize=8,
+            label='SD-COP-4th')
+    ax.axvline(x=14, color='blue', linestyle='--', alpha=0.7, linewidth=2,
+               label='COP limit (K=14)')
+    ax.axhline(y=0.5, color='gray', linestyle=':', alpha=0.5)
+    ax.set_xlabel('Number of Sources (K)')
+    ax.set_ylabel('Detection Rate (Pd)')
+    ax.set_title('(c) SD-COP Detection Rate')
+    ax.set_ylim([-0.05, 1.05])
+    ax.set_xticks(K_values)
+    ax.legend(fontsize=9)
+
+    # (1,1) RMSE vs K
+    ax = axes[1, 1]
+    ax.plot(K_values, rmse_vals, 's-', color='#2ca02c', linewidth=2.5, markersize=8,
+            label='SD-COP-4th')
+    ax.axvline(x=14, color='blue', linestyle='--', alpha=0.7, linewidth=2,
+               label='COP limit (K=14)')
+    ax.set_xlabel('Number of Sources (K)')
+    ax.set_ylabel('RMSE (degrees)')
+    ax.set_title('(d) SD-COP RMSE')
+    ax.set_xticks(K_values)
+    ax.legend(fontsize=9)
+
+    fig.suptitle('SD-COP Deflation Stage Analysis\n'
+                 'M=8 sensors, SNR=15dB, T=512 | Sequential deflation in HOC domain',
+                 fontsize=14, fontweight='bold')
+    fig.tight_layout(rect=[0, 0, 1, 0.92])
+    fig.savefig(os.path.join(OUTPUT_DIR, 'fig12_sdcop_stages.png'))
+    plt.close(fig)
+    print(f"  Saved fig12_sdcop_stages.png")
+
+
 def plot_combined_summary(k_data, snr_data, res_data, snap_data):
     """Create a combined 2x3 summary figure."""
     K_values, k_results = k_data
@@ -463,6 +695,7 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
     # (0,0) K scaling Pd
     ax = axes[0, 0]
     ax.axvspan(7.5, 14.5, alpha=0.08, color='blue', zorder=0)
+    ax.axvspan(14.5, max(K_values) + 0.5, alpha=0.06, color='red', zorder=0)
     ax.axvline(x=7, color='green', linestyle='--', alpha=0.5, linewidth=1)
     ax.axvline(x=14, color='blue', linestyle='--', alpha=0.5, linewidth=1)
     for name, data in k_results.items():
@@ -474,8 +707,9 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
     ax.set_title('(a) K Scaling: Detection Rate')
     ax.set_ylim([-0.05, 1.05])
     ax.text(5, 0.08, 'K<M-1', fontsize=7, color='green')
-    ax.text(10, 0.08, 'Underdetermined', fontsize=7, color='blue')
-    ax.legend(fontsize=6, loc='lower left')
+    ax.text(10.5, 0.08, 'Underdetermined', fontsize=7, color='blue')
+    ax.text(17, 0.08, 'SD-COP', fontsize=7, color='red')
+    ax.legend(fontsize=5.5, loc='lower left')
 
     # (0,1) SNR Pd
     ax = axes[0, 1]
@@ -487,7 +721,7 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
     ax.set_ylabel('Pd')
     ax.set_title('(b) SNR Robustness: Detection Rate')
     ax.set_ylim([-0.05, 1.05])
-    ax.legend(fontsize=7, loc='lower right')
+    ax.legend(fontsize=6, loc='lower right')
 
     # (0,2) Resolution Pd
     ax = axes[0, 2]
@@ -505,6 +739,7 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
     # (1,0) K scaling RMSE
     ax = axes[1, 0]
     ax.axvspan(7.5, 14.5, alpha=0.08, color='blue', zorder=0)
+    ax.axvspan(14.5, max(K_values) + 0.5, alpha=0.06, color='red', zorder=0)
     ax.axvline(x=7, color='green', linestyle='--', alpha=0.5, linewidth=1)
     ax.axvline(x=14, color='blue', linestyle='--', alpha=0.5, linewidth=1)
     for name, data in k_results.items():
@@ -514,7 +749,7 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
     ax.set_xlabel('K (sources)')
     ax.set_ylabel('RMSE (deg)')
     ax.set_title('(d) K Scaling: RMSE')
-    ax.legend(fontsize=6, loc='upper left')
+    ax.legend(fontsize=5.5, loc='upper left')
 
     # (1,1) SNR RMSE
     ax = axes[1, 1]
@@ -526,7 +761,7 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
     ax.set_ylabel('RMSE (deg)')
     ax.set_title('(e) SNR Robustness: RMSE')
     ax.set_yscale('log')
-    ax.legend(fontsize=7, loc='upper right')
+    ax.legend(fontsize=6, loc='upper right')
 
     # (1,2) Snapshots RMSE
     ax = axes[1, 2]
@@ -556,7 +791,7 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("Generating Benchmark Plots")
+    print("Generating Benchmark Plots (with SD-COP)")
     print(f"Output: {OUTPUT_DIR}")
     print("=" * 60)
 
@@ -565,6 +800,8 @@ if __name__ == "__main__":
     snr_data = collect_snr()
     res_data = collect_resolution()
     snap_data = collect_snapshots()
+    ext_k_data = collect_extended_k()
+    stage_data = collect_sdcop_stages()
 
     # Generate individual plots
     print("\nGenerating plots...")
@@ -572,6 +809,8 @@ if __name__ == "__main__":
     plot_snr(*snr_data)
     plot_resolution(*res_data)
     plot_snapshots(*snap_data)
+    plot_extended_k(*ext_k_data)
+    plot_sdcop_stages(stage_data)
 
     # Generate combined summary
     plot_combined_summary(k_data, snr_data, res_data, snap_data)
