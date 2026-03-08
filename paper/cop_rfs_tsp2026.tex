@@ -31,24 +31,24 @@
 
 \begin{document}
 
-\title{COP-RFS: Underdetermined DOA Estimation and Multi-Target Tracking\\via Higher-Order Cumulant Optimization\\with Random Finite Set Filtering}
+\title{COP-RFS: Underdetermined High-Resolution DOA Estimation\\and Multi-Target Tracking via Higher-Order Cumulant\\Optimization with Random Finite Set Filtering}
 
-\author{Jin~Ho~Choi,~\IEEEmembership{Member,~IEEE}
-\thanks{J.~H.~Choi is with the Department of Electronic and Electrical Engineering, Kyungpook National University, Daegu, South Korea (e-mail: drjinhochoi@knu.ac.kr).}
+\author{SmartEAR
+\thanks{SmartEAR (e-mail: drjinhochoi@knu.ac.kr).}
 \thanks{This work was supported by the Agency for Defense Development (ADD) and the Defense Acquisition Program Administration (DAPA), Republic of Korea.}
 \thanks{Manuscript received XXXX XX, 2026; revised XXXX XX, 2026.}}
 
 \markboth{IEEE TRANSACTIONS ON SIGNAL PROCESSING, VOL.~XX, NO.~XX, 2026}
-{Choi: COP-RFS: Underdetermined DOA Estimation and Multi-Target Tracking}
+{SmartEAR: COP-RFS: Underdetermined High-Resolution DOA Estimation and Multi-Target Tracking}
 
 \maketitle
 
 \begin{abstract}
-This paper presents COP-RFS, a unified framework for underdetermined direction-of-arrival (DOA) estimation and multi-target tracking using higher-order cumulant-based subspace constrained optimization (COP) integrated with random finite set (RFS) filtering. Three novel extensions of the $2\rho$th-order COP algorithm are proposed: (i) Temporal COP (T-COP), which exploits tracker-aided temporal cumulant accumulation with exponential forgetting for non-stationary signals; (ii) Sequential Deflation COP (SD-COP), which extends the source capacity beyond the single-stage limit through iterative signal deflation in the cumulant domain; and (iii) a physics-based Gaussian mixture probability hypothesis density (GM-PHD) filter that performs measurement-to-track identification using inertia-based prediction \emph{before} the Bayesian update step. We derive exact Cram\'{e}r--Rao lower bounds (CRLBs) for both standard covariance-based and higher-order cumulant-based DOA estimation, providing fundamental performance limits for the proposed methods. Extensive Monte Carlo simulations demonstrate that the COP family resolves $K > M-1$ sources with $M$ sensors, achieving near-CRLB performance at moderate SNR, while the physics-based PHD filter maintains sub-degree tracking accuracy through target crossings. The complete framework is validated in defense-relevant scenarios with time-varying target numbers, closely spaced sources, and crossing trajectories.
+This paper presents COP-RFS, a unified framework for underdetermined high-resolution direction-of-arrival (DOA) estimation and multi-target tracking using higher-order cumulant-based subspace constrained optimization (COP) integrated with random finite set (RFS) filtering. Three novel extensions of the $2\rho$th-order COP algorithm are proposed: (i) Temporal COP (T-COP), which exploits tracker-aided temporal cumulant accumulation with exponential forgetting for non-stationary signals; (ii) Sequential Deflation COP (SD-COP), which extends the source capacity beyond the single-stage limit through iterative signal deflation in the cumulant domain; and (iii) a physics-based Gaussian mixture probability hypothesis density (GM-PHD) filter that performs measurement-to-track identification using inertia-based prediction \emph{before} the Bayesian update step. We derive exact Cram\'{e}r--Rao lower bounds (CRLBs) for both standard covariance-based and higher-order cumulant-based DOA estimation, providing fundamental performance limits for the proposed methods. Extensive Monte Carlo simulations demonstrate that the COP family resolves $K > M-1$ sources with $M$ sensors, achieving near-CRLB performance at moderate SNR, while the physics-based PHD filter maintains sub-degree tracking accuracy through target crossings. The complete framework is validated in defense-relevant scenarios with time-varying target numbers, closely spaced sources, and crossing trajectories.
 \end{abstract}
 
 \begin{IEEEkeywords}
-Direction-of-arrival estimation, higher-order cumulants, underdetermined systems, multi-target tracking, probability hypothesis density filter, random finite sets, constrained optimization.
+Direction-of-arrival estimation, high-resolution, higher-order cumulants, underdetermined systems, multi-target tracking, probability hypothesis density filter, random finite sets, constrained optimization.
 \end{IEEEkeywords}
 
 
@@ -57,9 +57,9 @@ Direction-of-arrival estimation, higher-order cumulants, underdetermined systems
 \label{sec:intro}
 % ============================================================
 
-Direction-of-arrival (DOA) estimation is a fundamental problem in array signal processing with critical applications in radar, sonar, communications, and defense systems~\cite{barshalom2011tracking}. Classical subspace methods such as MUSIC~\cite{schmidt1986music} and ESPRIT~\cite{roy1989esprit} achieve high resolution but are limited to the \emph{overdetermined} case where the number of sources $K$ does not exceed $M-1$, the number of sensors minus one. This constraint poses a significant challenge in modern defense scenarios where a sensor array may face more incoming threats than its aperture can nominally resolve.
+High-resolution direction-of-arrival (DOA) estimation is a fundamental problem in array signal processing with critical applications in radar, sonar, communications, and defense systems~\cite{barshalom2011tracking}. Classical high-resolution subspace methods such as MUSIC~\cite{schmidt1986music} and ESPRIT~\cite{roy1989esprit} achieve super-resolution beyond the Rayleigh limit but are restricted to the \emph{overdetermined} case where the number of sources $K$ does not exceed $M-1$, the number of sensors minus one. This constraint poses a significant challenge in modern defense scenarios where a sensor array may face more incoming threats than its aperture can nominally resolve.
 
-Higher-order statistics (HOS) offer a principled approach to overcome this limitation. By exploiting the $2\rho$th-order cumulant structure of received signals, Choi and Yoo~\cite{choi2015underdetermined} proposed the Subspace Constrained Optimization of the Pseudo-spectrum (COP) algorithm, which extends the effective array aperture through a \emph{virtual array} of size $M_v = \rho(M-1)+1$, thereby resolving up to $\rho(M-1)$ sources---far exceeding the classical $M-1$ limit. The COP algorithm achieves this by constructing a cumulant matrix whose structure is equivalent to a covariance matrix from a larger virtual uniform linear array (ULA), and then applying subspace-based spectral estimation in this extended domain. A key advantage of higher-order cumulants is the automatic suppression of Gaussian noise, since all cumulants of order greater than two vanish for Gaussian processes~\cite{mendel1991tutorial}.
+Higher-order statistics (HOS) offer a principled approach to overcome this limitation. By exploiting the $2\rho$th-order cumulant structure of received signals, Choi and Yoo~\cite{choi2015underdetermined} proposed a high-resolution Subspace Constrained Optimization of the Pseudo-spectrum (COP) algorithm, which extends the effective array aperture through a \emph{virtual array} of size $M_v = \rho(M-1)+1$, thereby resolving up to $\rho(M-1)$ sources---far exceeding the classical $M-1$ limit. The COP algorithm achieves this by constructing a cumulant matrix whose structure is equivalent to a covariance matrix from a larger virtual uniform linear array (ULA), and then applying subspace-based spectral estimation in this extended domain. A key advantage of higher-order cumulants is the automatic suppression of Gaussian noise, since all cumulants of order greater than two vanish for Gaussian processes~\cite{mendel1991tutorial}.
 
 While the COP algorithm addresses the static underdetermined DOA problem, practical defense applications require two additional capabilities: (i) \emph{temporal processing} for non-stationary targets whose DOAs change over time, and (ii) \emph{multi-target tracking} to maintain continuous track trajectories across successive radar scans. This paper presents the COP-RFS framework that unifies these capabilities through three novel contributions:
 
@@ -446,7 +446,7 @@ The cumulant computation $\mathcal{O}(M^4 T)$ dominates for COP methods, where t
 \label{sec:conclusion}
 % ============================================================
 
-This paper presented COP-RFS, a unified framework for underdetermined DOA estimation and multi-target tracking. Three novel extensions of the COP algorithm were proposed: T-COP for temporal accumulation with tracker feedback, SD-COP for capacity extension through sequential deflation, and a physics-based GM-PHD filter for robust tracking through target crossings.
+This paper presented COP-RFS, a unified framework for underdetermined high-resolution DOA estimation and multi-target tracking. Three novel extensions of the COP algorithm were proposed: T-COP for temporal accumulation with tracker feedback, SD-COP for capacity extension through sequential deflation, and a physics-based GM-PHD filter for robust tracking through target crossings.
 
 The key contributions and findings are:
 \begin{enumerate}
