@@ -46,15 +46,16 @@ plt.rcParams.update({
 })
 
 # Algorithm styles: (color, marker, linestyle, label)
+# M=8 sensors -> conventional max K=M-1=7, COP max K=rho*(M-1)=14
 ALG_STYLES = {
-    'MUSIC':     ('#7f7f7f', 's', '--', 'MUSIC'),
-    'ESPRIT':    ('#bcbd22', 'D', '--', 'ESPRIT'),
-    'Capon':     ('#17becf', '^', '--', 'Capon'),
-    'COP':       ('#1f77b4', 'o', '-',  'COP-4th (Proposed base)'),
-    'T-COP(1)':  ('#ff7f0e', 'v', ':',  'T-COP (1 scan)'),
-    'T-COP(5)':  ('#d62728', 'P', '-',  'T-COP (5 scans)'),
-    'T-COP(10)': ('#9467bd', '*', '-',  'T-COP (10 scans)'),
-    'SD-COP':    ('#2ca02c', 'X', '-.',  'SD-COP'),
+    'MUSIC':     ('#7f7f7f', 's', '--', 'MUSIC (max K=M-1=7)'),
+    'ESPRIT':    ('#bcbd22', 'D', '--', 'ESPRIT (max K=M-1=7)'),
+    'Capon':     ('#17becf', '^', '--', 'Capon (max K=M-1=7)'),
+    'COP':       ('#1f77b4', 'o', '-',  'COP-4th (max K=14) [Proposed]'),
+    'T-COP(1)':  ('#ff7f0e', 'v', ':',  'T-COP-4th, 1 scan'),
+    'T-COP(5)':  ('#d62728', 'P', '-',  'T-COP-4th, 5 scans [Proposed]'),
+    'T-COP(10)': ('#9467bd', '*', '-',  'T-COP-4th, 10 scans [Proposed]'),
+    'SD-COP':    ('#2ca02c', 'X', '-.',  'SD-COP-4th (max K>14) [Proposed]'),
 }
 
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -272,52 +273,79 @@ def collect_snapshots():
 # ============================================================
 
 def plot_k_scaling(K_values, results):
-    """Fig 1 & 2: K Scaling."""
+    """Fig 1 & 2: K Scaling with underdetermined region annotation."""
     M = 8
+    max_conv = M - 1   # Conventional limit (MUSIC/ESPRIT/Capon)
+    max_cop = 14        # COP limit = rho*(M-1) for rho=2
 
-    # Fig 1: Pd vs K
-    fig, ax = plt.subplots(figsize=(8, 5))
-    for name, data in results.items():
-        s = ALG_STYLES[name]
-        ax.plot(K_values, data['pd'], color=s[0], marker=s[1],
-                linestyle=s[2], label=s[3])
+    for metric, ylabel, title_suffix, ylim, loc, fname in [
+        ('pd', 'Detection Rate (Pd)',
+         'Detection Rate vs Source Count', [-0.05, 1.05], 'lower left',
+         'fig1_k_scaling_pd.png'),
+        ('rmse', 'RMSE (degrees)',
+         'RMSE vs Source Count', None, 'upper left',
+         'fig2_k_scaling_rmse.png'),
+    ]:
+        fig, ax = plt.subplots(figsize=(9, 5.5))
 
-    ax.axvline(x=M, color='gray', linestyle=':', alpha=0.5, linewidth=1.5)
-    ax.text(M + 0.2, 0.05, f'M={M}\n(determined\nlimit)',
-            fontsize=9, color='gray', ha='left')
-    ax.axvline(x=M-1, color='lightgray', linestyle=':', alpha=0.5)
+        # Shaded regions
+        ax.axvspan(min(K_values) - 0.5, max_conv + 0.5,
+                   alpha=0.08, color='green', zorder=0)
+        ax.axvspan(max_conv + 0.5, max_cop + 0.5,
+                   alpha=0.08, color='blue', zorder=0)
 
-    ax.set_xlabel('Number of Sources (K)')
-    ax.set_ylabel('Detection Rate (Pd)')
-    ax.set_title('Underdetermined DOA: Detection Rate vs Source Count\n'
-                 f'M={M}, SNR=15dB, T=256')
-    ax.set_ylim([-0.05, 1.05])
-    ax.set_xticks(K_values)
-    ax.legend(loc='lower left', framealpha=0.9)
-    fig.savefig(os.path.join(OUTPUT_DIR, 'fig1_k_scaling_pd.png'))
-    plt.close(fig)
-    print(f"  Saved fig1_k_scaling_pd.png")
+        # Vertical boundary lines
+        ax.axvline(x=max_conv, color='green', linestyle='--',
+                   alpha=0.6, linewidth=1.5)
+        ax.axvline(x=M, color='gray', linestyle=':', alpha=0.4, linewidth=1)
+        ax.axvline(x=max_cop, color='blue', linestyle='--',
+                   alpha=0.6, linewidth=1.5)
 
-    # Fig 2: RMSE vs K
-    fig, ax = plt.subplots(figsize=(8, 5))
-    for name, data in results.items():
-        s = ALG_STYLES[name]
-        ax.plot(K_values, data['rmse'], color=s[0], marker=s[1],
-                linestyle=s[2], label=s[3])
+        # Region labels
+        y_label = 1.0 if metric == 'pd' else max(
+            max(d[metric]) for d in results.values()) * 0.95
 
-    ax.axvline(x=M, color='gray', linestyle=':', alpha=0.5, linewidth=1.5)
-    ax.text(M + 0.2, max(max(d['rmse']) for d in results.values()) * 0.9,
-            f'M={M}', fontsize=9, color='gray')
+        ax.text((min(K_values) + max_conv) / 2, y_label,
+                'Determined\n(K < M)',
+                fontsize=8, ha='center', va='top',
+                color='green', fontstyle='italic',
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
+                          alpha=0.8, edgecolor='green'))
 
-    ax.set_xlabel('Number of Sources (K)')
-    ax.set_ylabel('RMSE (degrees)')
-    ax.set_title('Underdetermined DOA: RMSE vs Source Count\n'
-                 f'M={M}, SNR=15dB, T=256')
-    ax.set_xticks(K_values)
-    ax.legend(loc='upper left', framealpha=0.9)
-    fig.savefig(os.path.join(OUTPUT_DIR, 'fig2_k_scaling_rmse.png'))
-    plt.close(fig)
-    print(f"  Saved fig2_k_scaling_rmse.png")
+        ax.text((max_conv + max_cop) / 2 + 0.5, y_label,
+                'Underdetermined\n(M-1 < K < COP limit)',
+                fontsize=8, ha='center', va='top',
+                color='blue', fontstyle='italic',
+                bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
+                          alpha=0.8, edgecolor='blue'))
+
+        # Boundary annotations
+        if metric == 'pd':
+            ax.annotate(f'K=M-1={max_conv}\nConventional limit',
+                       xy=(max_conv, 0.15), fontsize=8, color='green',
+                       ha='center', va='bottom')
+            ax.annotate(f'K={max_cop}\nCOP limit\n(rho*(M-1))',
+                       xy=(max_cop, 0.15), fontsize=8, color='blue',
+                       ha='center', va='bottom')
+
+        # Plot data
+        for name, data in results.items():
+            s = ALG_STYLES[name]
+            ax.plot(K_values, data[metric], color=s[0], marker=s[1],
+                    linestyle=s[2], label=s[3], linewidth=2, markersize=7)
+
+        ax.set_xlabel('Number of Sources (K)')
+        ax.set_ylabel(ylabel)
+        ax.set_title(f'Underdetermined DOA: {title_suffix}\n'
+                     f'M={M} sensors, SNR=15dB, T=256 snapshots')
+        if ylim:
+            ax.set_ylim(ylim)
+        ax.set_xticks(K_values)
+        ax.legend(loc=loc, framealpha=0.95, fontsize=8)
+        fig.tight_layout()
+        fig.savefig(os.path.join(OUTPUT_DIR, fname))
+        plt.close(fig)
+        print(f"  Saved {fname}")
 
 
 def plot_snr(snr_values, results):
@@ -332,9 +360,9 @@ def plot_snr(snr_values, results):
     ax.set_xlabel('SNR (dB)')
     ax.set_ylabel('Detection Rate (Pd)')
     ax.set_title('SNR Robustness: Detection Rate\n'
-                 'M=8, K=8, T=128 (Underdetermined)')
+                 'M=8 sensors, K=8 sources (K>M-1: Underdetermined), T=128')
     ax.set_ylim([-0.05, 1.05])
-    ax.legend(loc='lower right', framealpha=0.9)
+    ax.legend(loc='lower right', framealpha=0.9, fontsize=8)
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig3_snr_pd.png'))
     plt.close(fig)
     print(f"  Saved fig3_snr_pd.png")
@@ -349,9 +377,9 @@ def plot_snr(snr_values, results):
     ax.set_xlabel('SNR (dB)')
     ax.set_ylabel('RMSE (degrees)')
     ax.set_title('SNR Robustness: RMSE\n'
-                 'M=8, K=8, T=128 (Underdetermined)')
+                 'M=8 sensors, K=8 sources (K>M-1: Underdetermined), T=128')
     ax.set_yscale('log')
-    ax.legend(loc='upper right', framealpha=0.9)
+    ax.legend(loc='upper right', framealpha=0.9, fontsize=8)
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig4_snr_rmse.png'))
     plt.close(fig)
     print(f"  Saved fig4_snr_rmse.png")
@@ -434,16 +462,20 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
 
     # (0,0) K scaling Pd
     ax = axes[0, 0]
+    ax.axvspan(7.5, 14.5, alpha=0.08, color='blue', zorder=0)
+    ax.axvline(x=7, color='green', linestyle='--', alpha=0.5, linewidth=1)
+    ax.axvline(x=14, color='blue', linestyle='--', alpha=0.5, linewidth=1)
     for name, data in k_results.items():
         s = ALG_STYLES[name]
         ax.plot(K_values, data['pd'], color=s[0], marker=s[1],
                 linestyle=s[2], label=s[3], markersize=5)
-    ax.axvline(x=8, color='gray', linestyle=':', alpha=0.5)
     ax.set_xlabel('K (sources)')
     ax.set_ylabel('Pd')
     ax.set_title('(a) K Scaling: Detection Rate')
     ax.set_ylim([-0.05, 1.05])
-    ax.legend(fontsize=7, loc='lower left')
+    ax.text(5, 0.08, 'K<M-1', fontsize=7, color='green')
+    ax.text(10, 0.08, 'Underdetermined', fontsize=7, color='blue')
+    ax.legend(fontsize=6, loc='lower left')
 
     # (0,1) SNR Pd
     ax = axes[0, 1]
@@ -472,15 +504,17 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
 
     # (1,0) K scaling RMSE
     ax = axes[1, 0]
+    ax.axvspan(7.5, 14.5, alpha=0.08, color='blue', zorder=0)
+    ax.axvline(x=7, color='green', linestyle='--', alpha=0.5, linewidth=1)
+    ax.axvline(x=14, color='blue', linestyle='--', alpha=0.5, linewidth=1)
     for name, data in k_results.items():
         s = ALG_STYLES[name]
         ax.plot(K_values, data['rmse'], color=s[0], marker=s[1],
                 linestyle=s[2], label=s[3], markersize=5)
-    ax.axvline(x=8, color='gray', linestyle=':', alpha=0.5)
     ax.set_xlabel('K (sources)')
     ax.set_ylabel('RMSE (deg)')
     ax.set_title('(d) K Scaling: RMSE')
-    ax.legend(fontsize=7, loc='upper left')
+    ax.legend(fontsize=6, loc='upper left')
 
     # (1,1) SNR RMSE
     ax = axes[1, 1]
