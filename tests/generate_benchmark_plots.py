@@ -28,6 +28,7 @@ from iron_dome_sim.signal_model.signal_generator import generate_snapshots
 from iron_dome_sim.doa import (SubspaceCOP, TemporalCOP, SequentialDeflationCOP,
                                 MUSIC, ESPRIT, Capon)
 from iron_dome_sim.eval.metrics import rmse_doa, detection_rate
+from iron_dome_sim.eval.crlb import crlb_rmse, crlb_stochastic, crlb_cop
 
 # ============================================================
 # Style configuration
@@ -467,12 +468,22 @@ def plot_snr(snr_values, results):
     plt.close(fig)
     print(f"  Saved fig3_snr_pd.png")
 
-    # Fig 4: RMSE vs SNR
+    # Fig 4: RMSE vs SNR with exact CRLB
     fig, ax = plt.subplots(figsize=(8, 5))
     for name, data in results.items():
         s = ALG_STYLES[name]
         ax.plot(snr_values, data['rmse'], color=s[0], marker=s[1],
                 linestyle=s[2], label=s[3])
+
+    # Add exact CRLB curves
+    snr_fine = np.array(snr_values, dtype=float)
+    true_doas = np.radians(np.linspace(-50, 50, 8))  # K=8
+    crlb_std = crlb_rmse(true_doas, 8, snr_fine, 128, rho=1)
+    crlb_ho = crlb_rmse(true_doas, 8, snr_fine, 128, rho=2)
+    ax.plot(snr_values, crlb_std, 'k--', linewidth=1.5, alpha=0.7,
+            label='CRLB (standard)')
+    ax.plot(snr_values, crlb_ho, 'k:', linewidth=1.5, alpha=0.7,
+            label='CRLB (4th-order)')
 
     ax.set_xlabel('SNR (dB)')
     ax.set_ylabel('RMSE (degrees)')
@@ -518,7 +529,7 @@ def plot_resolution(spacing_values, results):
 
 
 def plot_snapshots(T_values, results):
-    """Fig 6: Snapshot efficiency (now includes SD-COP)."""
+    """Fig 6: Snapshot efficiency (now includes SD-COP + CRLB)."""
     fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
 
     for name, data in results.items():
@@ -527,6 +538,23 @@ def plot_snapshots(T_values, results):
                      linestyle=s[2], label=s[3], base=2)
         ax2.semilogx(T_values, data['rmse'], color=s[0], marker=s[1],
                      linestyle=s[2], label=s[3], base=2)
+
+    # Add exact CRLB curves to RMSE plot (ax2)
+    true_doas = np.radians(np.linspace(-40, 40, 6))  # K=6, same as collect_snapshots
+    crlb_std_vals = []
+    crlb_ho_vals = []
+    for T in T_values:
+        crb, _ = crlb_stochastic(true_doas, 8, 10, T)  # M=8, SNR=10dB
+        mean_crb = np.mean(crb)
+        crlb_std_vals.append(np.degrees(np.sqrt(mean_crb)) if mean_crb < np.inf else np.inf)
+        crb, _ = crlb_cop(true_doas, 8, 10, T, rho=2)
+        mean_crb = np.mean(crb)
+        crlb_ho_vals.append(np.degrees(np.sqrt(mean_crb)) if mean_crb < np.inf else np.inf)
+
+    ax2.semilogx(T_values, crlb_std_vals, 'k--', linewidth=1.5, alpha=0.7,
+                 label='CRLB (standard)', base=2)
+    ax2.semilogx(T_values, crlb_ho_vals, 'k:', linewidth=1.5, alpha=0.7,
+                 label='CRLB (4th-order)', base=2)
 
     ax1.set_xlabel('Number of Snapshots (T)')
     ax1.set_ylabel('Detection Rate (Pd)')
@@ -751,30 +779,54 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
     ax.set_title('(d) K Scaling: RMSE')
     ax.legend(fontsize=5.5, loc='upper left')
 
-    # (1,1) SNR RMSE
+    # (1,1) SNR RMSE with CRLB
     ax = axes[1, 1]
     for name, data in snr_results.items():
         s = ALG_STYLES[name]
         ax.plot(snr_values, data['rmse'], color=s[0], marker=s[1],
                 linestyle=s[2], label=s[3], markersize=5)
+    # CRLB for SNR plot: M=8, K=8, T=128
+    snr_fine = np.array(snr_values, dtype=float)
+    snr_doas = np.radians(np.linspace(-50, 50, 8))
+    crlb_std_snr = crlb_rmse(snr_doas, 8, snr_fine, 128, rho=1)
+    crlb_ho_snr = crlb_rmse(snr_doas, 8, snr_fine, 128, rho=2)
+    ax.plot(snr_values, crlb_std_snr, 'k--', linewidth=1.0, alpha=0.6,
+            label='CRLB (std)', markersize=3)
+    ax.plot(snr_values, crlb_ho_snr, 'k:', linewidth=1.0, alpha=0.6,
+            label='CRLB (4th)', markersize=3)
     ax.set_xlabel('SNR (dB)')
     ax.set_ylabel('RMSE (deg)')
     ax.set_title('(e) SNR Robustness: RMSE')
     ax.set_yscale('log')
-    ax.legend(fontsize=6, loc='upper right')
+    ax.legend(fontsize=5.5, loc='upper right')
 
-    # (1,2) Snapshots RMSE
+    # (1,2) Snapshots RMSE with CRLB
     ax = axes[1, 2]
     for name, data in snap_results.items():
         s = ALG_STYLES[name]
         ax.semilogx(T_values, data['rmse'], color=s[0], marker=s[1],
                      linestyle=s[2], label=s[3], markersize=5, base=2)
+    # CRLB for snapshot plot: M=8, K=6, SNR=10dB
+    snap_doas = np.radians(np.linspace(-40, 40, 6))
+    crlb_std_snap = []
+    crlb_ho_snap = []
+    for T in T_values:
+        crb, _ = crlb_stochastic(snap_doas, 8, 10, T)
+        mean_crb = np.mean(crb)
+        crlb_std_snap.append(np.degrees(np.sqrt(mean_crb)) if mean_crb < np.inf else np.inf)
+        crb, _ = crlb_cop(snap_doas, 8, 10, T, rho=2)
+        mean_crb = np.mean(crb)
+        crlb_ho_snap.append(np.degrees(np.sqrt(mean_crb)) if mean_crb < np.inf else np.inf)
+    ax.semilogx(T_values, crlb_std_snap, 'k--', linewidth=1.0, alpha=0.6,
+                label='CRLB (std)', base=2, markersize=3)
+    ax.semilogx(T_values, crlb_ho_snap, 'k:', linewidth=1.0, alpha=0.6,
+                label='CRLB (4th)', base=2, markersize=3)
     ax.set_xlabel('Snapshots (T)')
     ax.set_ylabel('RMSE (deg)')
     ax.set_title('(f) Snapshot Efficiency: RMSE')
     ax.set_xticks(T_values)
     ax.set_xticklabels([str(t) for t in T_values])
-    ax.legend(fontsize=7, loc='upper right')
+    ax.legend(fontsize=5.5, loc='upper right')
 
     fig.suptitle('COP Family Algorithm Performance Summary\n'
                  'Base: 2rho-th Order Subspace COP (Choi & Yoo, IEEE TSP 2015)',
