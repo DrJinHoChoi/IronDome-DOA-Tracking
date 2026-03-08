@@ -67,7 +67,7 @@ While the COP algorithm addresses the static underdetermined DOA problem, practi
 We introduce a tracker-aided temporal cumulant accumulation scheme with exponential forgetting factor $\alpha$. Unlike batch processing that assumes stationarity, T-COP maintains a running estimate of the cumulant matrix across scans, weighted by recency. When integrated with a multi-target tracker, the predicted DOAs from the tracking filter provide prior information that constrains the COP optimization, creating a beneficial feedback loop between estimation and tracking.
 
 \textbf{Contribution 2: Sequential Deflation COP (SD-COP).}
-When the number of sources $K$ approaches or exceeds the single-stage COP capacity $\rho(M-1)$, estimation performance degrades due to the exhaustion of virtual degrees of freedom. SD-COP addresses this by borrowing the successive interference cancellation (SIC) concept from communications~\cite{andrews2005sic}: after estimating and subtracting the strongest sources in the cumulant domain, the residual cumulant matrix contains fewer source contributions, enabling additional sources to be resolved. This multi-stage deflation extends the effective capacity well beyond $\rho(M-1)$.
+When the number of sources $K$ approaches or exceeds the single-stage COP capacity $\rho(M-1)$, estimation performance degrades due to the exhaustion of virtual degrees of freedom. SD-COP addresses this by borrowing the successive interference cancellation (SIC) concept from communications~\cite{andrews2005sic}: after estimating the strongest sources via COP, their contributions are subtracted from the original received signal in the signal domain via joint least-squares reconstruction, and the cumulant is recomputed from the residual. This signal-domain deflation avoids the cumulant power estimation errors inherent in direct cumulant-domain subtraction. A multi-pass global refinement with leave-one-out spectrum computation further improves accuracy, extending the effective capacity well beyond $\rho(M-1)$.
 
 \textbf{Contribution 3: Physics-Based GM-PHD Filter.}
 We propose a novel modification to the standard Gaussian mixture PHD (GM-PHD) filter~\cite{vo2006gmphd} for DOA tracking. The key innovation is performing measurement-to-track identification \emph{before} the Bayesian update step, using physics-based (inertia-driven) predictions. This ``predict--identify--update'' pipeline replaces the standard ``predict--update'' approach where all measurement--component combinations are evaluated. The Hungarian algorithm~\cite{kuhn1955hungarian} provides optimal assignment between predicted track positions and COP-estimated DOAs, enabling robust tracking through target crossings where conventional approaches fail due to measurement--track ambiguity.
@@ -183,39 +183,54 @@ where $w_p \in [0, 1]$ controls the prior weight. This creates a beneficial feed
 \subsection{Sequential Deflation COP (SD-COP)}
 \label{sec:sdcop}
 
-When $K$ approaches the COP capacity $\rho(M-1)$, estimation accuracy degrades due to exhaustion of virtual degrees of freedom. SD-COP addresses this through iterative signal deflation in the cumulant domain, analogous to successive interference cancellation (SIC) in communications~\cite{andrews2005sic}. At stage $s$, the deflated cumulant matrix is
+When $K$ approaches the COP capacity $\rho(M-1)$, estimation accuracy degrades due to exhaustion of virtual degrees of freedom. SD-COP addresses this through iterative signal-domain deflation, analogous to successive interference cancellation (SIC) in communications~\cite{andrews2005sic}. Rather than deflating in the cumulant domain---which requires accurate estimation of source cumulant powers and is prone to error accumulation---SD-COP operates on the original received signal $\mat{X}$ and recomputes the cumulant at each stage from the deflated signal residual.
+
+At stage $s$, the source signals corresponding to previously estimated DOAs $\hat{\Theta}_{1:s-1}$ are reconstructed via joint least-squares estimation:
 \begin{equation}
-\mat{C}_{\mathrm{res}}^{(s)} = \mat{C}_{2\rho} - \sum_{i=1}^{s-1}\sum_{k=1}^{K_i} \hat{\gamma}_{i,k}\,\mat{a}_v(\hat{\theta}_{i,k})\,\mat{a}_v^H(\hat{\theta}_{i,k})
+\hat{\mat{S}} = \left(\mat{A}^H(\hat{\Theta})\,\mat{A}(\hat{\Theta}) + \lambda\mat{I}\right)^{-1} \mat{A}^H(\hat{\Theta})\,\mat{X}
+\label{eq:sdcop_ls}
+\end{equation}
+where $\lambda$ is a regularization parameter proportional to $\mathrm{tr}(\mat{A}^H\mat{A})/|\hat{\Theta}|$. The residual signal is
+\begin{equation}
+\mat{X}_{\mathrm{res}}^{(s)} = \mat{X} - \mat{A}(\hat{\Theta}_{1:s-1})\,\hat{\mat{S}}
 \label{eq:sdcop_deflation}
 \end{equation}
-where $\hat{\gamma}_{i,k}$ are the estimated cumulant powers obtained via least-squares fitting:
+and the COP algorithm is applied to $\mathrm{cum}_{2\rho}(\mat{X}_{\mathrm{res}}^{(s)})$ to discover additional sources. Crucially, the deflation is always performed from the \emph{original} signal $\mat{X}$ using the cumulative set of all previously estimated DOAs, avoiding cascaded error accumulation.
+
+After all deflation stages, SD-COP performs \textbf{multi-pass global refinement}. For each estimated DOA $\hat{\theta}_k$, all other sources are deflated from $\mat{X}$, and a local COP search refines $\hat{\theta}_k$ on the single-source residual:
 \begin{equation}
-\hat{\vect{\gamma}}_s = \left(\mat{A}_v^H(\hat{\vect{\theta}}_s)\,\mat{A}_v(\hat{\vect{\theta}}_s)\right)^{-1} \mat{A}_v^H(\hat{\vect{\theta}}_s)\,\diag(\mat{C}_{\mathrm{res}}^{(s)})
-\label{eq:sdcop_power}
+\hat{\theta}_k^{\mathrm{ref}} = \argmax_{\theta \in [\hat{\theta}_k - \delta,\, \hat{\theta}_k + \delta]} P_{\mathrm{COP}}\!\left(\theta;\, \mathrm{cum}_{2\rho}(\mat{X} - \mat{A}(\hat{\Theta}_{\backslash k})\hat{\mat{S}}_{\backslash k})\right)
+\label{eq:sdcop_refine}
 \end{equation}
-and $\hat{\vect{\theta}}_s$ are the DOAs estimated in stage $s$. The total capacity of SD-COP after $S$ stages is $K_{\max}^{\mathrm{SD}} = S \cdot \rho(M-1)$.
+where $\delta$ narrows across $R$ refinement passes ($5^\circ \to 4^\circ \to 3^\circ$ for $R=3$). Near-duplicate estimates (within $0.03$~rad) are merged after each pass. Finally, a \textbf{leave-one-out spectrum} provides clean visualization: for each source $k$, all others are deflated and the single-source COP spectrum is computed, then all spectra are summed.
 
 \begin{algorithm}[t]
 \caption{SD-COP: Sequential Deflation COP}
 \label{alg:sdcop}
 \begin{algorithmic}[1]
-\REQUIRE Snapshot data $\mat{X}$, virtual array params $(M, d, \rho)$, total sources $K$
-\STATE Compute cumulant matrix $\mat{C}_{2\rho}$ from $\mat{X}$
-\STATE Initialize: $\mat{C}_{\mathrm{res}} \leftarrow \mat{C}_{2\rho}$, $\hat{\Theta} \leftarrow \emptyset$, stage $\leftarrow 1$
-\WHILE{$|\hat{\Theta}| < K$ and $\|\mat{C}_{\mathrm{res}}\|_F > \epsilon$}
-    \STATE $K_s \leftarrow \min(K_{\mathrm{batch}},\, K - |\hat{\Theta}|)$
-    \STATE $\hat{\theta}_1, \ldots, \hat{\theta}_{K_s} \leftarrow \mathrm{COP}(\mat{C}_{\mathrm{res}},\, K_s)$
+\REQUIRE Snapshot data $\mat{X}$, array params $(M, d, \rho)$, total sources $K$
+\STATE Initialize: $\hat{\Theta} \leftarrow \emptyset$, $\mat{X}_{\mathrm{res}} \leftarrow \mat{X}$
+\WHILE{$|\hat{\Theta}| < K$ and $\|\mat{X}_{\mathrm{res}}\|^2 / \|\mat{X}\|^2 > \epsilon$}
+    \STATE $K_s \leftarrow \min(K_{\mathrm{batch}},\, K - |\hat{\Theta}|,\, \rho(M-1))$
+    \STATE $\hat{\theta}_1, \ldots, \hat{\theta}_{K_s} \leftarrow \mathrm{COP}(\mathrm{cum}_{2\rho}(\mat{X}_{\mathrm{res}}),\, K_s)$
     \STATE $\hat{\Theta} \leftarrow \hat{\Theta} \cup \{\hat{\theta}_1, \ldots, \hat{\theta}_{K_s}\}$
-    \STATE \textbf{Deflation:} Estimate source powers $\hat{\gamma}_k$ via LS
-    \STATE $\mat{C}_{\mathrm{res}} \leftarrow \mat{C}_{\mathrm{res}} - \sum_{k=1}^{K_s} \hat{\gamma}_k\,\mat{a}_v(\hat{\theta}_k)\mat{a}_v^H(\hat{\theta}_k)$
-    \STATE stage $\leftarrow$ stage $+ 1$
+    \STATE \textbf{Signal-domain deflation} from \emph{original} $\mat{X}$:
+    \STATE $\hat{\mat{S}} \leftarrow (\mat{A}^H\mat{A} + \lambda\mat{I})^{-1}\mat{A}^H\mat{X}$ \hfill // LS over all $\hat{\Theta}$
+    \STATE $\mat{X}_{\mathrm{res}} \leftarrow \mat{X} - \mat{A}(\hat{\Theta})\,\hat{\mat{S}}$
 \ENDWHILE
-\STATE \textbf{Global refinement:} Re-estimate all $\hat{\Theta}$ using original $\mat{C}_{2\rho}$
-\RETURN $\hat{\Theta}$
+\STATE \textbf{Multi-pass refinement} ($R$ passes, narrowing search $\delta$):
+\FOR{pass $r = 1, \ldots, R$}
+    \FOR{each $\hat{\theta}_k \in \hat{\Theta}$}
+        \STATE Deflate all others: $\mat{X}_k \leftarrow \mat{X} - \mat{A}(\hat{\Theta}_{\backslash k})\hat{\mat{S}}_{\backslash k}$
+        \STATE $\hat{\theta}_k \leftarrow \argmax_\theta P_{\mathrm{COP}}(\theta;\, \mathrm{cum}_{2\rho}(\mat{X}_k))$, $|\theta - \hat{\theta}_k| < \delta_r$
+    \ENDFOR
+    \STATE Remove near-duplicates from $\hat{\Theta}$
+\ENDFOR
+\RETURN $\hat{\Theta}$, leave-one-out combined spectrum
 \end{algorithmic}
 \end{algorithm}
 
-The deflation step (line~8) subtracts the contribution of estimated sources from the cumulant matrix, revealing residual sources that were masked by stronger signals. The global refinement (line~11) mitigates error propagation by re-estimating all DOAs using the original (undeflated) cumulant matrix with knowledge of the full source set. The batch size $K_{\mathrm{batch}} \leq \rho(M-1)$ ensures each stage operates within the COP capacity.
+The signal-domain deflation (lines~6--8) avoids the need to estimate source cumulant powers, which is notoriously inaccurate in the underdetermined regime. The multi-pass refinement (lines~10--15) jointly optimizes all DOA estimates using the original data, reducing the error accumulation inherent in sequential approaches. The batch size $K_{\mathrm{batch}} \leq \rho(M-1)$ ensures each stage operates within the COP capacity.
 
 
 % ============================================================
@@ -375,12 +390,21 @@ Fig.~\ref{fig:spectrum} illustrates the fundamental advantage of COP over classi
 \label{fig:spectrum}
 \end{figure}
 
-Fig.~\ref{fig:cop_family_spectrum} further demonstrates the COP family performance in a super-underdetermined scenario with $K = 16$ sources, exceeding the single-stage COP capacity of $\rho(M-1) = 14$. While standard COP detects only 9 sources and T-COP with 5-scan accumulation improves to 10, SD-COP's sequential deflation recovers 13 of 16 sources by progressively removing strong source contributions from the cumulant matrix~\eqref{eq:sdcop_deflation}.
+Fig.~\ref{fig:capacity_limit} demonstrates COP-4th operating exactly at its theoretical capacity limit: $K = 14 = \rho(M-1)$ sources with $M = 8$ sensors and $\rho = 2$. With well-separated sources ($10^\circ$ spacing across $[-65^\circ, 65^\circ]$), SNR~$= 30$~dB, and $T = 4096$ snapshots, COP successfully resolves \emph{all 14 sources} with mean estimation error of $0.54^\circ$, confirming the theoretical capacity of the virtual aperture extension.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{../results/figures/fig0c_capacity_limit.png}
+\caption{COP-4th at theoretical capacity limit: $K = 14 = \rho(M-1)$ sources resolved with $M = 8$ sensors. Green circles: true DOAs. Red triangles: estimated DOAs. All 14 sources detected with mean error $0.54^\circ$.}
+\label{fig:capacity_limit}
+\end{figure}
+
+Fig.~\ref{fig:cop_family_spectrum} further demonstrates the COP family in a \emph{super}-underdetermined scenario with $K = 16$ sources, exceeding the single-stage COP capacity. Standard COP correctly identifies only 4 of 16 sources due to capacity exhaustion, while T-COP with 10-scan temporal accumulation significantly improves to 12/16 correct by enhancing cumulant estimation quality. SD-COP achieves 11/16 correct through signal-domain sequential deflation~\eqref{eq:sdcop_deflation} with multi-pass refinement, demonstrating the complementary strengths of the two proposed extensions.
 
 \begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{../results/figures/fig0b_cop_family_spectrum.png}
-\caption{COP family spectra for $K = 16$ sources (super-underdetermined, $K > \rho(M-1) = 14$). SD-COP detects 13/16 sources via sequential deflation, exceeding single-stage COP capacity.}
+\caption{COP family spectra for $K = 16$ sources (super-underdetermined, $K > \rho(M-1) = 14$). Green circles: true DOAs. Colored triangles: estimated DOAs. T-COP (12/16) and SD-COP (11/16) substantially outperform standard COP (4/16).}
 \label{fig:cop_family_spectrum}
 \end{figure}
 
@@ -449,7 +473,46 @@ Fig.~\ref{fig:snapshots} shows that COP requires approximately $T = 128$ snapsho
 \end{figure*}
 \FloatBarrier
 
-\subsection{Experiment 5: SD-COP Extended Capacity}
+\subsection{Experiment 5: Effect of Cumulant Order $\rho$}
+
+\textbf{Setup}: $K = 3$ to $20$ sources, SNR $= 20$~dB, $T = 1024$, 3 Monte Carlo seeds, $\rho \in \{1, 2, 3\}$.
+
+Fig.~\ref{fig:rho_scaling} reveals the fundamental capacity--accuracy trade-off across cumulant orders. Three distinct operating regimes emerge:
+\begin{itemize}
+\item \textbf{$K \leq 7$}: $\rho = 1$ (2nd-order, equivalent to MUSIC) achieves near-perfect detection, while $\rho = 3$ exhibits degraded performance due to higher cumulant estimation variance at low source counts.
+\item \textbf{$8 \leq K \leq 14$}: $\rho = 2$ (4th-order COP) achieves 55--100\% detection, significantly outperforming $\rho = 1$ which collapses below 25\%.
+\item \textbf{$K > 14$}: $\rho = 3$ (6th-order) takes over with 61--69\% detection at $K = 16$--$20$, enabled by the extended capacity $K_{\max} = 3(M-1) = 21$. Both $\rho = 1$ and $\rho = 2$ fall below 50\%.
+\end{itemize}
+This confirms the theoretical prediction that the optimal $\rho$ increases with source count, matching the capacity limit $K_{\max} = \rho(M-1)$.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{../results/figures/fig_rho_scaling.png}
+\caption{Detection rate vs.~source count $K$ for cumulant orders $\rho = 1, 2, 3$. Vertical dashed lines indicate capacity limits $K_{\max}^{(\rho)} = \rho(M-1)$. The crossover pattern validates the theoretical capacity scaling.}
+\label{fig:rho_scaling}
+\end{figure}
+
+\subsection{Experiment 6: Signal Type Dependence}
+
+\textbf{Setup}: $K = 10$ sources, $M = 8$, SNR $= 15$~dB, $T = 512$, 5 Monte Carlo seeds. Eight signal types tested: Gaussian (i.i.d.), AM sinusoid, speech, FM modulation, chirp (LFM), QPSK communication, missile (Swerling~I RCS), and mixed.
+
+Fig.~\ref{fig:signal_types} reveals that the COP advantage over MUSIC is \emph{directly proportional to the degree of non-Gaussianity} of the source signals. The COP-4th algorithm achieves:
+\begin{itemize}
+\item \textbf{Chirp/LFM}: 100\% detection---deterministic quadratic phase produces the strongest higher-order cumulant structure.
+\item \textbf{Speech}: 98\% detection---quasi-periodic voiced excitation with formant structure provides excellent non-Gaussian characteristics, particularly relevant for microphone array applications.
+\item \textbf{FM}: 96\% detection---constant-envelope frequency modulation yields strong cumulant signatures.
+\item \textbf{Gaussian (baseline)}: Only 48\% detection, confirming that COP's advantage vanishes for Gaussian signals whose cumulants of order $> 2$ are identically zero.
+\end{itemize}
+MUSIC, which operates on 2nd-order statistics only, achieves 20--28\% detection across all signal types (limited by $K > M-1$), demonstrating its inability to exploit non-Gaussian structure.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{../results/figures/fig_signal_types.png}
+\caption{COP vs.~MUSIC detection rate by signal type ($K = 10$, $M = 8$, underdetermined). COP's advantage scales with the degree of non-Gaussianity. Speech signals achieve 98\% detection.}
+\label{fig:signal_types}
+\end{figure}
+
+\subsection{Experiment 7: SD-COP Extended Capacity}
 
 \textbf{Setup}: $K = 10$ to $24$ sources, SNR $= 15$~dB, $T = 512$.
 
@@ -462,7 +525,7 @@ Fig.~\ref{fig:extended_k} focuses on the super-underdetermined regime. SD-COP ma
 \label{fig:extended_k}
 \end{figure}
 
-\subsection{Experiment 6: Multi-Target Tracking with Birth/Death}
+\subsection{Experiment 8: Multi-Target Tracking with Birth/Death}
 
 \textbf{Setup}: Time-varying target scenario where targets appear (birth) and disappear (death) over 20 scans. $M = 8$, SNR $= 15$~dB, $T = 256$. Target count varies from 1 to 5 and back.
 
@@ -475,7 +538,7 @@ Fig.~\ref{fig:birth_death} demonstrates the COP-PHD filter's ability to detect n
 \label{fig:birth_death}
 \end{figure}
 
-\subsection{Experiment 7: T-COP Feedback Loop}
+\subsection{Experiment 9: T-COP Feedback Loop}
 
 \textbf{Setup}: 5 targets with the T-COP + PHD feedback loop. COP estimates feed the PHD tracker, which provides predicted DOAs back to T-COP for subspace refinement.
 
@@ -488,7 +551,7 @@ Fig.~\ref{fig:feedback} shows the RMSE convergence over scans. The tracker-aided
 \label{fig:feedback}
 \end{figure}
 
-\subsection{Experiment 8: Moving Target Tracking with Crossings}
+\subsection{Experiment 10: Moving Target Tracking with Crossings}
 
 \textbf{Setup}: 4 targets with constant-velocity trajectories that cross at scans $\sim$9 and $\sim$20, $M = 8$, SNR $= 15$~dB, $T = 512$, process noise $= 0.3^\circ$/scan.
 
@@ -542,7 +605,7 @@ This paper presented COP-RFS, a unified framework for underdetermined high-resol
 
 The key contributions and findings are:
 \begin{enumerate}
-\item The COP family resolves $K > M-1$ sources using only $M$ sensors, with COP supporting up to $\rho(M-1) = 14$ sources and SD-COP extending this to $K > 20$ for $M = 8$.
+\item The COP family resolves $K > M-1$ sources using only $M$ sensors. We experimentally confirm that COP resolves all $K = \rho(M-1) = 14$ sources at the theoretical capacity limit (mean error $0.54^\circ$), while SD-COP and T-COP extend operation to $K > \rho(M-1)$ through sequential deflation and temporal accumulation, respectively.
 \item T-COP's tracker-aided temporal accumulation creates a mutually beneficial feedback loop that improves both estimation and tracking accuracy, approaching the 4th-order CRLB with sufficient temporal averaging.
 \item The physics-based predict--identify--update pipeline in the GM-PHD filter achieves sub-degree tracking RMSE through target crossings, where conventional approaches fail due to measurement--track ambiguity.
 \item Exact CRLB derivations for both standard and higher-order cumulant-based DOA estimation confirm the theoretical advantage of the extended virtual aperture.
