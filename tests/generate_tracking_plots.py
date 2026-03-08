@@ -24,15 +24,27 @@ from iron_dome_sim.tracking import COPPHD, ConstantVelocity
 from iron_dome_sim.eval.metrics import rmse_doa, detection_rate
 
 plt.rcParams.update({
-    'font.size': 11,
-    'axes.labelsize': 13,
-    'axes.titlesize': 14,
-    'legend.fontsize': 9,
+    'font.family': 'serif',
+    'font.serif': ['Times New Roman', 'DejaVu Serif'],
+    'font.size': 16,
+    'axes.labelsize': 18,
+    'axes.titlesize': 20,
+    'legend.fontsize': 14,
+    'xtick.labelsize': 14,
+    'ytick.labelsize': 14,
+    'lines.linewidth': 2.5,
+    'lines.markersize': 9,
     'figure.dpi': 150,
-    'savefig.dpi': 300,
+    'savefig.dpi': 600,
     'savefig.bbox': 'tight',
+    'savefig.pad_inches': 0.1,
     'axes.grid': True,
     'grid.alpha': 0.3,
+    'axes.linewidth': 1.2,
+    'xtick.major.width': 1.0,
+    'ytick.major.width': 1.0,
+    'xtick.major.size': 5,
+    'ytick.major.size': 5,
 })
 
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -93,35 +105,36 @@ def plot_birth_death():
         k_est_history.append(len(est_doas))
 
     # Plot
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(10, 8), height_ratios=[3, 1])
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 12), height_ratios=[3, 1])
 
     # DOA tracks
     scans = np.arange(1, n_scans + 1)
     for i, td in enumerate(true_history):
         for d in td:
-            ax1.plot(i + 1, np.degrees(d), 'b+', markersize=8, markeredgewidth=1.5)
+            ax1.plot(i + 1, np.degrees(d), 'b+', markersize=14, markeredgewidth=2.5)
     for i, ed in enumerate(est_history):
         for d in ed:
-            ax1.plot(i + 1, np.degrees(d), 'ro', markersize=5, alpha=0.7)
+            ax1.plot(i + 1, np.degrees(d), 'ro', markersize=8, alpha=0.7,
+                    markeredgecolor='darkred', markeredgewidth=0.5)
 
     ax1.set_ylabel('DOA (degrees)')
-    ax1.set_title('COP-RFS Tracking: Target Birth & Death')
+    ax1.set_title('COP-RFS Tracking: Target Birth & Death', fontweight='bold')
     ax1.legend(['True DOA', 'Estimated DOA'],
                loc='upper right', framealpha=0.9)
 
     # Annotate phases
-    ax1.axvspan(0.5, 5.5, alpha=0.1, color='green')
-    ax1.axvspan(5.5, 15.5, alpha=0.1, color='blue')
-    ax1.axvspan(15.5, 20.5, alpha=0.1, color='orange')
-    ax1.axvspan(20.5, 25.5, alpha=0.1, color='red')
-    ax1.text(3, -55, 'K=3', fontsize=9, ha='center', color='green')
-    ax1.text(10.5, -55, 'K=6 (birth)', fontsize=9, ha='center', color='blue')
-    ax1.text(18, -55, 'K=4 (death)', fontsize=9, ha='center', color='orange')
-    ax1.text(23, -55, 'K=2', fontsize=9, ha='center', color='red')
+    ax1.axvspan(0.5, 5.5, alpha=0.08, color='green')
+    ax1.axvspan(5.5, 15.5, alpha=0.08, color='blue')
+    ax1.axvspan(15.5, 20.5, alpha=0.08, color='orange')
+    ax1.axvspan(20.5, 25.5, alpha=0.08, color='red')
+    ax1.text(3, -55, 'K=3', fontsize=15, ha='center', color='green', fontweight='bold')
+    ax1.text(10.5, -55, 'K=6 (birth)', fontsize=15, ha='center', color='blue', fontweight='bold')
+    ax1.text(18, -55, 'K=4 (death)', fontsize=15, ha='center', color='orange', fontweight='bold')
+    ax1.text(23, -55, 'K=2', fontsize=15, ha='center', color='red', fontweight='bold')
 
     # Target count
-    ax2.step(scans, k_true_history, 'b-', linewidth=2, where='mid', label='True K')
-    ax2.step(scans, k_est_history, 'r--', linewidth=2, where='mid', label='Estimated K')
+    ax2.step(scans, k_true_history, 'b-', linewidth=2.5, where='mid', label='True K')
+    ax2.step(scans, k_est_history, 'r--', linewidth=2.5, where='mid', label='Estimated K')
     ax2.set_xlabel('Scan')
     ax2.set_ylabel('Target Count')
     ax2.set_title('Estimated vs True Target Count')
@@ -183,13 +196,13 @@ def plot_tcop_phd_feedback():
         results[label] = {'pd': pds, 'rmse': rmses}
 
     # Plot
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 12))
     scans = np.arange(1, n_scans + 1)
 
     colors = {'COP + PHD': '#1f77b4', 'T-COP + PHD': '#d62728'}
     for label, data in results.items():
-        ax1.plot(scans, data['pd'], '-o', color=colors[label], label=label, markersize=4)
-        ax2.plot(scans, data['rmse'], '-o', color=colors[label], label=label, markersize=4)
+        ax1.plot(scans, data['pd'], '-o', color=colors[label], label=label, markersize=8, linewidth=2.5)
+        ax2.plot(scans, data['rmse'], '-o', color=colors[label], label=label, markersize=8, linewidth=2.5)
 
     ax1.set_xlabel('Scan')
     ax1.set_ylabel('Detection Rate (Pd)')
@@ -203,7 +216,7 @@ def plot_tcop_phd_feedback():
     ax2.legend(loc='upper right')
 
     fig.suptitle('T-COP + PHD Feedback Loop (M=8, K=6, SNR=5dB)',
-                 fontsize=14, fontweight='bold', y=1.02)
+                 fontsize=22, fontweight='bold', y=1.02)
     fig.tight_layout()
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig8_tcop_phd_feedback.png'))
     plt.close(fig)
@@ -435,7 +448,7 @@ def plot_moving_targets():
             source_best_cost[source] = n_scans_label
 
     # Plot
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 8), height_ratios=[3, 1])
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 12), height_ratios=[3, 1])
     scans = np.arange(1, n_scans + 1)
 
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
@@ -444,15 +457,13 @@ def plot_moving_targets():
     # Plot true tracks (solid lines)
     for k in range(K):
         true_doas_k = [np.degrees(true_tracks[i][k]) for i in range(n_scans)]
-        ax1.plot(scans, true_doas_k, '-', color=colors[k], linewidth=2.5,
+        ax1.plot(scans, true_doas_k, '-', color=colors[k], linewidth=3.0,
                  alpha=0.8)
 
     # Mark crossing points
-    # Crossing at scan ~9: T1&T2, T3&T4
-    # Crossing at scan ~20: T1&T4
     for cross_scan in [9, 20]:
         if cross_scan < n_scans:
-            ax1.axvline(x=cross_scan, color='gray', linestyle=':', alpha=0.4)
+            ax1.axvline(x=cross_scan, color='gray', linestyle=':', alpha=0.4, linewidth=1.5)
 
     # Plot identified track estimates with matching colors
     n_plotted = 0
@@ -469,49 +480,48 @@ def plot_moving_targets():
                 c = 'gray'
                 m = 'x'
                 n_unassigned += 1
-            ax1.plot(scan_i + 1, doa_deg, m, color=c, markersize=8,
-                    markeredgecolor='black', markeredgewidth=0.5, alpha=0.85)
+            ax1.plot(scan_i + 1, doa_deg, m, color=c, markersize=12,
+                    markeredgecolor='black', markeredgewidth=0.8, alpha=0.85)
 
     # Legend
     from matplotlib.lines import Line2D
     legend_elements = []
     for k in range(K):
         legend_elements.append(
-            Line2D([0], [0], color=colors[k], linewidth=2.5,
-                   marker=markers[k], markersize=8,
-                   markeredgecolor='black', markeredgewidth=0.5,
+            Line2D([0], [0], color=colors[k], linewidth=3.0,
+                   marker=markers[k], markersize=12,
+                   markeredgecolor='black', markeredgewidth=0.8,
                    label=f'Target {k+1} (true + est)'))
     if n_unassigned > 0:
         legend_elements.append(
             Line2D([0], [0], marker='x', color='gray', linewidth=0,
-                   markersize=7, label='Unassigned'))
-    ax1.legend(handles=legend_elements, loc='upper right', fontsize=9)
-    ax1.set_ylabel('DOA (degrees)', fontsize=13)
+                   markersize=10, label='Unassigned'))
+    ax1.legend(handles=legend_elements, loc='upper right')
+    ax1.set_ylabel('DOA (degrees)')
     ax1.set_title('COP-RFS Moving Target Tracking: Physics-Based Identification\n'
                   f'M={M}, K={K} targets, SNR={snr_db}dB, {n_scans} scans '
-                  '(predict → identify → update)',
-                  fontsize=13, fontweight='bold')
-    ax1.set_xlabel('Scan', fontsize=13)
+                  '(predict \u2192 identify \u2192 update)',
+                  fontweight='bold')
+    ax1.set_xlabel('Scan')
 
     # Annotate crossings
-    ax1.annotate('T1-T2\ncross', xy=(9, -33), fontsize=8, ha='center',
-                color='gray', alpha=0.7)
-    ax1.annotate('T1-T4\ncross', xy=(20, -10), fontsize=8, ha='center',
-                color='gray', alpha=0.7)
+    ax1.annotate('T1-T2\ncross', xy=(9, -33), fontsize=13, ha='center',
+                color='gray', alpha=0.7, fontweight='bold')
+    ax1.annotate('T1-T4\ncross', xy=(20, -10), fontsize=13, ha='center',
+                color='gray', alpha=0.7, fontweight='bold')
 
-    # RMSE subplot (skip warmup scan 0 for Y-axis scaling)
-    ax2.plot(scans, rmse_per_scan, 'b-o', markersize=4, linewidth=1.5)
-    ax2.set_xlabel('Scan', fontsize=13)
-    ax2.set_ylabel('RMSE (deg)', fontsize=13)
-    ax2.set_title('Tracking RMSE per Scan', fontsize=12)
-    # Y-axis: auto-scale from scan 2 onwards (skip warmup)
+    # RMSE subplot
+    ax2.plot(scans, rmse_per_scan, 'b-o', markersize=6, linewidth=2.0)
+    ax2.set_xlabel('Scan')
+    ax2.set_ylabel('RMSE (deg)')
+    ax2.set_title('Tracking RMSE per Scan')
     rmse_after_warmup = rmse_per_scan[2:] if len(rmse_per_scan) > 2 else rmse_per_scan
     y_max = max(max(rmse_after_warmup) * 1.5, 3.0)
     ax2.set_ylim([0, y_max])
     avg_rmse = np.mean(rmse_per_scan[3:])  # Skip warmup
-    ax2.axhline(y=avg_rmse, color='red', linestyle='--', alpha=0.7,
+    ax2.axhline(y=avg_rmse, color='red', linestyle='--', alpha=0.7, linewidth=2.0,
                 label=f'Avg RMSE (after warmup): {avg_rmse:.2f} deg')
-    ax2.legend(fontsize=9)
+    ax2.legend()
 
     fig.tight_layout()
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig9_moving_targets.png'))

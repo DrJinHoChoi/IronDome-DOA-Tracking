@@ -34,32 +34,40 @@ from iron_dome_sim.eval.crlb import crlb_rmse, crlb_stochastic, crlb_cop
 # Style configuration
 # ============================================================
 plt.rcParams.update({
-    'font.size': 11,
-    'axes.labelsize': 13,
-    'axes.titlesize': 14,
-    'legend.fontsize': 9,
-    'xtick.labelsize': 11,
-    'ytick.labelsize': 11,
-    'lines.linewidth': 2.0,
-    'lines.markersize': 7,
+    'font.family': 'serif',
+    'font.serif': ['Times New Roman', 'DejaVu Serif'],
+    'font.size': 16,
+    'axes.labelsize': 18,
+    'axes.titlesize': 20,
+    'legend.fontsize': 14,
+    'xtick.labelsize': 14,
+    'ytick.labelsize': 14,
+    'lines.linewidth': 2.5,
+    'lines.markersize': 9,
     'figure.dpi': 150,
-    'savefig.dpi': 300,
+    'savefig.dpi': 600,
     'savefig.bbox': 'tight',
+    'savefig.pad_inches': 0.1,
     'axes.grid': True,
     'grid.alpha': 0.3,
+    'axes.linewidth': 1.2,
+    'xtick.major.width': 1.0,
+    'ytick.major.width': 1.0,
+    'xtick.major.size': 5,
+    'ytick.major.size': 5,
 })
 
 # Algorithm styles: (color, marker, linestyle, label)
 # M=8 sensors -> conventional max K=M-1=7, COP max K=rho*(M-1)=14
 ALG_STYLES = {
-    'MUSIC':     ('#7f7f7f', 's', '--', 'MUSIC (max K=M-1=7)'),
-    'ESPRIT':    ('#bcbd22', 'D', '--', 'ESPRIT (max K=M-1=7)'),
-    'Capon':     ('#17becf', '^', '--', 'Capon (max K=M-1=7)'),
-    'COP':       ('#1f77b4', 'o', '-',  'COP-4th (max K=14) [Proposed]'),
-    'T-COP(1)':  ('#ff7f0e', 'v', ':',  'T-COP-4th, 1 scan'),
-    'T-COP(5)':  ('#d62728', 'P', '-',  'T-COP-4th, 5 scans [Proposed]'),
-    'T-COP(10)': ('#9467bd', '*', '-',  'T-COP-4th, 10 scans [Proposed]'),
-    'SD-COP':    ('#2ca02c', 'X', '-.',  'SD-COP-4th (max K>14) [Proposed]'),
+    'MUSIC':     ('#AAAAAA', 's', '--', 'MUSIC'),
+    'ESPRIT':    ('#AA8800', 'D', '-.', 'ESPRIT'),
+    'Capon':     ('#008888', '^', ':',  'Capon'),
+    'COP':       ('#0055CC', 'o', '-',  'COP-4th [Proposed]'),
+    'T-COP(1)':  ('#FF8800', 'v', ':',  'T-COP, 1 scan'),
+    'T-COP(5)':  ('#DD0000', 'P', '-',  'T-COP, 5 scans [Proposed]'),
+    'T-COP(10)': ('#8800CC', '*', '-',  'T-COP, 10 scans [Proposed]'),
+    'SD-COP':    ('#00AA00', 'X', '-.',  'SD-COP [Proposed]'),
 }
 
 OUTPUT_DIR = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
@@ -379,21 +387,21 @@ def plot_k_scaling(K_values, results):
          'RMSE vs Source Count', None, 'upper left',
          'fig2_k_scaling_rmse.png'),
     ]:
-        fig, ax = plt.subplots(figsize=(10, 6))
+        fig, ax = plt.subplots(figsize=(16, 9))
 
         # THREE shaded regions
         ax.axvspan(min(K_values) - 0.5, max_conv + 0.5,
-                   alpha=0.08, color='green', zorder=0)
+                   alpha=0.06, color='green', zorder=0)
         ax.axvspan(max_conv + 0.5, max_cop + 0.5,
-                   alpha=0.08, color='blue', zorder=0)
+                   alpha=0.06, color='blue', zorder=0)
         ax.axvspan(max_cop + 0.5, max(K_values) + 0.5,
-                   alpha=0.08, color='red', zorder=0)
+                   alpha=0.06, color='red', zorder=0)
 
         # Vertical boundary lines
         ax.axvline(x=max_conv, color='green', linestyle='--',
-                   alpha=0.6, linewidth=1.5)
+                   alpha=0.6, linewidth=2.0)
         ax.axvline(x=max_cop, color='blue', linestyle='--',
-                   alpha=0.6, linewidth=1.5)
+                   alpha=0.6, linewidth=2.0)
 
         # Region labels
         y_label = 1.0 if metric == 'pd' else max(
@@ -401,21 +409,21 @@ def plot_k_scaling(K_values, results):
 
         ax.text((min(K_values) + max_conv) / 2, y_label,
                 'Determined\n(K < M)',
-                fontsize=8, ha='center', va='top',
+                fontsize=14, ha='center', va='top',
                 color='green', fontstyle='italic',
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
                           alpha=0.8, edgecolor='green'))
 
         ax.text((max_conv + max_cop) / 2 + 0.5, y_label,
-                'Underdetermined\n(M-1 < K <= COP limit)',
-                fontsize=8, ha='center', va='top',
+                'Underdetermined\n(M-1 < K \u2264 COP limit)',
+                fontsize=14, ha='center', va='top',
                 color='blue', fontstyle='italic',
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
                           alpha=0.8, edgecolor='blue'))
 
         ax.text((max_cop + max(K_values)) / 2, y_label,
                 'Super-Underdetermined\n(K > COP limit)\nSD-COP only',
-                fontsize=8, ha='center', va='top',
+                fontsize=14, ha='center', va='top',
                 color='red', fontstyle='italic',
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
                           alpha=0.8, edgecolor='red'))
@@ -423,26 +431,27 @@ def plot_k_scaling(K_values, results):
         # Boundary annotations
         if metric == 'pd':
             ax.annotate(f'K=M-1={max_conv}\nConventional limit',
-                       xy=(max_conv, 0.15), fontsize=8, color='green',
+                       xy=(max_conv, 0.15), fontsize=13, color='green',
                        ha='center', va='bottom')
-            ax.annotate(f'K={max_cop}\nCOP limit\n(rho*(M-1))',
-                       xy=(max_cop, 0.15), fontsize=8, color='blue',
+            ax.annotate(f'K={max_cop}\nCOP limit\n(\u03c1(M-1))',
+                       xy=(max_cop, 0.15), fontsize=13, color='blue',
                        ha='center', va='bottom')
 
         # Plot data
         for name, data in results.items():
             s = ALG_STYLES[name]
             ax.plot(K_values, data[metric], color=s[0], marker=s[1],
-                    linestyle=s[2], label=s[3], linewidth=2, markersize=7)
+                    linestyle=s[2], label=s[3], linewidth=2.5, markersize=10)
 
         ax.set_xlabel('Number of Sources (K)')
         ax.set_ylabel(ylabel)
         ax.set_title(f'Underdetermined DOA: {title_suffix}\n'
-                     f'M={M} sensors, SNR=15dB, T=256 snapshots')
+                     f'M={M} sensors, SNR=15dB, T=256 snapshots',
+                     fontweight='bold')
         if ylim:
             ax.set_ylim(ylim)
-        ax.set_xticks(K_values[::2])  # Show every other tick for readability
-        ax.legend(loc=loc, framealpha=0.95, fontsize=8)
+        ax.set_xticks(K_values[::2])
+        ax.legend(loc=loc, framealpha=0.95)
         fig.tight_layout()
         fig.savefig(os.path.join(OUTPUT_DIR, fname))
         plt.close(fig)
@@ -452,7 +461,7 @@ def plot_k_scaling(K_values, results):
 def plot_snr(snr_values, results):
     """Fig 3 & 4: SNR Robustness (now includes SD-COP)."""
     # Fig 3: Pd vs SNR
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(16, 8))
     for name, data in results.items():
         s = ALG_STYLES[name]
         ax.plot(snr_values, data['pd'], color=s[0], marker=s[1],
@@ -461,15 +470,17 @@ def plot_snr(snr_values, results):
     ax.set_xlabel('SNR (dB)')
     ax.set_ylabel('Detection Rate (Pd)')
     ax.set_title('SNR Robustness: Detection Rate\n'
-                 'M=8 sensors, K=8 sources (K>M-1: Underdetermined), T=128')
+                 'M=8 sensors, K=8 sources (K>M-1: Underdetermined), T=128',
+                 fontweight='bold')
     ax.set_ylim([-0.05, 1.05])
-    ax.legend(loc='lower right', framealpha=0.9, fontsize=8)
+    ax.legend(loc='lower right', framealpha=0.9)
+    fig.tight_layout()
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig3_snr_pd.png'))
     plt.close(fig)
     print(f"  Saved fig3_snr_pd.png")
 
     # Fig 4: RMSE vs SNR with exact CRLB
-    fig, ax = plt.subplots(figsize=(8, 5))
+    fig, ax = plt.subplots(figsize=(16, 8))
     for name, data in results.items():
         s = ALG_STYLES[name]
         ax.plot(snr_values, data['rmse'], color=s[0], marker=s[1],
@@ -480,17 +491,19 @@ def plot_snr(snr_values, results):
     true_doas = np.radians(np.linspace(-50, 50, 8))  # K=8
     crlb_std = crlb_rmse(true_doas, 8, snr_fine, 128, rho=1)
     crlb_ho = crlb_rmse(true_doas, 8, snr_fine, 128, rho=2)
-    ax.plot(snr_values, crlb_std, 'k--', linewidth=1.5, alpha=0.7,
+    ax.plot(snr_values, crlb_std, 'k--', linewidth=2.0, alpha=0.7,
             label='CRLB (standard)')
-    ax.plot(snr_values, crlb_ho, 'k:', linewidth=1.5, alpha=0.7,
+    ax.plot(snr_values, crlb_ho, 'k:', linewidth=2.0, alpha=0.7,
             label='CRLB (4th-order)')
 
     ax.set_xlabel('SNR (dB)')
     ax.set_ylabel('RMSE (degrees)')
     ax.set_title('SNR Robustness: RMSE\n'
-                 'M=8 sensors, K=8 sources (K>M-1: Underdetermined), T=128')
+                 'M=8 sensors, K=8 sources (K>M-1: Underdetermined), T=128',
+                 fontweight='bold')
     ax.set_yscale('log')
-    ax.legend(loc='upper right', framealpha=0.9, fontsize=8)
+    ax.legend(loc='upper right', framealpha=0.9)
+    fig.tight_layout()
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig4_snr_rmse.png'))
     plt.close(fig)
     print(f"  Saved fig4_snr_rmse.png")
@@ -498,7 +511,7 @@ def plot_snr(snr_values, results):
 
 def plot_resolution(spacing_values, results):
     """Fig 5: Close-spacing resolution (now includes SD-COP)."""
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 14))
 
     for name, data in results.items():
         s = ALG_STYLES[name]
@@ -521,8 +534,8 @@ def plot_resolution(spacing_values, results):
     ax2.legend(loc='upper left', framealpha=0.9)
 
     fig.suptitle('Close-Spacing Resolution (M=8, K=3, SNR=15dB, T=512)',
-                 fontsize=14, fontweight='bold', y=1.02)
-    fig.tight_layout()
+                 fontsize=22, fontweight='bold', y=1.01)
+    fig.tight_layout(rect=[0, 0, 1, 0.97])
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig5_resolution.png'))
     plt.close(fig)
     print(f"  Saved fig5_resolution.png")
@@ -530,7 +543,7 @@ def plot_resolution(spacing_values, results):
 
 def plot_snapshots(T_values, results):
     """Fig 6: Snapshot efficiency (now includes SD-COP + CRLB)."""
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 14))
 
     for name, data in results.items():
         s = ALG_STYLES[name]
@@ -551,9 +564,9 @@ def plot_snapshots(T_values, results):
         mean_crb = np.mean(crb)
         crlb_ho_vals.append(np.degrees(np.sqrt(mean_crb)) if mean_crb < np.inf else np.inf)
 
-    ax2.semilogx(T_values, crlb_std_vals, 'k--', linewidth=1.5, alpha=0.7,
+    ax2.semilogx(T_values, crlb_std_vals, 'k--', linewidth=2.0, alpha=0.7,
                  label='CRLB (standard)', base=2)
-    ax2.semilogx(T_values, crlb_ho_vals, 'k:', linewidth=1.5, alpha=0.7,
+    ax2.semilogx(T_values, crlb_ho_vals, 'k:', linewidth=2.0, alpha=0.7,
                  label='CRLB (4th-order)', base=2)
 
     ax1.set_xlabel('Number of Snapshots (T)')
@@ -572,8 +585,8 @@ def plot_snapshots(T_values, results):
     ax2.legend(loc='upper right', framealpha=0.9)
 
     fig.suptitle('Snapshot Efficiency (M=8, K=6, SNR=10dB)',
-                 fontsize=14, fontweight='bold', y=1.02)
-    fig.tight_layout()
+                 fontsize=22, fontweight='bold', y=1.01)
+    fig.tight_layout(rect=[0, 0, 1, 0.97])
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig6_snapshots.png'))
     plt.close(fig)
     print(f"  Saved fig6_snapshots.png")
@@ -583,7 +596,7 @@ def plot_extended_k(K_values, results):
     """Fig 11: Extended K scaling - SD-COP beyond COP capacity limit."""
     max_cop = 14
 
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5.5))
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(16, 14))
 
     for ax, metric, ylabel, ylim in [
         (ax1, 'pd', 'Detection Rate (Pd)', [-0.05, 1.05]),
@@ -595,19 +608,19 @@ def plot_extended_k(K_values, results):
         ax.axvspan(max_cop + 0.5, max(K_values) + 0.5,
                    alpha=0.06, color='red', zorder=0)
         ax.axvline(x=max_cop, color='blue', linestyle='--',
-                   alpha=0.7, linewidth=2)
+                   alpha=0.7, linewidth=2.5)
 
         # Region labels
         if metric == 'pd':
             ax.text(12, 0.08, 'COP\nCapacity',
-                    fontsize=8, ha='center', color='blue', fontstyle='italic')
+                    fontsize=15, ha='center', color='blue', fontstyle='italic')
             ax.text(19, 0.08, 'Beyond COP Limit\n(SD-COP deflation)',
-                    fontsize=8, ha='center', color='red', fontstyle='italic')
+                    fontsize=15, ha='center', color='red', fontstyle='italic')
 
         for name, data in results.items():
             s = ALG_STYLES[name]
             ax.plot(K_values, data[metric], color=s[0], marker=s[1],
-                    linestyle=s[2], label=s[3], linewidth=2.5, markersize=8)
+                    linestyle=s[2], label=s[3], linewidth=2.5, markersize=10)
 
         ax.set_xlabel('Number of Sources (K)')
         ax.set_ylabel(ylabel)
@@ -615,12 +628,12 @@ def plot_extended_k(K_values, results):
             ax.set_ylim(ylim)
         ax.set_xticks(K_values[::2])
         ax.legend(loc='lower left' if metric == 'pd' else 'upper left',
-                  framealpha=0.95, fontsize=9)
+                  framealpha=0.95)
 
     fig.suptitle('Extended K Scaling: SD-COP Beyond COP Capacity Limit\n'
-                 'M=8 sensors, SNR=15dB, T=512 | COP limit = rho*(M-1) = 14',
-                 fontsize=14, fontweight='bold')
-    fig.tight_layout(rect=[0, 0, 1, 0.92])
+                 'M=8 sensors, SNR=15dB, T=512 | COP limit = \u03c1(M-1) = 14',
+                 fontsize=22, fontweight='bold')
+    fig.tight_layout(rect=[0, 0, 1, 0.94])
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig11_extended_k.png'))
     plt.close(fig)
     print(f"  Saved fig11_extended_k.png")

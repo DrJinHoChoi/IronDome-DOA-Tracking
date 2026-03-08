@@ -15,6 +15,7 @@
 \usepackage{booktabs}
 \usepackage{subfig}
 \usepackage{hyperref}
+\usepackage{placeins}
 
 % Custom commands
 \newcommand{\vect}[1]{\boldsymbol{#1}}
@@ -34,8 +35,7 @@
 \title{Underdetermined High-Resolution DOA Estimation\\and Multi-Target Tracking via COP-RFS}
 
 \author{Jin~Ho~Choi,~\IEEEmembership{Member,~IEEE}
-\thanks{J.~H.~Choi is with SmartEAR Company, Daegu, South Korea (e-mail: drjinhochoi@knu.ac.kr).}
-\thanks{This work was supported by the Agency for Defense Development (ADD) and the Defense Acquisition Program Administration (DAPA), Republic of Korea.}
+\thanks{J.~H.~Choi is with SmartEAR Company, Daegu, South Korea (e-mail: jinhochoi@smartear.co.kr).}
 \thanks{Manuscript received XXXX XX, 2026; revised XXXX XX, 2026.}}
 
 \markboth{IEEE TRANSACTIONS ON SIGNAL PROCESSING, VOL.~XX, NO.~XX, 2026}
@@ -57,9 +57,9 @@ Direction-of-arrival estimation, high-resolution, higher-order cumulants, underd
 \label{sec:intro}
 % ============================================================
 
-High-resolution direction-of-arrival (DOA) estimation is a fundamental problem in array signal processing with critical applications in radar, sonar, communications, and defense systems~\cite{barshalom2011tracking}. Classical high-resolution subspace methods such as MUSIC~\cite{schmidt1986music} and ESPRIT~\cite{roy1989esprit} achieve super-resolution beyond the Rayleigh limit but are restricted to the \emph{overdetermined} case where the number of sources $K$ does not exceed $M-1$, the number of sensors minus one. This constraint poses a significant challenge in modern defense scenarios where a sensor array may face more incoming threats than its aperture can nominally resolve.
+High-resolution direction-of-arrival (DOA) estimation is a fundamental problem in array signal processing with critical applications in radar, sonar, communications, and defense systems~\cite{barshalom2011tracking,neri2023radar}. Classical high-resolution subspace methods such as MUSIC~\cite{schmidt1986music}, ESPRIT~\cite{roy1989esprit}, and Capon's MVDR beamformer~\cite{capon1969mvdr} achieve super-resolution beyond the Rayleigh limit but are restricted to the \emph{overdetermined} case where the number of sources $K$ does not exceed $M-1$, the number of sensors minus one. This constraint poses a significant challenge in modern defense scenarios where a sensor array may face more incoming threats than its aperture can nominally resolve.
 
-Higher-order statistics (HOS) offer a principled approach to overcome this limitation. By exploiting the $2\rho$th-order cumulant structure of received signals, Choi and Yoo~\cite{choi2015underdetermined} proposed a high-resolution Subspace Constrained Optimization of the Pseudo-spectrum (COP) algorithm, which extends the effective array aperture through a \emph{virtual array} of size $M_v = \rho(M-1)+1$, thereby resolving up to $\rho(M-1)$ sources---far exceeding the classical $M-1$ limit. The COP algorithm achieves this by constructing a cumulant matrix whose structure is equivalent to a covariance matrix from a larger virtual uniform linear array (ULA), and then applying subspace-based spectral estimation in this extended domain. A key advantage of higher-order cumulants is the automatic suppression of Gaussian noise, since all cumulants of order greater than two vanish for Gaussian processes~\cite{mendel1991tutorial}.
+Higher-order statistics (HOS) offer a principled approach to overcome this limitation~\cite{porat1991doa,chevalier2006hos}. By exploiting the $2\rho$th-order cumulant structure of received signals, Choi and Yoo~\cite{choi2015underdetermined} proposed a high-resolution Subspace Constrained Optimization of the Pseudo-spectrum (COP) algorithm, which extends the effective array aperture through a \emph{virtual array} of size $M_v = \rho(M-1)+1$, thereby resolving up to $\rho(M-1)$ sources---far exceeding the classical $M-1$ limit. Alternative approaches to the underdetermined DOA problem include sparse array designs such as nested arrays~\cite{pal2010nested} and coprime arrays~\cite{vaidyanathan2011coprime,liu2018superresolution,zhou2018deformed}, as well as sparsity-based methods~\cite{malioutov2005l1svd}. However, these approaches either require specialized array geometries or assume signal sparsity, whereas COP operates on standard ULAs and exploits higher-order cumulant structure. A key advantage of higher-order cumulants is the automatic suppression of Gaussian noise, since all cumulants of order greater than two vanish for Gaussian processes~\cite{mendel1991tutorial}.
 
 While the COP algorithm addresses the static underdetermined DOA problem, practical defense applications require two additional capabilities: (i) \emph{temporal processing} for non-stationary targets whose DOAs change over time, and (ii) \emph{multi-target tracking} to maintain continuous track trajectories across successive radar scans. This paper presents the COP-RFS framework that unifies these capabilities through three novel contributions:
 
@@ -128,7 +128,7 @@ For $M = 8$ sensors and $\rho = 2$, this yields $M_v = 15$ virtual elements capa
 
 \subsection{Subspace COP (Base Algorithm)}
 
-The COP algorithm~\cite{choi2015underdetermined} performs DOA estimation by jointly optimizing over the signal and noise subspaces of the virtual cumulant matrix. Given the eigendecomposition
+The COP algorithm~\cite{choi2015underdetermined} performs DOA estimation by jointly optimizing over the signal and noise subspaces of the virtual cumulant matrix. The number of sources $K$ is assumed known or estimated via information-theoretic criteria such as MDL~\cite{wax1985mdl}. Given the eigendecomposition
 \begin{equation}
 \mat{C}_{2\rho} = \mat{U}_s \mat{\Lambda}_s \mat{U}_s^H + \mat{U}_n \mat{\Lambda}_n \mat{U}_n^H
 \end{equation}
@@ -142,25 +142,50 @@ which simultaneously maximizes the signal subspace projection (numerator) and mi
 \subsection{Temporal COP (T-COP)}
 \label{sec:tcop}
 
-For non-stationary scenarios where source DOAs change between radar scans, batch cumulant estimation becomes suboptimal. T-COP introduces temporal accumulation with exponential forgetting:
+For non-stationary scenarios where source DOAs change between radar scans, batch cumulant estimation becomes suboptimal~\cite{tufts1982estimation}. T-COP introduces temporal accumulation with exponential forgetting:
 \begin{equation}
 \hat{\mat{C}}_{2\rho}^{(n)} = \alpha\,\hat{\mat{C}}_{2\rho}^{(n-1)} + (1-\alpha)\,\mat{C}_{2\rho}^{(n)}
 \label{eq:tcop_accumulation}
 \end{equation}
-where $\hat{\mat{C}}_{2\rho}^{(n)}$ is the accumulated cumulant estimate at scan $n$, $\mat{C}_{2\rho}^{(n)}$ is the instantaneous cumulant from the current scan, and $\alpha \in (0, 1]$ is the forgetting factor. Smaller $\alpha$ responds faster to DOA changes but uses fewer effective snapshots; larger $\alpha$ provides better estimation accuracy for slowly moving targets.
+where $\hat{\mat{C}}_{2\rho}^{(n)}$ is the accumulated cumulant estimate at scan $n$, $\mat{C}_{2\rho}^{(n)}$ is the instantaneous cumulant from the current scan, and $\alpha \in (0, 1]$ is the forgetting factor. The effective number of snapshots after $n$ scans is
+\begin{equation}
+T_{\mathrm{eff}}^{(n)} = T \cdot \frac{1 - \alpha^n}{1 - \alpha}
+\label{eq:tcop_teff}
+\end{equation}
+which grows monotonically, improving estimation accuracy while adapting to time-varying scenarios. The T-COP pseudo-spectrum at scan $n$ is computed as
+\begin{equation}
+P_{\mathrm{T\text{-}COP}}^{(n)}(\theta) = \frac{\mat{a}_v^H(\theta)\,\hat{\mat{U}}_s^{(n)}\hat{\mat{U}}_s^{(n)H}\,\mat{a}_v(\theta)}{\mat{a}_v^H(\theta)\,\hat{\mat{U}}_n^{(n)}\hat{\mat{U}}_n^{(n)H}\,\mat{a}_v(\theta)}
+\label{eq:tcop_spectrum}
+\end{equation}
+where $\hat{\mat{U}}_s^{(n)}$ and $\hat{\mat{U}}_n^{(n)}$ are the signal and noise subspaces of $\hat{\mat{C}}_{2\rho}^{(n)}$.
 
 \textbf{Tracker-aided subspace refinement.}
-When a multi-target tracker provides predicted DOAs $\{\hat{\theta}_k^{\mathrm{pred}}\}$ from the previous scan, T-COP incorporates this prior information into the subspace estimation:
+When a multi-target tracker provides predicted DOAs $\{\hat{\theta}_k^{\mathrm{pred}}\}_{k=1}^{\hat{K}}$ from the previous scan, T-COP incorporates this prior information. The prior signal subspace is constructed from the predicted steering vectors:
 \begin{equation}
-\mat{U}_s^{\mathrm{refined}} = (1 - w_p)\,\mat{U}_s + w_p\,\mat{U}_s^{\mathrm{prior}}
+\mat{U}_s^{\mathrm{prior}} = \mathrm{orth}\!\left(\mat{A}_v(\hat{\vect{\theta}}^{\mathrm{pred}})\right) \in \C^{M_v \times \hat{K}}
+\label{eq:tcop_prior_subspace}
+\end{equation}
+and the refined subspace is obtained via linear interpolation:
+\begin{equation}
+\mat{U}_s^{\mathrm{refined}} = \mathrm{orth}\!\left((1 - w_p)\,\mat{U}_s + w_p\,\mat{U}_s^{\mathrm{prior}}\right)
 \label{eq:tcop_prior}
 \end{equation}
-where $\mat{U}_s^{\mathrm{prior}}$ is constructed from the predicted steering vectors and $w_p \in [0, 1]$ controls the prior weight. This creates a beneficial feedback loop: accurate tracking improves DOA estimation, which in turn improves tracking.
+where $w_p \in [0, 1]$ controls the prior weight. This creates a beneficial feedback loop: accurate tracking improves DOA estimation, which in turn improves tracking.
 
 \subsection{Sequential Deflation COP (SD-COP)}
 \label{sec:sdcop}
 
-When $K$ approaches the COP capacity $\rho(M-1)$, estimation accuracy degrades due to exhaustion of virtual degrees of freedom. SD-COP addresses this through iterative signal deflation in the cumulant domain, analogous to successive interference cancellation (SIC) in communications~\cite{andrews2005sic}.
+When $K$ approaches the COP capacity $\rho(M-1)$, estimation accuracy degrades due to exhaustion of virtual degrees of freedom. SD-COP addresses this through iterative signal deflation in the cumulant domain, analogous to successive interference cancellation (SIC) in communications~\cite{andrews2005sic}. At stage $s$, the deflated cumulant matrix is
+\begin{equation}
+\mat{C}_{\mathrm{res}}^{(s)} = \mat{C}_{2\rho} - \sum_{i=1}^{s-1}\sum_{k=1}^{K_i} \hat{\gamma}_{i,k}\,\mat{a}_v(\hat{\theta}_{i,k})\,\mat{a}_v^H(\hat{\theta}_{i,k})
+\label{eq:sdcop_deflation}
+\end{equation}
+where $\hat{\gamma}_{i,k}$ are the estimated cumulant powers obtained via least-squares fitting:
+\begin{equation}
+\hat{\vect{\gamma}}_s = \left(\mat{A}_v^H(\hat{\vect{\theta}}_s)\,\mat{A}_v(\hat{\vect{\theta}}_s)\right)^{-1} \mat{A}_v^H(\hat{\vect{\theta}}_s)\,\diag(\mat{C}_{\mathrm{res}}^{(s)})
+\label{eq:sdcop_power}
+\end{equation}
+and $\hat{\vect{\theta}}_s$ are the DOAs estimated in stage $s$. The total capacity of SD-COP after $S$ stages is $K_{\max}^{\mathrm{SD}} = S \cdot \rho(M-1)$.
 
 \begin{algorithm}[t]
 \caption{SD-COP: Sequential Deflation COP}
@@ -192,7 +217,7 @@ The deflation step (line~8) subtracts the contribution of estimated sources from
 
 \subsection{Random Finite Set Formulation}
 
-The multi-target DOA tracking problem is naturally modeled using random finite sets (RFS)~\cite{mahler2003phd,mahler2007statistical}. At scan $n$, the multi-target state is the RFS
+The multi-target DOA tracking problem is naturally modeled using random finite sets (RFS)~\cite{mahler2003phd,mahler2007statistical}. Extensions such as the cardinalized PHD (CPHD)~\cite{vo2013labeled} further improve cardinality estimation. At scan $n$, the multi-target state is the RFS
 \begin{equation}
 \mathcal{X}_n = \{\mat{x}_{n,1}, \ldots, \mat{x}_{n,K_n}\}
 \end{equation}
@@ -208,11 +233,38 @@ v_{n|n}(\mat{x}) = \sum_{j=1}^{J_{n|n}} w_{n|n}^{(j)}\,\mathcal{N}(\mat{x};\, \m
 \label{eq:phd_gm}
 \end{equation}
 
+\subsection{Constant-Velocity Motion Model}
+
+Each target state $\mat{x} = [\theta, \dot{\theta}]^T$ evolves according to the constant-velocity model~\cite{simon2006optimal}:
+\begin{equation}
+\mat{x}_{n+1} = \mat{F}\,\mat{x}_n + \mat{w}_n, \quad
+\mat{F} = \begin{bmatrix} 1 & \Delta t \\ 0 & 1 \end{bmatrix}
+\label{eq:motion_model}
+\end{equation}
+where $\Delta t$ is the inter-scan interval and $\mat{w}_n \sim \mathcal{N}(\mat{0}, \mat{Q})$ is the process noise with
+\begin{equation}
+\mat{Q} = \sigma_w^2 \begin{bmatrix} \Delta t^3/3 & \Delta t^2/2 \\ \Delta t^2/2 & \Delta t \end{bmatrix}.
+\label{eq:process_noise}
+\end{equation}
+The measurement model is $z_n = \mat{H}\,\mat{x}_n + v_n$ with $\mat{H} = [1,\, 0]$ and $v_n \sim \mathcal{N}(0, \sigma_\theta^2)$.
+
 \subsection{Physics-Based Predict--Identify--Update Pipeline}
 
 The standard GM-PHD filter processes measurements in a ``predict--update'' pipeline where every measurement updates every predicted component, creating $\mathcal{O}(J \cdot M)$ updated components per scan. In DOA tracking scenarios with crossing targets, this leads to track coalescence---distinct targets merge into a single track at crossing points.
 
-We propose a ``predict--identify--update'' pipeline that leverages the constant-velocity motion model (Newton's first law) to identify which measurement belongs to which track \emph{before} the Bayesian update:
+We propose a ``predict--identify--update'' pipeline that leverages the constant-velocity motion model~\eqref{eq:motion_model} to identify which measurement belongs to which track \emph{before} the Bayesian update. The key innovation is the \textbf{Hungarian assignment}~\cite{kuhn1955hungarian} on the cost matrix
+\begin{equation}
+C_{jm} = |\hat{\theta}_j^{\mathrm{pred}} - z_m|, \quad
+\hat{\theta}_j^{\mathrm{pred}} = [\mat{F}\,\mat{m}_j]_1
+\label{eq:hungarian_cost}
+\end{equation}
+where $[\cdot]_1$ denotes the first element (DOA). The matched track $j$ is then updated via the Kalman equations:
+\begin{align}
+\mat{K}_j &= \mat{P}_j^{-}\mat{H}^T(\mat{H}\mat{P}_j^{-}\mat{H}^T + \sigma_\theta^2)^{-1} \label{eq:kalman_gain}\\
+\mat{m}_j^{+} &= \mat{m}_j^{-} + \mat{K}_j(z_{m(j)} - \mat{H}\mat{m}_j^{-}) \label{eq:kalman_state}\\
+\mat{P}_j^{+} &= (\mat{I} - \mat{K}_j\mat{H})\mat{P}_j^{-} \label{eq:kalman_cov}
+\end{align}
+where each confirmed track uses \emph{only its matched measurement} $z_{m(j)}$, not all measurements as in the standard PHD update.
 
 \begin{algorithm}[t]
 \caption{Physics-Based GM-PHD: Predict--Identify--Update}
@@ -251,9 +303,19 @@ We propose a ``predict--identify--update'' pipeline that leverages the constant-
 
 \textbf{Key design choices:}
 \begin{itemize}
-\item \textbf{Velocity-gated merge} (Step~6): Two components are merged only if their velocity difference $|\dot{\theta}_i - \dot{\theta}_j| < \delta_v$. This prevents track coalescence at crossing points where targets have similar positions but different velocities.
-\item \textbf{Birth timing} (Step~4): Birth components are created \emph{before} the update step so they receive PHD update (with all measurements) in the same scan, enabling single-scan track confirmation.
-\item \textbf{Differentiated update} (Step~5): Confirmed tracks receive Kalman updates only with their matched measurement, while tentative/birth components receive standard PHD multi-measurement updates. This prevents spurious weight growth from unrelated measurements.
+\item \textbf{Velocity-gated merge} (Step~6): Two components $i, j$ are merged only if both the Mahalanobis position distance and velocity difference satisfy
+\begin{equation}
+(\mat{m}_i - \mat{m}_j)^T(\mat{P}_i)^{-1}(\mat{m}_i - \mat{m}_j) < \delta_m^2 \;\;\text{and}\;\; |\dot{\theta}_i - \dot{\theta}_j| < \delta_v.
+\label{eq:vel_gated_merge}
+\end{equation}
+This prevents track coalescence at crossing points where targets have similar positions but different velocities.
+\item \textbf{Birth from COP spectrum} (Step~4): Birth component weight is proportional to the COP spectrum height at the unassociated measurement:
+\begin{equation}
+w_b = w_0 \cdot \frac{P_{\mathrm{COP}}(z_b)}{\max_\theta P_{\mathrm{COP}}(\theta)}
+\label{eq:birth_weight}
+\end{equation}
+ensuring that strong spectral peaks receive higher initial weight for faster confirmation.
+\item \textbf{Differentiated update} (Step~5): Confirmed tracks receive Kalman updates via \eqref{eq:kalman_gain}--\eqref{eq:kalman_cov} only with their matched measurement, while tentative/birth components receive standard PHD multi-measurement updates. This prevents spurious weight growth from unrelated measurements.
 \end{itemize}
 
 
@@ -294,6 +356,26 @@ The COP CRLB is lower than the standard CRLB due to two factors:
 
 This section presents comprehensive simulation results evaluating the proposed COP-RFS framework. Unless otherwise noted, the default parameters are: ULA with $M = 8$ sensors, half-wavelength spacing $d = 0.5\lambda$, cumulant order $\rho = 2$ (fourth-order), and scan angle grid $\theta \in [-90^\circ, 90^\circ]$ with $0.1^\circ$ resolution.
 
+\subsection{Spatial Spectrum Comparison}
+
+Fig.~\ref{fig:spectrum} illustrates the fundamental advantage of COP over classical methods in an underdetermined scenario with $K = 10$ sources ($M = 8$ sensors). The top panel compares the spatial pseudo-spectra of COP-4th, MUSIC, and Capon. While MUSIC (limited to $K \leq M-1 = 7$) produces spurious peaks and Capon exhibits broad, overlapping lobes, the COP-4th order pseudo-spectrum~\eqref{eq:cop_spectrum} resolves all 10 sources with sharp, well-separated peaks. The bottom panel shows the COP spectrum with detected peak positions (red triangles), confirming that all $K = 10$ true DOAs are accurately identified. This is enabled by the virtual array extension from $M = 8$ to $M_v = 15$ elements.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{../results/figures/fig0_spatial_spectrum.png}
+\caption{Spatial spectrum comparison for $K = 10$ sources with $M = 8$ sensors (underdetermined). Top: COP-4th resolves all sources while MUSIC and Capon fail. Bottom: COP peak detection identifies all 10 DOAs.}
+\label{fig:spectrum}
+\end{figure}
+
+Fig.~\ref{fig:cop_family_spectrum} further demonstrates the COP family performance in a super-underdetermined scenario with $K = 16$ sources, exceeding the single-stage COP capacity of $\rho(M-1) = 14$. While standard COP detects only 9 sources and T-COP with 5-scan accumulation improves to 10, SD-COP's sequential deflation recovers 13 of 16 sources by progressively removing strong source contributions from the cumulant matrix~\eqref{eq:sdcop_deflation}.
+
+\begin{figure}[!htbp]
+\centering
+\includegraphics[width=\linewidth]{../results/figures/fig0b_cop_family_spectrum.png}
+\caption{COP family spectra for $K = 16$ sources (super-underdetermined, $K > \rho(M-1) = 14$). SD-COP detects 13/16 sources via sequential deflation, exceeding single-stage COP capacity.}
+\label{fig:cop_family_spectrum}
+\end{figure}
+
 \subsection{Experiment 1: Underdetermined Source Capacity (K Scaling)}
 
 \textbf{Setup}: $K = 3$ to $20$ sources uniformly spaced in $[-60^\circ, 60^\circ]$, SNR $= 15$~dB, $T = 256$ snapshots, 10 Monte Carlo trials.
@@ -305,7 +387,7 @@ Fig.~\ref{fig:k_scaling} shows detection rate (Pd) and RMSE versus source count 
 \item \textbf{Super-underdetermined} ($K > 14$): Even COP degrades, but SD-COP extends operation to $K = 20$ through sequential deflation, maintaining Pd $> 0.3$.
 \end{itemize}
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{../results/figures/fig1_k_scaling_pd.png}
 \caption{Detection rate vs. source count $K$ for $M = 8$ sensors. Vertical dashed lines at $K = 7$ (conventional limit) and $K = 14$ (COP limit). SD-COP extends operation beyond $K = 14$.}
@@ -324,7 +406,7 @@ Fig.~\ref{fig:snr} shows RMSE versus SNR with exact CRLB curves. Key observation
 \item The 4th-order CRLB is consistently lower than the standard CRLB, confirming the theoretical aperture extension benefit.
 \end{itemize}
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{../results/figures/fig4_snr_rmse.png}
 \caption{RMSE vs. SNR for $K = 8$ sources with $M = 8$ sensors (underdetermined). Dashed/dotted black lines show exact CRLB for standard and 4th-order estimation.}
@@ -337,12 +419,13 @@ Fig.~\ref{fig:snr} shows RMSE versus SNR with exact CRLB curves. Key observation
 
 Fig.~\ref{fig:resolution} demonstrates that COP-based methods achieve superior angular resolution compared to classical approaches. COP resolves sources down to $2^\circ$ separation, while MUSIC and Capon require $\geq 5^\circ$. T-COP with temporal accumulation further improves resolution to approximately $1^\circ$.
 
-\begin{figure}[t]
+\begin{figure*}[!htbp]
 \centering
-\includegraphics[width=\linewidth]{../results/figures/fig5_resolution.png}
+\includegraphics[width=0.75\textwidth]{../results/figures/fig5_resolution.png}
 \caption{Close-spacing resolution: detection rate and RMSE vs. angular separation for $K = 3$ sources ($M = 8$, SNR $= 15$~dB).}
 \label{fig:resolution}
-\end{figure}
+\end{figure*}
+\FloatBarrier
 
 \subsection{Experiment 4: Snapshot Efficiency}
 
@@ -350,12 +433,13 @@ Fig.~\ref{fig:resolution} demonstrates that COP-based methods achieve superior a
 
 Fig.~\ref{fig:snapshots} shows that COP requires approximately $T = 128$ snapshots to achieve stable estimation, while MUSIC requires $T \geq 256$ (and still fails due to the underdetermined configuration). T-COP achieves the best sample efficiency through temporal accumulation across scans. Both CRLB curves decrease with $\sqrt{T}$ as expected, with the 4th-order CRLB consistently below the standard CRLB.
 
-\begin{figure}[t]
+\begin{figure*}[!htbp]
 \centering
-\includegraphics[width=\linewidth]{../results/figures/fig6_snapshots.png}
+\includegraphics[width=0.75\textwidth]{../results/figures/fig6_snapshots.png}
 \caption{Snapshot efficiency: detection rate and RMSE vs. number of snapshots $T$ ($M = 8$, $K = 6$, SNR $= 10$~dB). CRLB curves shown as theoretical lower bounds.}
 \label{fig:snapshots}
-\end{figure}
+\end{figure*}
+\FloatBarrier
 
 \subsection{Experiment 5: SD-COP Extended Capacity}
 
@@ -363,7 +447,7 @@ Fig.~\ref{fig:snapshots} shows that COP requires approximately $T = 128$ snapsho
 
 Fig.~\ref{fig:extended_k} focuses on the super-underdetermined regime. SD-COP maintains Pd $> 0.4$ up to $K = 24$ through multi-stage deflation, while single-stage COP drops to near-zero performance beyond $K = 14$. The number of deflation stages increases from 1 to 2--3 as $K$ exceeds the single-stage capacity.
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{../results/figures/fig11_extended_k.png}
 \caption{Extended K scaling: SD-COP performance beyond the single-stage COP limit ($K = 14$) through sequential deflation ($M = 8$, SNR $= 15$~dB).}
@@ -376,10 +460,10 @@ Fig.~\ref{fig:extended_k} focuses on the super-underdetermined regime. SD-COP ma
 
 Fig.~\ref{fig:birth_death} demonstrates the COP-PHD filter's ability to detect new targets within a single scan and maintain accurate cardinality estimation. The physics-based birth mechanism, which creates new tracks only from unassociated COP measurements, prevents false track initiation from clutter while enabling immediate detection of genuine new targets.
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{../results/figures/fig7_birth_death.png}
-\caption{Multi-target tracking with time-varying target count: (a) DOA tracks, (b) cardinality estimation, (c) COP-PHD component evolution.}
+\caption{Multi-target tracking with time-varying target count: (a) DOA tracks, (b) cardinality estimation.}
 \label{fig:birth_death}
 \end{figure}
 
@@ -389,7 +473,7 @@ Fig.~\ref{fig:birth_death} demonstrates the COP-PHD filter's ability to detect n
 
 Fig.~\ref{fig:feedback} shows the RMSE convergence over scans. The tracker-aided T-COP (with feedback) converges faster and achieves lower steady-state RMSE than standalone COP, demonstrating the mutual benefit of the estimation--tracking feedback loop.
 
-\begin{figure}[t]
+\begin{figure}[!htbp]
 \centering
 \includegraphics[width=\linewidth]{../results/figures/fig8_tcop_phd_feedback.png}
 \caption{T-COP + PHD feedback loop: tracker-predicted DOAs refine cumulant subspace estimation, improving both estimation and tracking accuracy.}
@@ -407,13 +491,13 @@ Fig.~\ref{fig:moving_targets} presents the most challenging scenario. The physic
 \item \textbf{Inertia-based prediction}: Targets continue on their predicted trajectories even when measurements are ambiguous at crossings.
 \end{itemize}
 
-\begin{figure}[t]
+\begin{figure*}[!htbp]
 \centering
-\includegraphics[width=\linewidth]{../results/figures/fig9_moving_targets.png}
+\includegraphics[width=0.75\textwidth]{../results/figures/fig9_moving_targets.png}
 \caption{Moving target tracking with trajectory crossings: physics-based identification maintains accurate track assignment through crossing points (scans $\sim$9 and $\sim$20).}
 \label{fig:moving_targets}
-\end{figure}
-
+\end{figure*}
+\FloatBarrier
 
 \subsection{Computational Complexity}
 
@@ -456,7 +540,7 @@ The key contributions and findings are:
 \item Exact CRLB derivations for both standard and higher-order cumulant-based DOA estimation confirm the theoretical advantage of the extended virtual aperture.
 \end{enumerate}
 
-The proposed framework is particularly relevant to defense applications where multiple incoming threats must be simultaneously detected, localized, and tracked using compact sensor arrays with limited aperture. Future work includes extension to two-dimensional (azimuth--elevation) DOA estimation, non-uniform array geometries, and real-time implementation on embedded radar platforms.
+The proposed framework is particularly relevant to applications where multiple targets must be simultaneously detected, localized, and tracked using compact sensor arrays with limited aperture. Future work includes extension to two-dimensional (azimuth--elevation) DOA estimation, non-uniform array geometries, evaluation using the GOSPA metric~\cite{rahmathullah2017gospa} for comprehensive multi-target performance assessment, and real-time implementation on embedded radar platforms.
 
 
 % ============================================================
