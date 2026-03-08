@@ -1,5 +1,7 @@
 from .base import DOAEstimator
 from .subspace_cop import SubspaceCOP
+from .temporal_cop import TemporalCOP
+from .sequential_cop import SequentialDeflationCOP
 from .music import MUSIC
 from .esprit import ESPRIT
 from .capon import Capon
