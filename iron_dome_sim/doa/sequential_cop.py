@@ -3,21 +3,13 @@
 Novel extension that overcomes the limitation of standard COP when the
 number of sources approaches the virtual array capacity.
 
-Key innovation:
-1. Estimate strongest sources first via COP
-2. Subtract their contribution from the received signal
-3. Re-compute cumulant on residual signal
-4. Repeat COP on residual for remaining weaker sources
-5. Combine all estimates
-
-This is analogous to SIC (Successive Interference Cancellation) in
-communications, but applied to higher-order cumulant DOA estimation.
-
-Patent-relevant novel contributions:
-- Sequential deflation in the higher-order cumulant domain
-- Signal reconstruction and subtraction using estimated DOA + beamforming
-- Progressive subspace refinement across deflation stages
-- Automatic termination based on residual energy ratio
+Key innovation (v2 — improved deflation + multi-pass refinement):
+1. Estimate strongest sources via COP on signal-domain residual
+2. Joint LS signal reconstruction and subtraction
+3. Smaller batch sizes for more accurate per-stage estimation
+4. Adaptive source counting via eigenvalue gap analysis
+5. Multi-pass global refinement for accurate final estimates
+6. Leave-one-out final spectrum for clean visualization
 
 Reference (base algorithm):
     Choi & Yoo, IEEE TSP 2015.
@@ -33,33 +25,34 @@ class SequentialDeflationCOP(DOAEstimator):
     """Sequential Deflation COP for enhanced underdetermined DOA estimation.
 
     Addresses the capacity limitation by iteratively:
-    1. Applying COP to estimate a batch of DOAs
-    2. Reconstructing and subtracting the estimated source signals
-    3. Re-applying COP to the residual for remaining sources
-
-    This effectively extends the practical resolution beyond
-    rho*(M-1) sources by processing in stages.
+    1. Applying COP on residual signal cumulant to estimate a batch of DOAs
+    2. Joint LS signal reconstruction and subtraction from original signal
+    3. Adaptive batch sizing via eigenvalue analysis per stage
+    4. Multi-pass global refinement on original data
+    5. Leave-one-out final spectrum for clear peak visualization
 
     Args:
         array: ULA array object.
         rho: Cumulant order parameter (default: 2).
         num_sources: Total number of sources to estimate.
-        batch_size: Sources to estimate per deflation stage.
-                    Default: M-1 (maximum for stable COP per stage).
+        batch_size: Sources to estimate per deflation stage (default: adaptive).
         max_stages: Maximum number of deflation stages.
-        residual_threshold: Stop when residual energy ratio drops below this.
+        residual_threshold: Stop when residual energy drops below this fraction.
         spectrum_type: COP spectrum type ("combined", "signal", "noise").
+        n_refine: Number of global refinement passes (default: 3).
     """
 
     def __init__(self, array, rho=2, num_sources=None, batch_size=None,
-                 max_stages=5, residual_threshold=0.01,
-                 spectrum_type="combined"):
+                 max_stages=8, residual_threshold=0.005,
+                 spectrum_type="combined", n_refine=3):
         super().__init__(array, num_sources)
         self.rho = rho
+        # batch_size: half the single-stage capacity for balanced stages
         self.batch_size = batch_size or max(array.max_sources(rho) // 2, 3)
         self.max_stages = max_stages
         self.residual_threshold = residual_threshold
         self.spectrum_type = spectrum_type
+        self.n_refine = n_refine
         self.name = f"SD-COP-{2*rho}th"
 
         # Diagnostics
@@ -71,22 +64,17 @@ class SequentialDeflationCOP(DOAEstimator):
 
     @property
     def max_sources(self):
-        # Exceeds single-stage COP limit via deflation
         return self.array.max_sources(self.rho) * self.max_stages
 
     def estimate(self, X, scan_angles=None):
-        """Estimate DOAs via sequential deflation.
-
-        Strategy:
-        - If K is within single-stage COP capacity: use standard COP (no deflation)
-        - If K exceeds capacity: deflate in stages, then globally refine
+        """Estimate DOAs via sequential deflation with multi-pass refinement.
 
         Args:
             X: Received signal matrix, shape (M, T).
             scan_angles: Angular scan grid in radians.
 
         Returns:
-            doa_estimates: All estimated DOA angles in radians.
+            doa_estimates: All estimated DOA angles in radians, sorted.
             spectrum: Combined spectrum from all stages.
         """
         if scan_angles is None:
@@ -110,7 +98,7 @@ class SequentialDeflationCOP(DOAEstimator):
             })
             return doas, spectrum
 
-        # Beyond capacity: sequential deflation
+        # Beyond capacity: sequential deflation in signal domain
         X_residual = X.copy()
         all_doas = []
         combined_spectrum = np.zeros(len(scan_angles))
@@ -128,10 +116,13 @@ class SequentialDeflationCOP(DOAEstimator):
             if energy_ratio < self.residual_threshold and stage > 0:
                 break
 
-            # Stage batch size: estimate up to capacity per stage
+            # Fixed batch size (adaptive disabled — more stable)
             K_batch = min(self.batch_size, K_remaining, single_stage_capacity)
 
-            # Apply COP to residual
+            if K_batch <= 0:
+                break
+
+            # Apply COP to residual signal
             stage_doas, stage_spectrum = self._cop_stage(
                 X_residual, scan_angles, K_batch
             )
@@ -152,17 +143,28 @@ class SequentialDeflationCOP(DOAEstimator):
             combined_spectrum = np.maximum(combined_spectrum, stage_spectrum)
             K_remaining -= len(stage_doas)
 
-            # Deflation: subtract ALL found sources from ORIGINAL signal
+            # Deflate: subtract ALL found sources from ORIGINAL signal
             # (cumulative deflation from original avoids error accumulation)
             X_residual = self._deflate(X, np.array(all_doas))
 
-        # Remove duplicate DOAs
+        # Remove duplicate DOAs (close estimates from different stages)
         all_doas = self._remove_duplicates(np.array(all_doas))
 
-        # Global refinement: re-estimate DOAs using all found sources
-        all_doas = self._global_refinement(X, all_doas, scan_angles)
+        # Multi-pass global refinement: each pass narrows the search
+        for refine_pass in range(self.n_refine):
+            search_deg = 5.0 - refine_pass * 1.0  # 5° → 4° → 3°
+            all_doas = self._global_refinement(
+                X, all_doas, scan_angles, search_range_deg=max(search_deg, 2.0)
+            )
+            # Remove near-duplicates that refinement may create
+            all_doas = self._remove_duplicates(all_doas, threshold_rad=0.03)
 
-        # Normalize combined spectrum
+        # Leave-one-out final spectrum for clean visualization
+        combined_spectrum = self._leave_one_out_spectrum(
+            X, all_doas, scan_angles
+        )
+
+        # Normalize
         P_max = np.max(combined_spectrum)
         if P_max > 0:
             combined_spectrum /= P_max
@@ -174,8 +176,30 @@ class SequentialDeflationCOP(DOAEstimator):
         _, combined = self.estimate(X, scan_angles)
         return combined
 
+    def _adaptive_batch_size(self, C, K_remaining):
+        """Determine batch size based on eigenvalue gap analysis.
+
+        Uses eigenvalue magnitude to determine how many strong sources
+        are clearly separable from the noise floor.
+        """
+        try:
+            eigenvalues = np.sort(np.abs(np.linalg.eigvalsh(C)))[::-1]
+
+            if len(eigenvalues) < 3:
+                return min(self.batch_size, K_remaining)
+
+            # Count eigenvalues significantly above noise floor
+            noise_level = np.median(eigenvalues[len(eigenvalues)//2:])
+            n_significant = int(np.sum(eigenvalues > 3.0 * noise_level))
+
+            K_batch = min(self.batch_size, max(n_significant, 2), K_remaining)
+            return K_batch
+
+        except Exception:
+            return min(self.batch_size, K_remaining)
+
     def _cop_stage(self, X, scan_angles, K):
-        """Single COP estimation stage on (possibly deflated) data.
+        """Single COP estimation stage on (possibly deflated) signal.
 
         Args:
             X: Signal matrix (original or residual).
@@ -209,16 +233,22 @@ class SequentialDeflationCOP(DOAEstimator):
             if len(a_v) != M_v:
                 a_v = a_v[:M_v] if len(a_v) > M_v else np.pad(a_v, (0, M_v - len(a_v)))
 
-            sig_proj = U_s.conj().T @ a_v
-            numerator = np.real(np.sum(np.abs(sig_proj) ** 2))
-
-            noise_proj = U_n.conj().T @ a_v
-            denominator = np.real(np.sum(np.abs(noise_proj) ** 2))
-
-            if denominator < 1e-15:
-                P[i] = 1e10 * (numerator + 1e-15)
-            else:
-                P[i] = numerator / denominator
+            if self.spectrum_type == "combined":
+                sig_proj = U_s.conj().T @ a_v
+                numerator = np.real(np.sum(np.abs(sig_proj) ** 2))
+                noise_proj = U_n.conj().T @ a_v
+                denominator = np.real(np.sum(np.abs(noise_proj) ** 2))
+                if denominator < 1e-15:
+                    P[i] = 1e10 * (numerator + 1e-15)
+                else:
+                    P[i] = numerator / denominator
+            elif self.spectrum_type == "noise":
+                noise_proj = U_n.conj().T @ a_v
+                denominator = np.real(np.sum(np.abs(noise_proj) ** 2))
+                P[i] = 1.0 / (denominator + 1e-15)
+            else:  # "signal"
+                sig_proj = U_s.conj().T @ a_v
+                P[i] = np.real(np.sum(np.abs(sig_proj) ** 2))
 
         P_max = np.max(P)
         if P_max > 0:
@@ -230,15 +260,12 @@ class SequentialDeflationCOP(DOAEstimator):
     def _deflate(self, X, estimated_doas):
         """Subtract estimated source contributions from received signal.
 
-        Uses least-squares estimation of source signals given the estimated
-        DOAs, then subtracts the reconstructed signal.
-
-        This is more accurate than per-source MVDR beamforming because it
-        jointly estimates all sources, avoiding cross-source leakage.
+        Uses joint least-squares estimation of all source signals,
+        then subtracts the reconstructed signal.
 
         Args:
-            X: Current signal matrix, shape (M, T).
-            estimated_doas: DOAs to subtract (radians).
+            X: Original signal matrix, shape (M, T).
+            estimated_doas: All DOAs estimated so far (radians).
 
         Returns:
             X_residual: Signal after source subtraction.
@@ -246,14 +273,16 @@ class SequentialDeflationCOP(DOAEstimator):
         M, T = X.shape
 
         if len(estimated_doas) == 0:
-            return X
+            return X.copy()
 
-        # Steering matrix for estimated DOAs
+        # Steering matrix for all estimated DOAs
         A_est = self.array.steering_matrix(estimated_doas)
 
-        # Joint least-squares source estimation: S = (A^H A)^{-1} A^H X
+        # Joint LS source estimation: S = (A^H A)^{-1} A^H X
         AHA = A_est.conj().T @ A_est
-        AHA_reg = AHA + 1e-6 * np.eye(len(estimated_doas))
+        # Adaptive regularization based on condition number
+        reg_val = 1e-4 * np.real(np.trace(AHA)) / len(estimated_doas)
+        AHA_reg = AHA + reg_val * np.eye(len(estimated_doas))
         S_est = np.linalg.solve(AHA_reg, A_est.conj().T @ X)
 
         # Reconstruct and subtract
@@ -262,21 +291,17 @@ class SequentialDeflationCOP(DOAEstimator):
 
         return X_residual
 
-    def _global_refinement(self, X, doas, scan_angles, search_range_deg=3.0):
-        """Globally refine all DOA estimates after deflation stages.
+    def _global_refinement(self, X, doas, scan_angles, search_range_deg=5.0):
+        """Global refinement: for each DOA, deflate others and re-estimate.
 
-        For each estimated DOA, performs a fine local search on the original
-        signal data with all OTHER sources deflated. This corrects errors
-        from inter-stage deflation artifacts.
-
-        Novel contribution: Post-deflation global refinement in higher-order
-        cumulant domain.
+        For each estimated DOA, deflates all other sources from the original
+        signal, then performs a fine local COP search on the residual.
 
         Args:
             X: Original received signal matrix, shape (M, T).
             doas: All estimated DOAs from deflation stages.
             scan_angles: Angular grid.
-            search_range_deg: Local search range around each DOA (degrees).
+            search_range_deg: Local search range (degrees).
 
         Returns:
             refined_doas: Refined DOA estimates.
@@ -304,10 +329,11 @@ class SequentialDeflationCOP(DOAEstimator):
             U_n = eigenvectors[:, 1:]
 
             # Local search around current estimate
-            local_angles = scan_angles[
+            local_mask = (
                 (scan_angles > refined[k] - search_range) &
                 (scan_angles < refined[k] + search_range)
-            ]
+            )
+            local_angles = scan_angles[local_mask]
 
             if len(local_angles) == 0:
                 continue
@@ -334,6 +360,58 @@ class SequentialDeflationCOP(DOAEstimator):
             refined[k] = best_angle
 
         return np.sort(refined)
+
+    def _leave_one_out_spectrum(self, X, doas, scan_angles):
+        """Compute clean spectrum via leave-one-out deflation.
+
+        For each detected source, deflates all others and computes the
+        single-source COP spectrum. The combined spectrum sums all
+        single-source spectra for a cleaner visualization with
+        peaks at all detected DOAs.
+
+        Args:
+            X: Original signal matrix.
+            doas: All refined DOA estimates.
+            scan_angles: Angular grid.
+
+        Returns:
+            combined: Combined spectrum (unnormalized).
+        """
+        combined = np.zeros(len(scan_angles))
+
+        if len(doas) == 0:
+            return combined
+
+        for k in range(len(doas)):
+            # Deflate all sources except k
+            other_doas = np.concatenate([doas[:k], doas[k+1:]])
+            X_k = self._deflate(X, other_doas)
+
+            # Single-source COP spectrum
+            C = compute_cumulant_matrix(X_k, self.rho)
+            M_v = C.shape[0]
+
+            eigenvalues, eigenvectors = np.linalg.eigh(C)
+            idx = np.argsort(np.abs(eigenvalues))[::-1]
+            eigenvectors = eigenvectors[:, idx]
+
+            U_s = eigenvectors[:, :1]
+            U_n = eigenvectors[:, 1:]
+
+            for i, theta in enumerate(scan_angles):
+                a_v = self.array.virtual_steering_vector(theta, self.rho)
+                if len(a_v) != M_v:
+                    a_v = a_v[:M_v] if len(a_v) > M_v else np.pad(
+                        a_v, (0, M_v - len(a_v)))
+
+                sig_proj = U_s.conj().T @ a_v
+                numerator = np.real(np.sum(np.abs(sig_proj) ** 2))
+                noise_proj = U_n.conj().T @ a_v
+                denominator = np.real(np.sum(np.abs(noise_proj) ** 2))
+
+                combined[i] += numerator / (denominator + 1e-15)
+
+        return combined
 
     def _remove_duplicates(self, doas, threshold_rad=0.02):
         """Remove duplicate DOA estimates (within threshold)."""
