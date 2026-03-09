@@ -172,26 +172,28 @@ def assign_labels(label_hist, K, base_doas, rates):
 
 
 def plot_tracking(ax, true_all, label_hist, l2s, K, title):
-    """Plot DOA tracking panel."""
+    """Plot DOA tracking panel.
+
+    Color convention:
+      - True DOAs: per-target colored lines + GREEN circles
+      - Estimated DOAs: RED upward triangles with black edge
+    """
     scans = np.arange(1, N_SCANS + 1)
 
-    # True tracks: solid translucent lines
+    # True tracks: colored solid lines + green circles
     for k in range(K):
         doas = [np.degrees(true_all[i][k]) for i in range(N_SCANS)]
         ax.plot(scans, doas, '-', color=TARGET_COLORS[k % len(TARGET_COLORS)],
                 linewidth=3.0, alpha=0.4, zorder=2)
+        ax.plot(scans, doas, 'o', color='#00AA00', markersize=5,
+                markeredgecolor='darkgreen', markeredgewidth=0.4,
+                alpha=0.45, zorder=3)
 
-    # Estimated: markers
+    # Estimated: ALL red triangles
     for si, tlh in enumerate(label_hist):
         for label, (state, _, _) in tlh.items():
-            src = l2s.get(label, -1)
-            if 0 <= src < K:
-                c = TARGET_COLORS[src % len(TARGET_COLORS)]
-                m = TARGET_MARKERS[src % len(TARGET_MARKERS)]
-            else:
-                c, m = 'gray', 'x'
-            ax.plot(si + 1, np.degrees(state[0]), m, color=c, markersize=9,
-                    markeredgecolor='black', markeredgewidth=0.8,
+            ax.plot(si + 1, np.degrees(state[0]), '^', color='#DD0000',
+                    markersize=8, markeredgecolor='black', markeredgewidth=0.7,
                     alpha=0.85, zorder=5)
 
     ax.set_ylabel('DOA (degrees)')
@@ -248,9 +250,9 @@ def main():
                   f'(a) COP-RFS: {K} targets tracked (K > M$-$1={M-1})')
 
     leg_cop = [
-        Line2D([0], [0], color='gray', linewidth=3.5, alpha=0.5,
-               label='True track'),
-        Line2D([0], [0], marker='^', color='w', markerfacecolor='gray',
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='#00AA00',
+               markeredgecolor='darkgreen', markersize=9, label='True DOA'),
+        Line2D([0], [0], marker='^', color='w', markerfacecolor='#DD0000',
                markeredgecolor='black', markersize=9, label='Estimated DOA'),
     ]
     ax_cop.legend(handles=leg_cop, loc='upper right', fontsize=11)
@@ -261,9 +263,9 @@ def main():
                   f'(b) MUSIC-PHD: {K} targets (limit={M-1})')
 
     leg_mus = [
-        Line2D([0], [0], color='gray', linewidth=3.5, alpha=0.5,
-               label='True track'),
-        Line2D([0], [0], marker='^', color='w', markerfacecolor='gray',
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='#00AA00',
+               markeredgecolor='darkgreen', markersize=9, label='True DOA'),
+        Line2D([0], [0], marker='^', color='w', markerfacecolor='#DD0000',
                markeredgecolor='black', markersize=9, label='Estimated DOA'),
     ]
     ax_mus.legend(handles=leg_mus, loc='upper right', fontsize=11)

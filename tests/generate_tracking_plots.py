@@ -466,54 +466,40 @@ def plot_moving_targets():
     true_colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728']
     est_markers = ['o', 's', 'D', '^']
 
-    # TRUE TRACKS: SOLID THICK LINES with alpha (clearly "ground truth")
+    # TRUE TRACKS: COLORED SOLID LINES + GREEN circles
     for k in range(K):
         true_doas_k = [np.degrees(true_tracks[i][k]) for i in range(n_scans)]
         ax1.plot(scans, true_doas_k, '-', color=true_colors[k], linewidth=3.5,
                  alpha=0.5, zorder=2)
+        ax1.plot(scans, true_doas_k, 'o', color='#00AA00', markersize=7,
+                 markeredgecolor='darkgreen', markeredgewidth=0.6,
+                 alpha=0.5, zorder=3)
 
     # Mark crossing points
     for cross_scan in [9, 20]:
         if cross_scan < n_scans:
             ax1.axvline(x=cross_scan, color='gray', linestyle=':', alpha=0.4, linewidth=1.5)
 
-    # ESTIMATED DOAs: MARKERS with BLACK EDGE (clearly "estimated")
+    # ESTIMATED DOAs: ALL RED TRIANGLES with BLACK EDGE
     n_plotted = 0
     n_unassigned = 0
     for scan_i, tlh in enumerate(track_label_history):
         for label, (state, cov, w) in tlh.items():
             doa_deg = np.degrees(state[0])
-            source_id = label_to_source.get(label, -1)
-            if source_id >= 0 and source_id < K:
-                c = true_colors[source_id]
-                m = est_markers[source_id]
-                n_plotted += 1
-            else:
-                c = 'gray'
-                m = 'x'
-                n_unassigned += 1
-            ax1.plot(scan_i + 1, doa_deg, m, color=c, markersize=12,
-                    markeredgecolor='black', markeredgewidth=1.2, alpha=0.9, zorder=5)
+            n_plotted += 1
+            ax1.plot(scan_i + 1, doa_deg, '^', color='#DD0000', markersize=10,
+                    markeredgecolor='black', markeredgewidth=0.8, alpha=0.85, zorder=5)
 
-    # Legend: CLEARLY separate True (lines) from Estimated (markers)
+    # Legend: CLEARLY separate True (green circles) from Estimated (red triangles)
     from matplotlib.lines import Line2D
     legend_elements = [
-        Line2D([0], [0], color='gray', linewidth=4.0, alpha=0.5,
-               linestyle='-', label='True Track (line)'),
-        Line2D([0], [0], marker='o', color='w', markerfacecolor='gray',
-               markeredgecolor='black', markersize=11, markeredgewidth=1.2,
-               label='Estimated DOA (marker)'),
+        Line2D([0], [0], marker='o', color='w', markerfacecolor='#00AA00',
+               markeredgecolor='darkgreen', markersize=11, markeredgewidth=1.0,
+               label='True DOA'),
+        Line2D([0], [0], marker='^', color='w', markerfacecolor='#DD0000',
+               markeredgecolor='black', markersize=11, markeredgewidth=0.8,
+               label='Estimated DOA'),
     ]
-    for k in range(K):
-        legend_elements.append(
-            Line2D([0], [0], color=true_colors[k], linewidth=3.0,
-                   marker=est_markers[k], markersize=10,
-                   markeredgecolor='black', markeredgewidth=0.8,
-                   label=f'Target {k+1}'))
-    if n_unassigned > 0:
-        legend_elements.append(
-            Line2D([0], [0], marker='x', color='gray', linewidth=0,
-                   markersize=10, label='Unassigned'))
     ax1.legend(handles=legend_elements, loc='upper right', fontsize=12)
     ax1.set_ylabel('DOA (degrees)')
     ax1.set_title('COP-RFS Moving Target Tracking: Physics-Based Identification\n'

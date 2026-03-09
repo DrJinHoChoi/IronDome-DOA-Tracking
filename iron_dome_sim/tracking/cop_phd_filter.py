@@ -84,7 +84,8 @@ class COPPHD:
                  birth_weight=0.1, prune_threshold=1e-5,
                  merge_threshold=4.0, max_components=100,
                  birth_pos_std_deg=2.0, birth_vel_std_deg=5.0,
-                 association_gate_deg=8.0):
+                 association_gate_deg=8.0,
+                 use_physics=True):
 
         self.model = motion_model
         self.cop_estimator = cop_estimator
@@ -106,6 +107,11 @@ class COPPHD:
 
         # Association gate
         self.association_gate = np.radians(association_gate_deg)
+
+        # Physics-based identification flag
+        # True: predict-identify-update (proposed), Hungarian + velocity-gated
+        # False: standard predict-update (baseline), all measurements update all components
+        self.use_physics = use_physics
 
         # GM-PHD state: list of GaussianComponents
         self.gm_components = []
@@ -149,24 +155,33 @@ class COPPHD:
         # Step 2: Predict existing tracks (physics/inertia)
         predicted = self._predict_existing()
 
-        # Step 3: Associate measurements to predicted tracks
-        # Uses predicted DOAs (from inertia) for identification
-        associations, unassoc_meas_idx = self._associate_measurements(
-            predicted, doa_measurements)
+        if self.use_physics:
+            # === PROPOSED: Predict-Identify-Update ===
+            # Step 3: Associate measurements to predicted tracks
+            associations, unassoc_meas_idx = self._associate_measurements(
+                predicted, doa_measurements)
 
-        # Step 4: Birth from unassociated measurements
-        # Created BEFORE update so they receive PHD update in same scan
-        unassoc_doas = [doa_measurements[j] for j in unassoc_meas_idx]
-        birth_components = self._cop_spectrum_birth(
-            spectrum, scan_angles, unassoc_doas)
+            # Step 4: Birth from unassociated measurements
+            unassoc_doas = [doa_measurements[j] for j in unassoc_meas_idx]
+            birth_components = self._cop_spectrum_birth(
+                spectrum, scan_angles, unassoc_doas)
 
-        # Step 5: Update — confirmed predicted tracks get matched-only update,
-        # birth/tentative components get standard PHD update (same scan)
-        all_components = predicted + birth_components
-        n_predicted = len(predicted)  # Births start at index n_predicted
-        updated = self._update_associated(
-            all_components, doa_measurements, associations,
-            n_predicted=n_predicted)
+            # Step 5: Update — confirmed tracks get matched-only update,
+            # birth/tentative get standard PHD update
+            all_components = predicted + birth_components
+            n_predicted = len(predicted)
+            updated = self._update_associated(
+                all_components, doa_measurements, associations,
+                n_predicted=n_predicted)
+        else:
+            # === BASELINE: Standard Predict-Update (no identification) ===
+            # All measurements birth, all components get standard PHD update
+            birth_components = self._cop_spectrum_birth(
+                spectrum, scan_angles, list(doa_measurements))
+            all_components = predicted + birth_components
+            associations = []  # No physics-based association
+            updated = self._update_standard_phd(
+                all_components, doa_measurements)
 
         # Step 6: Prune and merge (velocity-gated)
         self.gm_components = self._prune_and_merge(updated)
@@ -415,6 +430,65 @@ class COPPHD:
 
         return updated
 
+    def _update_standard_phd(self, all_components, doa_measurements):
+        """Standard GM-PHD update: every measurement updates every component.
+
+        This is the BASELINE (no physics-based identification).
+        Each measurement creates an updated component from EVERY predicted
+        component, leading to O(J*M) components per scan.
+
+        Args:
+            all_components: All predicted + birth components.
+            doa_measurements: COP DOA estimates.
+
+        Returns:
+            List of updated GaussianComponents.
+        """
+        updated = []
+
+        for comp in all_components:
+            # Missed detection component
+            updated.append(GaussianComponent(
+                (1 - self.p_d) * comp.weight,
+                comp.mean.copy(), comp.covariance.copy(), comp.label))
+
+            # Detection update with ALL measurements
+            for doa in doa_measurements:
+                z = np.array([doa, 0.0])
+
+                H = self.model.H(comp.mean)
+                z_pred = H @ comp.mean
+                innov = z - z_pred
+                innov[0] = (innov[0] + np.pi) % (2 * np.pi) - np.pi
+
+                R = self.model.R()
+                S = H @ comp.covariance @ H.T + R
+
+                try:
+                    S_inv = np.linalg.inv(S)
+                except np.linalg.LinAlgError:
+                    S_inv = np.linalg.inv(S + 1e-6 * np.eye(S.shape[0]))
+
+                K = comp.covariance @ H.T @ S_inv
+                m_upd = comp.mean + K @ innov
+                I_KH = np.eye(len(comp.mean)) - K @ H
+                P_upd = I_KH @ comp.covariance @ I_KH.T + K @ R @ K.T
+
+                det_S = max(np.linalg.det(S), 1e-30)
+                q = np.exp(-0.5 * innov @ S_inv @ innov) / \
+                    np.sqrt((2 * np.pi) ** len(z) * det_S)
+
+                w_upd = self.p_d * comp.weight * q
+                normalizer = self.clutter_intensity + w_upd
+                if normalizer > 0:
+                    w_upd /= normalizer
+
+                if w_upd > self.prune_threshold:
+                    updated.append(GaussianComponent(
+                        w_upd, m_upd, P_upd, comp.label))
+
+        return updated
+
     def _cop_spectrum_birth(self, spectrum, scan_angles, unassoc_doas):
         """Generate birth components from unassociated COP measurements.
 
@@ -496,14 +570,15 @@ class COPPHD:
                 if used[j]:
                     continue
 
-                # Velocity-gated merge protection:
+                # Velocity-gated merge protection (proposed, physics-based):
                 # Targets crossing have similar positions but DIFFERENT
                 # velocities — merging them destroys one track.
-                dim = len(pruned[i].mean)
-                if dim >= 4 and pruned[i].weight >= 0.3 and pruned[j].weight >= 0.3:
-                    vel_diff = abs(pruned[i].mean[2] - pruned[j].mean[2])
-                    if vel_diff > np.radians(2.0):
-                        continue
+                if self.use_physics:
+                    dim = len(pruned[i].mean)
+                    if dim >= 4 and pruned[i].weight >= 0.3 and pruned[j].weight >= 0.3:
+                        vel_diff = abs(pruned[i].mean[2] - pruned[j].mean[2])
+                        if vel_diff > np.radians(2.0):
+                            continue
 
                 # Mahalanobis distance
                 diff = pruned[j].mean - pruned[i].mean

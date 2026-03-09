@@ -26,8 +26,9 @@ Y.~Bar-Shalom, P.~K. Willett, and X.~Tian, \emph{Tracking and Data Fusion: A
   Handbook of Algorithms}.\hskip 1em plus 0.5em minus 0.4em\relax YBS
   Publishing, 2011.
 
-\bibitem{neri2023radar}
-F.~Neri, ``Introduction to electronic defense systems,'' 2018.
+\bibitem{neri2018defense}
+F.~Neri, \emph{Introduction to Electronic Defense Systems}, 3rd~ed.\hskip 1em
+  plus 0.5em minus 0.4em\relax Artech House, 2018.
 
 \bibitem{schmidt1986music}
 R.~O. Schmidt, ``Multiple emitter location and signal parameter estimation,''
@@ -84,19 +85,39 @@ D.~Malioutov, M.~\c{C}etin, and A.~S. Willsky, ``A sparse signal reconstruction
   Signal Processing}, vol.~53, no.~8, pp. 3010--3022, Aug. 2005.
 
 \bibitem{mendel1991tutorial}
-J.~M. Mendel, \emph{Tutorial on Higher-Order Statistics (Spectra) in Signal
-  Processing and System Theory}.\hskip 1em plus 0.5em minus 0.4em\relax Proc.
-  IEEE, 1991, vol.~79, no.~3.
-
-\bibitem{andrews2005sic}
-J.~G. Andrews, ``Interference cancellation for cellular systems: A contemporary
-  overview,'' \emph{IEEE Wireless Commun.}, vol.~12, no.~2, pp. 19--29, Apr.
-  2005.
+J.~M. Mendel, ``Tutorial on higher-order statistics (spectra) in signal
+  processing and system theory: Theoretical results and some applications,''
+  \emph{Proc. IEEE}, vol.~79, no.~3, pp. 278--305, Mar. 1991.
 
 \bibitem{vo2006gmphd}
 B.-N. Vo and W.-K. Ma, ``The {Gaussian Mixture Probability Hypothesis Density}
   filter,'' \emph{IEEE Trans. Signal Processing}, vol.~54, no.~11, pp.
   4091--4104, Nov. 2006.
+
+\bibitem{panta2009gmphd}
+K.~Panta, B.-N. Vo, and S.~Singh, ``Novel data association schemes for the
+  probability hypothesis density filter,'' \emph{IEEE Trans. Aerosp. Electron.
+  Syst.}, vol.~43, no.~2, pp. 556--570, Apr. 2007.
+
+\bibitem{clark2006gmphd_track}
+D.~E. Clark and B.-N. Vo, ``Convergence analysis of the {Gaussian} mixture
+  {PHD} filter,'' in \emph{IEEE Trans. Signal Processing}, vol.~55, no.~4, Apr.
+  2007, pp. 1204--1212.
+
+\bibitem{georgescu2012phd_doa}
+R.~Georgescu and P.~Willett, ``The {GM-PHD} filter multiple target tracker
+  applied to phased array radar,'' \emph{IEEE Trans. Aerosp. Electron. Syst.},
+  vol.~48, no.~2, pp. 1543--1557, Apr. 2012.
+
+\bibitem{vo2014lmb}
+B.-T. Vo and B.-N. Vo, ``Labeled random finite sets and the {Bayes}
+  multi-target tracking filter,'' \emph{IEEE Trans. Signal Processing},
+  vol.~62, no.~24, pp. 6554--6567, Dec. 2014.
+
+\bibitem{andrews2005sic}
+J.~G. Andrews, ``Interference cancellation for cellular systems: A contemporary
+  overview,'' \emph{IEEE Wireless Commun.}, vol.~12, no.~2, pp. 19--29, Apr.
+  2005.
 
 \bibitem{kuhn1955hungarian}
 H.~W. Kuhn, ``The {Hungarian} method for the assignment problem,'' \emph{Naval
@@ -136,7 +157,7 @@ R.~P.~S. Mahler, ``Multitarget {Bayes} filtering via first-order multitarget
 ------, \emph{Statistical Multisource-Multitarget Information Fusion}.\hskip
   1em plus 0.5em minus 0.4em\relax Artech House, 2007.
 
-\bibitem{vo2013labeled}
+\bibitem{vo2007cphd}
 B.-T. Vo, B.-N. Vo, and A.~Cantoni, ``Analytic implementations of the
   cardinalized probability hypothesis density filter,'' \emph{IEEE Trans.
   Signal Processing}, vol.~55, no.~7, pp. 3553--3567, Jul. 2007.
@@ -144,10 +165,5 @@ B.-T. Vo, B.-N. Vo, and A.~Cantoni, ``Analytic implementations of the
 \bibitem{simon2006optimal}
 D.~Simon, \emph{Optimal State Estimation: {Kalman}, {H-infinity}, and Nonlinear
   Approaches}.\hskip 1em plus 0.5em minus 0.4em\relax Wiley, 2006.
-
-\bibitem{rahmathullah2017gospa}
-A.~S. Rahmathullah, A.~F. Garc\'{i}a-Fern\'{a}ndez, and L.~Svensson,
-  ``Generalized optimal sub-pattern assignment metric,'' \emph{arXiv preprint
-  arXiv:1601.05585v2}, 2017.
 
 \end{thebibliography}
