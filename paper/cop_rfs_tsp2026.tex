@@ -33,7 +33,7 @@
 \title{Underdetermined High-Resolution DOA Estimation\\and Multi-Target Tracking via COP-RFS}
 
 \author{Jin~Ho~Choi,~\IEEEmembership{Member,~IEEE}
-\thanks{J.~H.~Choi is with SmartEAR Company, Daegu, South Korea (e-mail: jinhochoi@smartear.co.kr).}
+\thanks{J.~H.~Choi is with SmartEAR AI, Daegu, South Korea (e-mail: jinhochoi@smartear.co.kr).}
 \thanks{Manuscript received XXXX XX, 2026; revised XXXX XX, 2026.}}
 
 \markboth{IEEE TRANSACTIONS ON SIGNAL PROCESSING, VOL.~XX, NO.~XX, 2026}
@@ -42,7 +42,7 @@
 \maketitle
 
 \begin{abstract}
-This paper presents COP-RFS, a closed-loop framework that tightly couples underdetermined direction-of-arrival (DOA) estimation with random-finite-set (RFS) multi-target tracking. The estimation front-end is the higher-order cumulant-based Constrained Optimization of the Pseudo-spectrum (COP), whose virtual array of size $M_v=\rho(M{-}1){+}1$ resolves up to $\rho(M{-}1)$ sources from only $M$ sensors. Two novel extensions---Temporal COP (T-COP) with tracker-aided cumulant accumulation, and Sequential Deflation COP (SD-COP) with signal-domain iterative deflation---further improve estimation under non-stationarity and in the super-underdetermined regime. The tracking back-end is a physics-based Gaussian-mixture probability hypothesis density (GM-PHD) filter that introduces a \emph{predict--identify--update} pipeline: inertia-driven predictions are matched to COP measurements via the Hungarian algorithm \emph{before} the Bayesian update, with velocity-gated merging to prevent track coalescence at crossing points. The key contribution is the \emph{bidirectional synergy} between these two stages: COP feeds high-resolution, underdetermined DOA measurements to the PHD filter, while the tracker feeds predicted DOAs back to T-COP for subspace refinement---a closed loop that neither component can achieve alone. End-to-end experiments confirm that COP-RFS resolves all $K{=}14{=}\rho(M{-}1)$ sources at the theoretical capacity limit, maintains sub-degree tracking RMSE through target crossings, and substantially outperforms the conventional MUSIC--PHD pipeline in both determined and underdetermined scenarios.
+This paper presents COP-RFS, a closed-loop framework that tightly couples underdetermined direction-of-arrival (DOA) estimation with random-finite-set (RFS) multi-target tracking. Extending our earlier work on the Constrained Optimization of the Pseudo-spectrum (COP) algorithm~\cite{choi2015underdetermined}, the estimation front-end exploits higher-order cumulants to construct a virtual array of size $M_v=\rho(M{-}1){+}1$ that resolves up to $\rho(M{-}1)$ sources from only $M$ sensors. Two novel extensions---Temporal COP (T-COP) with tracker-aided cumulant accumulation, and Sequential Deflation COP (SD-COP) with signal-domain iterative deflation---further improve estimation under non-stationarity and in the super-underdetermined regime. The tracking back-end is a physics-based Gaussian-mixture probability hypothesis density (GM-PHD) filter that introduces a \emph{predict--identify--update} pipeline: inertia-driven predictions are matched to COP measurements via the Hungarian algorithm \emph{before} the Bayesian update, with velocity-gated merging to prevent track coalescence at crossing points. The key contribution is the \emph{bidirectional synergy} between these two stages: COP feeds high-resolution, underdetermined DOA measurements to the PHD filter, while the tracker feeds predicted DOAs back to T-COP for subspace refinement---a closed loop that neither component can achieve alone. End-to-end experiments confirm that COP-RFS resolves all $K{=}14{=}\rho(M{-}1)$ sources at the theoretical capacity limit, maintains sub-degree tracking RMSE through target crossings, and substantially outperforms the conventional MUSIC--PHD pipeline in both determined and underdetermined scenarios.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -60,7 +60,7 @@ While the COP algorithm addresses the static underdetermined DOA problem, practi
 
 The GM-PHD filter~\cite{vo2006gmphd} provides an efficient approximation for RFS-based multi-target tracking, but the standard predict--update formulation does not maintain explicit track identity. Several extensions have addressed this limitation: Panta et~al.~\cite{panta2009gmphd} introduced data association schemes for the GM-PHD filter, Clark and Vo~\cite{clark2006gmphd_track} analyzed convergence properties, and Georgescu and Willett~\cite{georgescu2012phd_doa} applied the GM-PHD to phased array DOA tracking. More fundamentally, the labeled multi-Bernoulli (LMB) and $\delta$-GLMB filters~\cite{vo2014lmb} solve the track identity problem within the RFS-theoretic framework itself. However, none of these works exploit higher-order cumulant structure for the DOA estimation front-end, nor do they establish a closed-loop feedback between tracker predictions and the estimation subspace.
 
-This paper introduces the COP-RFS framework that \emph{closes this loop} via bidirectional coupling between a higher-order cumulant front-end and an RFS-based tracking back-end. The resulting synergy---neither achievable by the DOA estimator nor the tracker alone---constitutes the principal novelty:
+This paper substantially extends the COP algorithm introduced in~\cite{choi2015underdetermined}---which addressed only the static DOA estimation problem---into a complete estimation-and-tracking framework called COP-RFS. The key advance is a \emph{closed feedback loop} between the higher-order cumulant front-end and an RFS-based tracking back-end, a synergy neither achievable by the DOA estimator nor the tracker alone. The principal contributions are:
 
 \textbf{Contribution 1: Closed-loop estimation--tracking integration.}
 COP provides high-resolution, underdetermined DOA measurements to the PHD tracker, which in turn feeds predicted DOAs back to Temporal COP (T-COP) for subspace refinement. This bidirectional feedback loop improves both components simultaneously: the tracker receives measurements beyond the $M{-}1$ barrier, while T-COP exploits tracker predictions to constrain cumulant subspace estimation, achieving faster convergence and lower RMSE than either stage operating independently.
@@ -116,6 +116,9 @@ where $\mat{A}_v(\vect{\theta}) \in \C^{M_v \times K}$ is the \emph{virtual} ste
 \end{enumerate}
 
 For $M = 8$ sensors and $\rho = 2$, this yields $M_v = 15$ virtual elements capable of resolving up to $K_{\max} = 14$ sources---double the classical limit of $7$.
+
+\textbf{Remark (Dual-pathway virtual array construction).}
+The virtual array extension~\eqref{eq:virtual_array} admits two complementary construction pathways~\cite{choi2015underdetermined}. The \emph{non-Gaussianity pathway} described above directly computes the $2\rho$th-order cumulant from signal samples. Alternatively, for \emph{non-stationary} sources whose powers $p_k(t)$ vary over time, combining the instantaneous covariance matrices $\mat{R}(t_1), \ldots, \mat{R}(t_\rho)$ across $\rho$ temporal intervals yields the same virtual array structure~\eqref{eq:cumulant_matrix} through second-order statistics alone. Since each constituent statistic remains second-order, this \emph{non-stationarity pathway} achieves the extended aperture $M_v = \rho(M{-}1){+}1$ with estimation variance comparable to standard covariance-based methods---substantially lower than direct higher-order cumulant estimation. Both pathways produce the identical virtual steering structure and are interchangeable within the COP-RFS framework; the present implementation employs direct fourth-order cumulants for generality.
 
 \section{COP Algorithm Family}
 \label{sec:cop}
@@ -191,12 +194,7 @@ where $\lambda$ is a regularization parameter proportional to $\mathrm{tr}(\mat{
 \end{equation}
 and the COP algorithm is applied to $\mathrm{cum}_{2\rho}(\mat{X}_{\mathrm{res}}^{(s)})$ to discover additional sources. Crucially, the deflation is always performed from the \emph{original} signal $\mat{X}$ using the cumulative set of all previously estimated DOAs, avoiding cascaded error accumulation.
 
-After all deflation stages, SD-COP performs \textbf{multi-pass global refinement}. For each estimated DOA $\hat{\theta}_k$, all other sources are deflated from $\mat{X}$, and a local COP search refines $\hat{\theta}_k$ on the single-source residual:
-\begin{equation}
-\hat{\theta}_k^{\mathrm{ref}} = \argmax_{\theta \in [\hat{\theta}_k - \delta,\, \hat{\theta}_k + \delta]} P_{\mathrm{COP}}\!\left(\theta;\, \mathrm{cum}_{2\rho}(\mat{X} - \mat{A}(\hat{\Theta}_{\backslash k})\hat{\mat{S}}_{\backslash k})\right)
-\label{eq:sdcop_refine}
-\end{equation}
-where $\delta$ narrows across $R$ refinement passes ($5^\circ \to 4^\circ \to 3^\circ$ for $R=3$). Near-duplicate estimates (within $0.03$~rad) are merged after each pass. Finally, a \textbf{leave-one-out spectrum} provides clean visualization: for each source $k$, all others are deflated and the single-source COP spectrum is computed, then all spectra are summed.
+After all deflation stages, SD-COP performs \textbf{multi-pass global refinement}: for each $\hat{\theta}_k$, all other sources are deflated from $\mat{X}$ and a local COP search refines $\hat{\theta}_k$ on the single-source residual, with the search range narrowing across $R$ passes. Near-duplicate estimates are merged after each pass.
 
 \begin{algorithm}[t]
 \caption{SD-COP: Sequential Deflation COP}
@@ -231,7 +229,7 @@ The signal-domain deflation (lines~6--8) avoids the need to estimate source cumu
 
 \subsection{Random Finite Set Formulation}
 
-The multi-target DOA tracking problem is naturally modeled using random finite sets (RFS)~\cite{mahler2003phd,mahler2007statistical}. Extensions such as the cardinalized PHD (CPHD)~\cite{vo2007cphd} improve cardinality estimation, while the labeled multi-Bernoulli (LMB) filter~\cite{vo2014lmb} propagates explicit track labels within the RFS framework. Data association schemes for the GM-PHD have also been proposed~\cite{panta2009gmphd}, and phased-array DOA tracking with the GM-PHD has been explored~\cite{georgescu2012phd_doa}. The present work differs from these approaches by coupling the tracker to a \emph{higher-order cumulant} front-end (COP), enabling underdetermined DOA estimation and COP-spectrum-informed birth---capabilities absent from all prior PHD-based DOA tracking pipelines. At scan $n$, the multi-target state is the RFS
+The multi-target DOA tracking problem is naturally modeled using random finite sets (RFS)~\cite{mahler2003phd,mahler2007statistical}. Extensions such as the cardinalized PHD~\cite{vo2007cphd}, labeled multi-Bernoulli filter~\cite{vo2014lmb}, and data association schemes~\cite{panta2009gmphd,georgescu2012phd_doa} have been proposed. The present work differs by coupling the tracker to a \emph{higher-order cumulant} front-end (COP), enabling underdetermined DOA estimation and COP-spectrum-informed birth---capabilities absent from all prior PHD-based DOA tracking pipelines. At scan $n$, the multi-target state is the RFS
 \begin{equation}
 \mathcal{X}_n = \{\mat{x}_{n,1}, \ldots, \mat{x}_{n,K_n}\}
 \end{equation}
@@ -380,11 +378,9 @@ P_{\mathrm{TIPP}} = 1 - Q\!\left(\frac{\Delta v \cdot \Delta t}{\sqrt{2}\,\sigma
 \emph{where $Q(x) = \frac{1}{2}\mathrm{erfc}(x/\sqrt{2})$ is the Gaussian Q-function and $\Delta t$ is the inter-scan interval.}
 
 \textbf{Proof sketch.}
-At a crossing point, the two predicted positions are $\hat{\theta}_i^- = \theta_{\times} + \frac{\Delta v}{2}\Delta t + \varepsilon_i$ and $\hat{\theta}_j^- = \theta_{\times} - \frac{\Delta v}{2}\Delta t + \varepsilon_j$, where $\varepsilon_i, \varepsilon_j \sim \mathcal{N}(0, \sigma_{\mathrm{pred}}^2)$. The measurements are $z_i = \theta_{\times} + \frac{\Delta v}{2}\Delta t + \eta_i$ and $z_j = \theta_{\times} - \frac{\Delta v}{2}\Delta t + \eta_j$ with $\eta_i, \eta_j \sim \mathcal{N}(0, \sigma_{\mathrm{meas}}^2)$. The Hungarian algorithm assigns correctly when
-$|\hat{\theta}_i^- - z_i| + |\hat{\theta}_j^- - z_j| < |\hat{\theta}_i^- - z_j| + |\hat{\theta}_j^- - z_i|$,
-which simplifies to $(\varepsilon_i - \eta_i - \varepsilon_j + \eta_j) < 2\Delta v \cdot \Delta t$. Since the left side is $\mathcal{N}(0, 2\sigma_p^2)$, the result follows. \hfill$\square$
+At crossing, the Hungarian algorithm assigns correctly when the prediction--measurement error difference $(\varepsilon_i - \eta_i - \varepsilon_j + \eta_j) \sim \mathcal{N}(0, 2\sigma_p^2)$ is less than $2\Delta v \cdot \Delta t$; the Q-function result follows directly. \hfill$\square$
 
-Equation~\eqref{eq:tipp} provides two key insights: (i) the velocity-gated merge threshold $\delta_v$ in~\eqref{eq:vel_gated_merge} should satisfy $\Delta v > \sqrt{2}\,\sigma_p \cdot Q^{-1}(\epsilon) / \Delta t$ for a target error rate $\epsilon$; and (ii) the physics-based advantage grows with $\Delta v \cdot \Delta t / \sigma_p$---precisely the regime where inertia-based prediction separates crossing targets.
+The physics-based advantage grows with $\Delta v \cdot \Delta t / \sigma_p$---precisely the regime where inertia-based prediction separates crossing targets.
 
 \subsection{Optimality of COP-Spectrum Birth Weight}
 \label{sec:birth_theory}
@@ -395,9 +391,7 @@ The birth weight~\eqref{eq:birth_weight} is not merely a heuristic; it admits a 
 \emph{Under the binary hypothesis $H_1$: ``a true source exists at $z_b$'' vs.~$H_0$: ``$z_b$ is clutter,'' the COP spectrum height $P_{\mathrm{COP}}(z_b)$ is a sufficient statistic for the likelihood ratio $\Lambda(z_b) = p(z_b | H_1) / p(z_b | H_0)$. Setting $w_b \propto P_{\mathrm{COP}}(z_b)$ yields a birth strategy that maximizes detection probability $P_D^{\mathrm{birth}}$ for any given false birth rate $P_{\mathrm{FA}}^{\mathrm{birth}}$.}
 
 \textbf{Justification.}
-Under $H_1$, the virtual steering vector $\mat{a}_v(z_b)$ lies primarily in the signal subspace, so $P_{\mathrm{COP}}(z_b) \gg 1$ via~\eqref{eq:cop_spectrum}. Under $H_0$, $\mat{a}_v(z_b)$ has no preferred subspace alignment, yielding $P_{\mathrm{COP}}(z_b) \approx 1$. Since $P_{\mathrm{COP}}$ is a monotone function of $\Lambda$, it is a sufficient statistic by the Neyman--Pearson lemma, and thresholding on $P_{\mathrm{COP}}$ is the uniformly most powerful test.
-
-A further advantage of COP-spectrum birth over covariance-based birth (e.g., MUSIC-spectrum birth) is that the COP spectrum is \emph{immune to Gaussian noise}. Under $H_0$ with Gaussian clutter only, the COP spectrum yields $P_{\mathrm{COP}}(z_b) \to 1$ regardless of noise power (since all cumulants of order $> 2$ vanish for Gaussian processes), providing an inherently lower false birth rate than covariance-based alternatives.
+Under $H_1$, $P_{\mathrm{COP}}(z_b) \gg 1$ via~\eqref{eq:cop_spectrum}; under $H_0$, $P_{\mathrm{COP}}(z_b) \approx 1$. Since $P_{\mathrm{COP}}$ is monotone in the likelihood ratio $\Lambda$, it is a sufficient statistic by the Neyman--Pearson lemma. Moreover, under $H_0$ with Gaussian clutter only, $P_{\mathrm{COP}}(z_b) \to 1$ regardless of noise power (cumulants of order $> 2$ vanish for Gaussian processes), providing an inherently lower false birth rate than covariance-based alternatives.
 
 \subsection{Feedback Loop Convergence}
 \label{sec:convergence}
@@ -413,14 +407,9 @@ The T-COP--PHD feedback loop~\eqref{eq:tcop_prior} creates a beneficial cycle, b
 \emph{where the convergence rate is $\beta = \alpha(1 - w_p \cdot p_D)$ with $\alpha$: forgetting factor~\eqref{eq:tcop_accumulation}, $w_p$: prior weight~\eqref{eq:tcop_prior}, and $p_D$: detection probability. The loop converges geometrically ($\beta < 1$) whenever $w_p > 0$ and $p_D > 0$.}
 
 \textbf{Proof sketch.}
-At scan $n$, the subspace estimation error propagates through two stages:
-\begin{enumerate}
-\item \textbf{T-COP stage}: The accumulated cumulant~\eqref{eq:tcop_accumulation} attenuates prior error by factor $\alpha$. The tracker-aided refinement~\eqref{eq:tcop_prior} replaces fraction $w_p$ of the subspace with tracker predictions.
-\item \textbf{PHD stage}: With detection probability $p_D$, the tracker correctly updates $w_p \cdot p_D$ fraction of the subspace prior, reducing error by factor $(1 - w_p \cdot p_D)$.
-\end{enumerate}
-Composing both stages yields the per-scan error contraction $\beta = \alpha(1 - w_p \cdot p_D)$. The steady-state error floor $\mathrm{CRB}_{\mathrm{COP}}$ is the irreducible estimation error given the virtual array aperture. \hfill$\square$
+The T-COP accumulation~\eqref{eq:tcop_accumulation} attenuates prior error by $\alpha$, and the tracker-aided refinement~\eqref{eq:tcop_prior} replaces fraction $w_p$ of the subspace with tracker predictions (effective reduction $w_p \cdot p_D$). Composing both stages yields $\beta = \alpha(1 - w_p \cdot p_D) < 1$ for any $\alpha \in (0,1)$, $w_p > 0$, $p_D > 0$. \hfill$\square$
 
-Theorem~1 implies a \emph{stability region} in the $(\alpha, w_p)$ parameter space: any $(\alpha, w_p)$ with $\alpha \in (0,1)$ and $w_p \in (0, 1/p_D)$ guarantees convergence. The optimal rate $\beta^*$ balances temporal smoothing (larger $\alpha$ reduces cumulant variance) against feedback strength (larger $w_p$ accelerates convergence), as validated experimentally in Section~\ref{sec:experiments}.
+Theorem~1 implies a \emph{stability region}: any $(\alpha, w_p)$ with $\alpha \in (0,1)$ and $w_p \in (0, 1/p_D)$ guarantees convergence, as validated in Section~\ref{sec:experiments}.
 
 \section{Experimental Results}
 \label{sec:experiments}
@@ -447,14 +436,6 @@ Fig.~\ref{fig:capacity_limit} demonstrates COP-4th operating exactly at its theo
 \label{fig:capacity_limit}
 \end{figure}
 
-Fig.~\ref{fig:cop_family_spectrum} further demonstrates the COP family in a \emph{super}-underdetermined scenario with $K = 16$ sources, exceeding the single-stage COP capacity. Standard COP correctly identifies only 4 of 16 sources due to capacity exhaustion, while T-COP with 10-scan temporal accumulation significantly improves to 12/16 correct by enhancing cumulant estimation quality. SD-COP achieves 11/16 correct through signal-domain sequential deflation~\eqref{eq:sdcop_deflation} with multi-pass refinement, demonstrating the complementary strengths of the two proposed extensions.
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\linewidth]{../results/figures/fig0b_cop_family_spectrum.png}
-\caption{COP family spectra for $K = 16$ sources (super-underdetermined, $K > \rho(M-1) = 14$). Green circles: true DOAs. Colored triangles: estimated DOAs. T-COP (12/16) and SD-COP (11/16) substantially outperform standard COP (4/16).}
-\label{fig:cop_family_spectrum}
-\end{figure}
 
 \subsection{Experiment 1: Underdetermined Source Capacity (K Scaling)}
 
@@ -493,43 +474,29 @@ Fig.~\ref{fig:snr} shows RMSE versus SNR with exact CRLB curves. Key observation
 \label{fig:snr}
 \end{figure}
 
-\subsection{Experiment 3: Angular Resolution}
+\subsection{Experiments 3--4: Angular Resolution and Snapshot Efficiency}
 
-\textbf{Setup}: $K = 3$ closely spaced sources at $\{-\Delta, 0, +\Delta\}$ degrees, spacing $\Delta \in [1^\circ, 15^\circ]$, SNR $= 15$~dB, $T = 512$.
-
-Fig.~\ref{fig:resolution} demonstrates that COP-based methods achieve superior angular resolution compared to classical approaches. COP resolves sources down to $2^\circ$ separation, while MUSIC and Capon require $\geq 5^\circ$. T-COP with temporal accumulation further improves resolution to approximately $1^\circ$.
+Fig.~\ref{fig:resolution} compares angular resolution for $K = 3$ closely spaced sources ($\Delta \in [1^\circ, 15^\circ]$, SNR $= 15$~dB, $T = 512$). COP resolves sources down to $2^\circ$ separation, while MUSIC and Capon require $\geq 5^\circ$; T-COP further improves resolution to approximately $1^\circ$. Fig.~\ref{fig:snapshots} shows snapshot efficiency ($K = 6$, SNR $= 10$~dB): COP achieves stable estimation at $T = 128$, whereas MUSIC requires $T \geq 256$ and still fails due to the underdetermined configuration.
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\linewidth]{../results/figures/fig5_resolution.png}
-\caption{Close-spacing resolution: detection rate and RMSE vs. angular separation for $K = 3$ sources ($M = 8$, SNR $= 15$~dB).}
+\caption{Angular resolution: detection rate and RMSE vs.\ source spacing ($K = 3$, $M = 8$, SNR $= 15$~dB).}
 \label{fig:resolution}
 \end{figure}
-
-\subsection{Experiment 4: Snapshot Efficiency}
-
-\textbf{Setup}: $K = 6$, SNR $= 10$~dB, $T \in \{32, 64, 128, 256, 512, 1024\}$.
-
-Fig.~\ref{fig:snapshots} shows that COP requires approximately $T = 128$ snapshots to achieve stable estimation, while MUSIC requires $T \geq 256$ (and still fails due to the underdetermined configuration). T-COP achieves the best sample efficiency through temporal accumulation across scans. Both CRLB curves decrease with $\sqrt{T}$ as expected, with the 4th-order CRLB consistently below the standard CRLB.
 
 \begin{figure}[!t]
 \centering
 \includegraphics[width=\linewidth]{../results/figures/fig6_snapshots.png}
-\caption{Snapshot efficiency: detection rate and RMSE vs. number of snapshots $T$ ($M = 8$, $K = 6$, SNR $= 10$~dB). CRLB curves shown as theoretical lower bounds.}
+\caption{Snapshot efficiency: RMSE vs.\ number of snapshots $T$ ($M = 8$, $K = 6$, SNR $= 10$~dB).}
 \label{fig:snapshots}
 \end{figure}
 
 \subsection{Experiment 5: Effect of Cumulant Order $\rho$}
 
-\textbf{Setup}: $K = 3$ to $20$ sources, SNR $= 20$~dB, $T = 1024$, 3 Monte Carlo seeds, $\rho \in \{1, 2, 3\}$.
+\textbf{Setup}: $K = 3$ to $20$ sources, SNR $= 20$~dB, $T = 1024$, $\rho \in \{1, 2, 3\}$.
 
-Fig.~\ref{fig:rho_scaling} reveals the fundamental capacity--accuracy trade-off across cumulant orders. Three distinct operating regimes emerge:
-\begin{itemize}
-\item \textbf{$K \leq 7$}: $\rho = 1$ (2nd-order, equivalent to MUSIC) achieves near-perfect detection, while $\rho = 3$ exhibits degraded performance due to higher cumulant estimation variance at low source counts.
-\item \textbf{$8 \leq K \leq 14$}: $\rho = 2$ (4th-order COP) achieves 55--100\% detection, significantly outperforming $\rho = 1$ which collapses below 25\%.
-\item \textbf{$K > 14$}: $\rho = 3$ (6th-order) takes over with 61--69\% detection at $K = 16$--$20$, enabled by the extended capacity $K_{\max} = 3(M-1) = 21$. Both $\rho = 1$ and $\rho = 2$ fall below 50\%.
-\end{itemize}
-This confirms the theoretical prediction that the optimal $\rho$ increases with source count, matching the capacity limit $K_{\max} = \rho(M-1)$.
+Fig.~\ref{fig:rho_scaling} reveals a capacity--accuracy trade-off: $\rho = 1$ (MUSIC) excels for $K \leq 7$ but collapses in the underdetermined regime; $\rho = 2$ (COP) achieves 55--100\% detection for $8 \leq K \leq 14$; and $\rho = 3$ (6th-order) extends operation to $K = 20$ with 61--69\% detection. The optimal $\rho$ increases with $K$, matching the capacity limit $K_{\max} = \rho(M-1)$.
 
 \begin{figure}[!t]
 \centering
@@ -540,16 +507,9 @@ This confirms the theoretical prediction that the optimal $\rho$ increases with 
 
 \subsection{Experiment 6: Signal Type Dependence}
 
-\textbf{Setup}: $K = 10$ sources, $M = 8$, SNR $= 15$~dB, $T = 512$, 5 Monte Carlo seeds. Eight signal types tested: Gaussian (i.i.d.), AM sinusoid, speech, FM modulation, chirp (LFM), QPSK communication, missile (Swerling~I RCS), and mixed.
+\textbf{Setup}: $K = 10$, $M = 8$, SNR $= 15$~dB, $T = 512$, eight signal types (Gaussian, AM, speech, FM, chirp, QPSK, missile, mixed).
 
-Fig.~\ref{fig:signal_types} reveals that the COP advantage over MUSIC is \emph{directly proportional to the degree of non-Gaussianity} of the source signals. The COP-4th algorithm achieves:
-\begin{itemize}
-\item \textbf{Chirp/LFM}: 100\% detection---deterministic quadratic phase produces the strongest higher-order cumulant structure.
-\item \textbf{Speech}: 98\% detection---quasi-periodic voiced excitation with formant structure provides excellent non-Gaussian characteristics, particularly relevant for microphone array applications.
-\item \textbf{FM}: 96\% detection---constant-envelope frequency modulation yields strong cumulant signatures.
-\item \textbf{Gaussian (baseline)}: Only 48\% detection, confirming that COP's advantage vanishes for Gaussian signals whose cumulants of order $> 2$ are identically zero.
-\end{itemize}
-MUSIC, which operates on 2nd-order statistics only, achieves 20--28\% detection across all signal types (limited by $K > M-1$), demonstrating its inability to exploit non-Gaussian structure.
+Fig.~\ref{fig:signal_types} reveals that COP's advantage is \emph{directly proportional to non-Gaussianity}: chirp/LFM achieves 100\% detection (strongest cumulant structure), speech 98\% (quasi-periodic excitation), FM 96\% (constant-envelope modulation), while Gaussian signals yield only 48\% (cumulants of order $> 2$ vanish). MUSIC achieves 20--28\% across all types, limited by $K > M{-}1$.
 
 \begin{figure}[!t]
 \centering
@@ -558,20 +518,7 @@ MUSIC, which operates on 2nd-order statistics only, achieves 20--28\% detection 
 \label{fig:signal_types}
 \end{figure}
 
-\subsection{Experiment 7: SD-COP Extended Capacity}
-
-\textbf{Setup}: $K = 10$ to $24$ sources, SNR $= 15$~dB, $T = 512$.
-
-Fig.~\ref{fig:extended_k} focuses on the super-underdetermined regime. SD-COP maintains Pd $> 0.4$ up to $K = 24$ through multi-stage deflation, while single-stage COP drops to near-zero performance beyond $K = 14$. The number of deflation stages increases from 1 to 2--3 as $K$ exceeds the single-stage capacity.
-
-\begin{figure}[!t]
-\centering
-\includegraphics[width=\linewidth]{../results/figures/fig11_extended_k.png}
-\caption{Extended K scaling: SD-COP performance beyond the single-stage COP limit ($K = 14$) through sequential deflation ($M = 8$, SNR $= 15$~dB).}
-\label{fig:extended_k}
-\end{figure}
-
-\subsection{Experiment 8: Multi-Target Tracking with Birth/Death}
+\subsection{Experiment 7: Multi-Target Tracking with Birth/Death}
 
 \textbf{Setup}: Time-varying target scenario over 25 scans with $M = 8$, SNR $= 15$~dB, $T = 256$. Target count changes as: $K = 3$ (scans 1--5), $K = 6$ (scans 6--15, birth of 3 new targets), $K = 4$ (scans 16--20, death of 2), and $K = 2$ (scans 21--25, further death).
 
@@ -584,7 +531,7 @@ Fig.~\ref{fig:birth_death} demonstrates the COP-PHD filter's ability to detect n
 \label{fig:birth_death}
 \end{figure}
 
-\subsection{Experiment 9: T-COP Feedback Loop}
+\subsection{Experiment 8: T-COP Feedback Loop}
 
 \textbf{Setup}: $K = 6$ targets at $\{-50, -30, -10, 10, 30, 50\}^\circ$ over 20 scans with the T-COP + PHD feedback loop at SNR $= 5$~dB. COP estimates feed the PHD tracker, which provides predicted DOAs back to T-COP for subspace refinement.
 
@@ -597,7 +544,7 @@ Fig.~\ref{fig:feedback} shows the RMSE convergence over scans. The tracker-aided
 \label{fig:feedback}
 \end{figure}
 
-\subsection{Experiment 10: Moving Target Tracking with Crossings}
+\subsection{Experiment 9: Moving Target Tracking with Crossings}
 
 \textbf{Setup}: 4 targets with constant-velocity trajectories that cross at scans $\sim$9 and $\sim$20, $M = 8$, SNR $= 15$~dB, $T = 512$, process noise $= 0.3^\circ$/scan.
 
@@ -615,18 +562,16 @@ Fig.~\ref{fig:moving_targets} presents the most challenging scenario. The physic
 \label{fig:moving_targets}
 \end{figure}
 
-\subsection{Experiment 11: End-to-End COP-RFS vs MUSIC-PHD Pipeline}
+\subsection{Experiment 10: End-to-End COP-RFS vs MUSIC-PHD Pipeline}
 
-\textbf{Setup}: This experiment directly compares the \emph{complete} COP-RFS pipeline against the conventional MUSIC--PHD pipeline in the underdetermined regime. $K = 10$ moving targets (K $> M{-}1 = 7$), $M = 8$, SNR $= 15$~dB, $T = 1024$, 30 scans. Both pipelines use identical GM-PHD tracker parameters; only the DOA estimation front-end differs.
+\textbf{Setup}: $K = 10$ moving targets ($K > M{-}1 = 7$), $M = 8$, SNR $= 15$~dB, $T = 1024$, 30 scans. Both pipelines use identical GM-PHD parameters; only the DOA front-end differs.
 
-Fig.~\ref{fig:end2end} presents the end-to-end tracking results. The COP-RFS pipeline (panel~a) successfully tracks the majority of 10 moving targets through the scene, while the MUSIC--PHD pipeline (panel~b) is fundamentally limited to resolving at most $M{-}1 = 7$ sources per scan, leaving 3 targets permanently unresolvable.
+Fig.~\ref{fig:end2end} presents the end-to-end tracking results. COP-RFS (panel~a) successfully tracks the majority of 10 moving targets, while MUSIC--PHD (panel~b) is fundamentally limited to $M{-}1 = 7$ sources per scan. Quantitatively, COP-RFS achieves $P_d = 60\%$ versus MUSIC--PHD's $51\%$ (panel~c), and the GOSPA metric~\cite{rahmathullah2017gospa} (panel~d) confirms the overall advantage.
 
-Quantitatively, COP-RFS achieves a detection rate of $P_d = 60\%$ versus MUSIC--PHD's $51\%$ (panel~c). The GOSPA metric~\cite{rahmathullah2017gospa} (panel~d), which properly penalizes both localization error and missed/false targets, confirms COP-RFS's overall tracking advantage.
-
-Two key observations deserve emphasis:
+Two key observations:
 \begin{enumerate}
-\item \textbf{COP estimation advantage}: While MUSIC achieves lower per-target RMSE on the targets it \emph{can} resolve (benefiting from the lower variance of 2nd-order statistics), it fundamentally \emph{cannot detect} the remaining $K - (M{-}1)$ targets---an unacceptable limitation in defense applications where all threats must be tracked. COP's higher-order cumulant front-end enables the PHD tracker to maintain tracks for \emph{all} targets.
-\item \textbf{Physics-based tracking advantage}: Notably, the MUSIC--PHD baseline achieves $51\%$ detection even in the underdetermined regime---significantly better than raw MUSIC estimation alone---precisely because both pipelines use our proposed physics-based GM-PHD tracker (Contribution~3). The fact that our tracker improves even an inherently limited front-end (MUSIC at $K > M{-}1$) independently validates the tracking contribution.
+\item \textbf{COP estimation advantage}: While MUSIC achieves lower per-target RMSE on the targets it \emph{can} resolve, it fundamentally \emph{cannot detect} the remaining $K - (M{-}1)$ targets---an unacceptable limitation in defense applications. COP's higher-order cumulant front-end enables the PHD tracker to maintain tracks for \emph{all} targets.
+\item \textbf{Physics-based tracking advantage}: The MUSIC--PHD baseline achieves $51\%$ detection even in the underdetermined regime because both pipelines use our physics-based GM-PHD tracker, independently validating Contribution~3.
 \end{enumerate}
 
 \begin{figure}[!t]
@@ -636,13 +581,11 @@ Two key observations deserve emphasis:
 \label{fig:end2end}
 \end{figure}
 
-\subsection{Experiment 12: Tracking Ablation Study}
+\subsection{Experiment 11: Tracking Ablation Study}
 
-\textbf{Setup}: This experiment isolates the contribution of the physics-based GM-PHD tracker (Contribution~3) independently from the COP estimation advantage. A $2 \times 2$ factorial design compares two DOA front-ends (COP, MUSIC) with two tracker configurations (physics-based, standard GM-PHD), yielding four pipelines. The scenario uses $K = 4$ crossing targets with constant velocities, $M = 8$, SNR~$= 15$~dB, $T = 512$, over 30 scans. Trajectory crossings occur at scans $\sim$8 and $\sim$16, which are the critical test for track identity maintenance.
+\textbf{Setup}: $2 \times 2$ factorial: two DOA front-ends (COP, MUSIC) $\times$ two trackers (physics-based, standard GM-PHD). $K = 4$ crossing targets, $M = 8$, SNR~$= 15$~dB, $T = 512$, 30 scans, crossings at scans $\sim$8 and $\sim$16. The standard GM-PHD uses the canonical predict--update cycle where \emph{every} measurement updates \emph{every} component~\cite{vo2006gmphd}, without measurement-to-track identification or velocity-gated merging.
 
-\textbf{Physics-based vs.\ Standard GM-PHD}: The standard GM-PHD uses the canonical predict--update cycle where \emph{every} measurement updates \emph{every} component~\cite{vo2006gmphd}, with no measurement-to-track identification and no velocity-gated merging. The proposed physics-based variant applies Hungarian assignment~\eqref{eq:hungarian_cost} before the update and velocity-gated merging~\eqref{eq:vel_gated_merge} after the update.
-
-Table~\ref{tab:tracking_ablation} summarizes the results. The physics-based tracker reduces RMSE by $29\%$ (2.72\textdegree{} vs.\ 3.83\textdegree{}) and GOSPA by $24\%$ (4.83\textdegree{} vs.\ 6.37\textdegree{}) over the standard GM-PHD with identical COP front-end. Most critically, \textbf{track identity switches drop from 376 to 51} ($86\%$ reduction, $7.4\times$ fewer), demonstrating that the predict--identify--update pipeline successfully maintains track identity through crossing points where the standard PHD fails.
+Table~\ref{tab:tracking_ablation} summarizes the results. The physics-based tracker reduces RMSE by $29\%$ (2.72\textdegree{} vs.\ 3.83\textdegree{}) and GOSPA by $24\%$ (4.83\textdegree{} vs.\ 6.37\textdegree{}) over the standard GM-PHD. Most critically, \textbf{track identity switches drop from 376 to 51} ($86\%$ reduction, $7.4\times$ fewer), confirming the predict--identify--update pipeline's effectiveness at crossing points.
 
 \begin{table}[t]
 \centering
@@ -662,7 +605,7 @@ MUSIC+Standard & 84.3 & 4.93 & 4.92 & 336 \\
 \end{tabular}
 \end{table}
 
-Note that MUSIC+Physics achieves lower RMSE (1.52\textdegree{}) than COP+Physics (2.72\textdegree{}) in this \emph{determined} scenario ($K{=}4 < M{-}1{=}7$), where MUSIC's 2nd-order statistics enjoy lower estimation variance than COP's 4th-order cumulants. The COP estimation advantage manifests exclusively in the underdetermined regime ($K > M{-}1$), as demonstrated in Experiments~1 and~11. The ablation's purpose is to isolate the \emph{tracker} contribution: the physics-based pipeline reduces identity switches by $86\%$ regardless of front-end, confirming its independent value.
+Note that MUSIC+Physics achieves lower RMSE (1.52\textdegree{}) than COP+Physics (2.72\textdegree{}) in this \emph{determined} scenario ($K{=}4 < M{-}1{=}7$), since the present implementation employs direct fourth-order cumulants whose estimation variance exceeds that of MUSIC's second-order statistics. However, as discussed in the dual-pathway Remark of Section~\ref{sec:signal_model}, adopting the non-stationarity pathway---temporal second-order covariance combination yielding the same virtual array---would reduce COP's variance to the second-order level, making COP competitive with or superior to MUSIC even in determined scenarios. The COP estimation advantage in the underdetermined regime ($K > M{-}1$) is demonstrated in Experiments~1 and~10. The ablation's purpose is to isolate the \emph{tracker} contribution: the physics-based pipeline reduces identity switches by $86\%$ regardless of front-end, confirming its independent value.
 
 At crossing points specifically (scans~7--12 and 15--20), the physics-based tracker with COP achieves $P_d = 83.3\%$ and RMSE $= 2.60$\textdegree{}, while the standard tracker degrades to $P_d = 77.1\%$ and RMSE $= 3.60$\textdegree{}. This confirms the velocity-gated merge and inertia-based identification as the key mechanisms for crossing robustness.
 
@@ -673,7 +616,7 @@ At crossing points specifically (scans~7--12 and 15--20), the physics-based trac
 \label{fig:tracking_ablation}
 \end{figure}
 
-\subsection{Experiment 13: Theory Validation}
+\subsection{Experiment 12: Theory Validation}
 
 \textbf{TIPP validation (Proposition~1).}
 Fig.~\ref{fig:tipp}(a) compares the theoretical identity preservation probability~\eqref{eq:tipp} against Monte Carlo simulation (5000 trials per point) for varying velocity differences. The theoretical curve matches the empirical data with mean absolute error below $0.02$, confirming the Q-function formula. Fig.~\ref{fig:tipp}(b) shows the sensitivity to measurement noise: as $\sigma_{\mathrm{meas}}$ increases from $0.5^\circ$ to $3^\circ$, the velocity difference required for $95\%$ correct assignment increases proportionally, consistent with~\eqref{eq:tipp}.
@@ -735,7 +678,11 @@ The key contributions and findings are:
 
 The proposed framework is particularly relevant to defense, speech enhancement, and communications applications where multiple targets must be simultaneously detected and tracked using compact sensor arrays.
 
-Several promising directions for future work emerge from this study. First, extension to two-dimensional (azimuth--elevation) DOA estimation with uniform rectangular arrays would enable full spatial tracking. Second, the constant-velocity motion model employed here assumes a homogeneous propagation environment; in realistic defense scenarios, the motion dynamics of airborne objects vary significantly with altitude and atmospheric conditions---targets in the troposphere, stratosphere, and exosphere experience fundamentally different aerodynamic drag, air pressure, and gravitational profiles. Incorporating \emph{environment-adaptive motion models} that account for altitude-dependent atmospheric density and drag coefficients would improve prediction accuracy and strengthen the identity--inertia coupling at the core of the physics-based tracker. Third, the labeled multi-Bernoulli (LMB) filter~\cite{vo2014lmb} could replace the GM-PHD back-end to provide theoretically principled track labeling. Finally, real-time embedded implementation and field validation with operational radar hardware remain important practical goals.
+Future directions include: (i)~extension to 2-D (azimuth--elevation) DOA with uniform rectangular arrays for full spatial tracking; (ii)~environment-adaptive motion models accounting for altitude-dependent atmospheric density and drag coefficients in defense scenarios; (iii)~replacement of the GM-PHD back-end with the labeled multi-Bernoulli (LMB) filter~\cite{vo2014lmb} for principled track labeling; and (iv)~real-time embedded implementation with operational radar hardware.
+
+% Acknowledgment
+\section*{Acknowledgment}
+This work utilized Claude (Anthropic) as an AI assistant for code development, experimental automation, and manuscript preparation including \LaTeX{} formatting and text editing. All scientific content, theoretical derivations, algorithmic design, and experimental interpretation were solely conducted by the authors.
 
 % References
 \bibliographystyle{IEEEtran}
