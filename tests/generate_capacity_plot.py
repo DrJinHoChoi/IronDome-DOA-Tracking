@@ -151,13 +151,13 @@ def main():
     ax2.plot(scan_deg, P_db, color='#0055CC', linewidth=2.5,
              label='COP-4th Spectrum', zorder=3)
 
-    # True DOAs: GREEN dashed lines + GREEN circles at bottom
+    # True DOAs: GREEN dashed lines + GREEN circles at y=-44
     for i, td in enumerate(true_deg):
         ax2.axvline(x=td, color='#00AA00', linestyle='--', alpha=0.4,
                     linewidth=1.0, zorder=1)
-    ax2.plot(true_deg, np.full_like(true_deg, -38.0), 'o',
-             color='#00AA00', markersize=9, markeredgecolor='darkgreen',
-             markeredgewidth=0.8, zorder=5, clip_on=False)
+    ax2.plot(true_deg, np.full_like(true_deg, -44.0), 'o',
+             color='#00AA00', markersize=10, markeredgecolor='darkgreen',
+             markeredgewidth=1.0, zorder=5, clip_on=False)
 
     # Estimated DOAs: RED inverted triangles ON the spectrum curve
     for i, ed_rad in enumerate(est_doas):
@@ -166,14 +166,18 @@ def main():
         ax2.plot(ed, P_db[idx], '^', color='#DD0000', markersize=14,
                  markeredgecolor='black', markeredgewidth=1.0, zorder=6)
 
-    # Draw matching lines between true (bottom) and estimated (peak)
+    # ALSO add RED markers at fixed y=-48 so ALL estimated DOAs are clearly visible
+    est_deg_arr = np.degrees(est_doas)
+    ax2.plot(est_deg_arr, np.full_like(est_deg_arr, -48.0), '^',
+             color='#DD0000', markersize=10, markeredgecolor='black',
+             markeredgewidth=0.8, zorder=5, clip_on=False)
+
+    # Draw matching lines between true (y=-44) and estimated (y=-48)
     for true_d, est_d, err_d in matched_pairs:
         if est_d is not None:
-            # Find spectrum value at estimated DOA
-            idx = np.argmin(np.abs(scan_deg - est_d))
             color = '#00AA00' if err_d < 1.5 else '#FF8800'
-            ax2.plot([true_d, est_d], [-38.0, P_db[idx]],
-                     color=color, linewidth=0.6, alpha=0.4, zorder=0)
+            ax2.plot([true_d, est_d], [-44.0, -48.0],
+                     color=color, linewidth=0.8, alpha=0.5, zorder=0)
 
     # Custom legend
     legend_elements = [
@@ -187,11 +191,14 @@ def main():
     ]
     ax2.legend(handles=legend_elements, loc='upper left', framealpha=0.95, fontsize=13)
 
-    # Annotate true DOA values
-    for i, td in enumerate(true_deg):
-        offset = 1.5 if i % 2 == 0 else 3.5
-        ax2.annotate(f'{td:.0f}', xy=(td, -38.0 + offset), fontsize=7,
-                     ha='center', va='bottom', color='#00AA00', fontweight='bold')
+    # Row labels on the left
+    ax2.annotate('True →', xy=(-84, -44.0), fontsize=10, fontweight='bold',
+                 color='#00AA00', va='center', ha='right')
+    ax2.annotate('Est →', xy=(-84, -48.0), fontsize=10, fontweight='bold',
+                 color='#DD0000', va='center', ha='right')
+
+    # Horizontal separator line between True and Est rows
+    ax2.axhline(y=-46.0, color='gray', linewidth=0.5, alpha=0.3, xmin=0.02, xmax=0.98)
 
     ax2.set_xlabel('DOA (degrees)')
     ax2.set_ylabel('Normalized Spectrum (dB)')
@@ -199,7 +206,7 @@ def main():
                   f'[M$_v$={M_v}, Detected: {n_correct}/{K}, '
                   f'Mean err: {np.mean(errors):.2f}' + chr(176) + ']',
                   fontsize=16, fontweight='bold')
-    ax2.set_ylim([-42, 5])
+    ax2.set_ylim([-54, 5])
     ax2.set_xlim([-85, 85])
 
     # Print detailed results

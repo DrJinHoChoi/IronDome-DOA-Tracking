@@ -621,7 +621,7 @@ Fig.~\ref{fig:moving_targets} presents the most challenging scenario. The physic
 
 Fig.~\ref{fig:end2end} presents the end-to-end tracking results. The COP-RFS pipeline (panel~a) successfully tracks the majority of 10 moving targets through the scene, while the MUSIC--PHD pipeline (panel~b) is fundamentally limited to resolving at most $M{-}1 = 7$ sources per scan, leaving 3 targets permanently unresolvable.
 
-Quantitatively, COP-RFS achieves a detection rate of $P_d = 60\%$ versus MUSIC--PHD's $51\%$ (panel~c). The GOSPA metric (panel~d), which properly penalizes both localization error and missed/false targets, confirms COP-RFS's overall tracking advantage.
+Quantitatively, COP-RFS achieves a detection rate of $P_d = 60\%$ versus MUSIC--PHD's $51\%$ (panel~c). The GOSPA metric~\cite{rahmathullah2017gospa} (panel~d), which properly penalizes both localization error and missed/false targets, confirms COP-RFS's overall tracking advantage.
 
 Two key observations deserve emphasis:
 \begin{enumerate}
@@ -662,6 +662,8 @@ MUSIC+Standard & 84.3 & 4.93 & 4.92 & 336 \\
 \end{tabular}
 \end{table}
 
+Note that MUSIC+Physics achieves lower RMSE (1.52\textdegree{}) than COP+Physics (2.72\textdegree{}) in this \emph{determined} scenario ($K{=}4 < M{-}1{=}7$), where MUSIC's 2nd-order statistics enjoy lower estimation variance than COP's 4th-order cumulants. The COP estimation advantage manifests exclusively in the underdetermined regime ($K > M{-}1$), as demonstrated in Experiments~1 and~11. The ablation's purpose is to isolate the \emph{tracker} contribution: the physics-based pipeline reduces identity switches by $86\%$ regardless of front-end, confirming its independent value.
+
 At crossing points specifically (scans~7--12 and 15--20), the physics-based tracker with COP achieves $P_d = 83.3\%$ and RMSE $= 2.60$\textdegree{}, while the standard tracker degrades to $P_d = 77.1\%$ and RMSE $= 3.60$\textdegree{}. This confirms the velocity-gated merge and inertia-based identification as the key mechanisms for crossing robustness.
 
 \begin{figure}[!t]
@@ -674,7 +676,7 @@ At crossing points specifically (scans~7--12 and 15--20), the physics-based trac
 \subsection{Experiment 13: Theory Validation}
 
 \textbf{TIPP validation (Proposition~1).}
-Fig.~\ref{fig:tipp}(a) compares the theoretical identity preservation probability~\eqref{eq:tipp} against Monte Carlo simulation (5000 trials per point) for varying velocity differences. The theoretical curve matches the empirical data with mean absolute error below $0.01$, confirming the Q-function formula. Fig.~\ref{fig:tipp}(b) shows the sensitivity to measurement noise: as $\sigma_{\mathrm{meas}}$ increases from $0.5^\circ$ to $3^\circ$, the velocity difference required for $95\%$ correct assignment increases proportionally, consistent with~\eqref{eq:tipp}.
+Fig.~\ref{fig:tipp}(a) compares the theoretical identity preservation probability~\eqref{eq:tipp} against Monte Carlo simulation (5000 trials per point) for varying velocity differences. The theoretical curve matches the empirical data with mean absolute error below $0.02$, confirming the Q-function formula. Fig.~\ref{fig:tipp}(b) shows the sensitivity to measurement noise: as $\sigma_{\mathrm{meas}}$ increases from $0.5^\circ$ to $3^\circ$, the velocity difference required for $95\%$ correct assignment increases proportionally, consistent with~\eqref{eq:tipp}.
 
 \begin{figure}[!t]
 \centering

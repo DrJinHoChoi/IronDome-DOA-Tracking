@@ -101,8 +101,8 @@ K.~Panta, B.-N. Vo, and S.~Singh, ``Novel data association schemes for the
 
 \bibitem{clark2006gmphd_track}
 D.~E. Clark and B.-N. Vo, ``Convergence analysis of the {Gaussian} mixture
-  {PHD} filter,'' in \emph{IEEE Trans. Signal Processing}, vol.~55, no.~4, Apr.
-  2007, pp. 1204--1212.
+  {PHD} filter,'' \emph{IEEE Trans. Signal Processing}, vol.~55, no.~4, pp.
+  1204--1212, Apr. 2007.
 
 \bibitem{georgescu2012phd_doa}
 R.~Georgescu and P.~Willett, ``The {GM-PHD} filter multiple target tracker
@@ -165,5 +165,10 @@ B.-T. Vo, B.-N. Vo, and A.~Cantoni, ``Analytic implementations of the
 \bibitem{simon2006optimal}
 D.~Simon, \emph{Optimal State Estimation: {Kalman}, {H-infinity}, and Nonlinear
   Approaches}.\hskip 1em plus 0.5em minus 0.4em\relax Wiley, 2006.
+
+\bibitem{rahmathullah2017gospa}
+A.~S. Rahmathullah, A.~F. Garc\'{i}a-Fern\'{a}ndez, and L.~Svensson,
+  ``Generalized optimal sub-pattern assignment metric,'' in \emph{Proc. 20th
+  Int. Conf. Inf. Fusion (FUSION)}, Xi'an, China, 2017, pp. 182--189.
 
 \end{thebibliography}
