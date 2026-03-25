@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 
 from iron_dome_sim.signal_model.array import UniformLinearArray
 from iron_dome_sim.signal_model.signal_generator import generate_snapshots
-from iron_dome_sim.doa import SubspaceCOP, TemporalCOP, SequentialDeflationCOP, MUSIC, Capon
+from iron_dome_sim.doa import SubspaceCOP, TemporalCOP, SequentialDeflationCOP, MUSIC, Capon, COP_CBF, COP_MVDR
 
 plt.rcParams.update({
     'font.family': 'serif',
@@ -97,12 +97,24 @@ def plot_spatial_spectrum():
     capon = Capon(array)
     capon_db = to_db(capon.spectrum(X, scan_angles))
 
+    # COP-CBF (K-free)
+    cop_cbf = COP_CBF(array, num_sources=K, rho=2)
+    cop_cbf_db = to_db(cop_cbf.spectrum(X, scan_angles))
+
+    # COP-MVDR (K-free)
+    cop_mvdr = COP_MVDR(array, num_sources=K, rho=2)
+    cop_mvdr_db = to_db(cop_mvdr.spectrum(X, scan_angles))
+
     # ---- 2 panels ----
     fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(14, 14), gridspec_kw={'hspace': 0.35})
 
-    # == (a) COP vs MUSIC vs Capon ==
+    # == (a) COP vs MUSIC vs Capon + COP Beamforming ==
     ax1.plot(scan_deg, cop_db, color='#0055CC', linewidth=2.8,
              label='COP-4th [Proposed]', zorder=4)
+    ax1.plot(scan_deg, cop_mvdr_db, color='#CC4400', linewidth=2.5, linestyle='-',
+             label='COP-MVDR (K-free) [Proposed]', zorder=3)
+    ax1.plot(scan_deg, cop_cbf_db, color='#66BB66', linewidth=2.0, linestyle='--',
+             label='COP-CBF (K-free)', zorder=3)
     ax1.plot(scan_deg, music_db, color='#888888', linestyle='--', linewidth=2.0,
              label=f'MUSIC (max K={M-1})', zorder=2)
     ax1.plot(scan_deg, capon_db, color='#009999', linestyle=':', linewidth=2.0,
@@ -111,7 +123,7 @@ def plot_spatial_spectrum():
 
     ax1.set_xlabel('DOA (degrees)')
     ax1.set_ylabel('Normalized Spectrum (dB)')
-    ax1.set_title(f'(a) COP vs Classical  [M={M}, K={K}, SNR={snr_db} dB]',
+    ax1.set_title(f'(a) COP Family vs Classical  [M={M}, K={K}, SNR={snr_db} dB]',
                   fontsize=16, fontweight='bold')
     ax1.set_ylim([-42, 5])
     ax1.set_xlim([-90, 90])

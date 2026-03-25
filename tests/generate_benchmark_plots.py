@@ -26,7 +26,7 @@ from matplotlib.patches import FancyArrowPatch
 from iron_dome_sim.signal_model.array import UniformLinearArray
 from iron_dome_sim.signal_model.signal_generator import generate_snapshots
 from iron_dome_sim.doa import (SubspaceCOP, TemporalCOP, SequentialDeflationCOP,
-                                MUSIC, ESPRIT, Capon)
+                                MUSIC, ESPRIT, Capon, COP_CBF, COP_MVDR)
 from iron_dome_sim.eval.metrics import rmse_doa, detection_rate
 from iron_dome_sim.eval.crlb import crlb_rmse, crlb_stochastic, crlb_cop
 
@@ -63,6 +63,8 @@ ALG_STYLES = {
     'MUSIC':     ('#AAAAAA', 's', '--', 'MUSIC'),
     'ESPRIT':    ('#AA8800', 'D', '-.', 'ESPRIT'),
     'Capon':     ('#008888', '^', ':',  'Capon'),
+    'COP-CBF':   ('#66BB66', 'h', '--', 'COP-CBF (K-free)'),
+    'COP-MVDR':  ('#CC4400', 'p', '-',  'COP-MVDR (K-free) [Proposed]'),
     'COP':       ('#0055CC', 'o', '-',  'COP-4th [Proposed]'),
     'T-COP(1)':  ('#FF8800', 'v', ':',  'T-COP, 1 scan'),
     'T-COP(5)':  ('#DD0000', 'P', '-',  'T-COP, 5 scans [Proposed]'),
@@ -109,6 +111,10 @@ def make_alg(name, array, K, snr_db=15):
         return alg
     elif name == 'SD-COP':
         return SequentialDeflationCOP(array, rho=2, num_sources=K)
+    elif name == 'COP-CBF':
+        return COP_CBF(array, num_sources=K, rho=2)
+    elif name == 'COP-MVDR':
+        return COP_MVDR(array, num_sources=K, rho=2)
     raise ValueError(f"Unknown algorithm: {name}")
 
 
@@ -135,7 +141,7 @@ def collect_k_scaling():
 
     # Extended K range: 3 to 20 (beyond COP limit of 14)
     K_values = [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20]
-    alg_names = ['MUSIC', 'ESPRIT', 'Capon', 'COP', 'T-COP(5)', 'SD-COP']
+    alg_names = ['MUSIC', 'ESPRIT', 'Capon', 'COP-CBF', 'COP-MVDR', 'COP', 'T-COP(5)', 'SD-COP']
 
     results = {name: {'pd': [], 'rmse': []} for name in alg_names}
 
@@ -175,7 +181,7 @@ def collect_snr():
     true_doas = np.radians(np.linspace(-50, 50, K))
 
     snr_values = [-10, -5, 0, 5, 10, 15, 20]
-    alg_names = ['MUSIC', 'COP', 'T-COP(1)', 'T-COP(5)', 'T-COP(10)', 'SD-COP']
+    alg_names = ['MUSIC', 'COP-CBF', 'COP-MVDR', 'COP', 'T-COP(1)', 'T-COP(5)', 'T-COP(10)', 'SD-COP']
 
     results = {name: {'pd': [], 'rmse': []} for name in alg_names}
 
@@ -214,7 +220,7 @@ def collect_resolution():
     n_trials = 10
 
     spacing_values = [15, 10, 7, 5, 3, 2, 1]
-    alg_names = ['MUSIC', 'Capon', 'COP', 'T-COP(5)', 'SD-COP']
+    alg_names = ['MUSIC', 'Capon', 'COP-CBF', 'COP-MVDR', 'COP', 'T-COP(5)', 'SD-COP']
 
     results = {name: {'pd': [], 'rmse': []} for name in alg_names}
 
@@ -254,7 +260,7 @@ def collect_snapshots():
     true_doas = np.radians(np.linspace(-40, 40, K))
 
     T_values = [32, 64, 128, 256, 512, 1024]
-    alg_names = ['MUSIC', 'COP', 'T-COP(5)', 'SD-COP']
+    alg_names = ['MUSIC', 'COP-CBF', 'COP-MVDR', 'COP', 'T-COP(5)', 'SD-COP']
 
     results = {name: {'pd': [], 'rmse': []} for name in alg_names}
 
