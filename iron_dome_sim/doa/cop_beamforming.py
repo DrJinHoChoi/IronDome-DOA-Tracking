@@ -100,9 +100,12 @@ class COP_MVDR(DOAEstimator):
         C = compute_cumulant_matrix(X, rho=self.rho)
         M_v = C.shape[0]
 
-        # Diagonal loading for numerical stability
-        C += self.diagonal_loading * np.eye(M_v)
-        C_inv = np.linalg.inv(C)
+        # Cumulant matrix has negative eigenvalues (negative kurtosis signals).
+        # Use abs(eigenvalues) to make PD — negative eigvals carry signal info,
+        # clipping them destroys DOA information.
+        eigvals, eigvecs = np.linalg.eigh(C)
+        C_pd = eigvecs @ np.diag(np.abs(eigvals) + self.diagonal_loading) @ eigvecs.conj().T
+        C_inv = np.linalg.inv(C_pd)
 
         P = np.zeros(len(scan_angles))
         for i, theta in enumerate(scan_angles):

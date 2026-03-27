@@ -34,11 +34,15 @@ def rmse_doa(estimated, true):
     # Optimal assignment
     row_ind, col_ind = linear_sum_assignment(cost)
 
-    # RMSE over assigned pairs
+    # RMSE over assigned pairs + penalty for unmatched true sources
     total_error = sum(cost[r, c] for r, c in zip(row_ind, col_ind))
     n_pairs = len(row_ind)
+    n_missed = len(true) - n_pairs
 
-    rmse = np.sqrt(total_error / max(n_pairs, 1))
+    # Penalty: unmatched true sources get max possible error (pi/2 = 90 deg)
+    penalty = n_missed * (np.pi / 2) ** 2
+
+    rmse = np.sqrt((total_error + penalty) / max(len(true), 1))
     assignment = list(zip(row_ind, col_ind))
 
     return rmse, assignment

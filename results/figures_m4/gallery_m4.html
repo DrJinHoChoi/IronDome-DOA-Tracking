@@ -1,0 +1,29 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>COP DOA M=4 Results</title>
+<style>
+body{background:#1a1a2e;color:#eee;font-family:Arial;margin:0;padding:20px}
+h1{text-align:center;color:#0ff}
+h2{text-align:center;color:#aaa;font-size:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(600px,1fr));gap:15px;padding:10px}
+.card{background:#16213e;border-radius:8px;padding:10px;cursor:pointer}
+.card img{width:100%;border-radius:4px}
+.card p{text-align:center;font-size:13px;color:#aaa;margin:5px 0}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);z-index:10;justify-content:center;align-items:center}
+.modal.active{display:flex}
+.modal img{max-width:95%;max-height:95%;object-fit:contain}
+</style></head><body>
+<h1>COP-RFS DOA Results: M=4 Sensors</h1>
+<h2>M_v=7 (virtual) | Conv. limit: K=3 | COP limit: K=6</h2>
+<div class="grid">
+<div class="card" onclick="showModal(this)"><img src="fig1_m4_k_scaling_pd.png"><p>Fig 1 m4 k scaling pd</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig2_m4_k_scaling_rmse.png"><p>Fig 2 m4 k scaling rmse</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig3_m4_snr_pd.png"><p>Fig 3 m4 snr pd</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig4_m4_snr_rmse.png"><p>Fig 4 m4 snr rmse</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig5_m4_resolution.png"><p>Fig 5 m4 resolution</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig6_m4_snapshots.png"><p>Fig 6 m4 snapshots</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig_m4_summary.png"><p>Fig  m4 summary</p></div>
+</div>
+<div class="modal" id="modal" onclick="this.classList.remove('active{'})"><img id="modalImg"></div>
+<script>
+function showModal(el){var img=el.querySelector("img");document.getElementById("modalImg").src=img.src;document.getElementById("modal").classList.add("active")}
+</script></body></html>
