@@ -23,255 +23,265 @@ from iron_dome_sim.signal_model.array import UniformLinearArray
 from iron_dome_sim.signal_model.signal_generator import generate_snapshots
 from iron_dome_sim.doa import SubspaceCOP, MUSIC, Capon, COP_CBF, COP_MVDR
 from iron_dome_sim.eval.metrics import rmse_doa, detection_rate
-# Lightweight tracker for demo (no COP_RFS_RT dependency issues)
 
 # ============================================================
 # Page Config
 # ============================================================
 st.set_page_config(
-    page_title="SmartEar COP-DOA Demo",
+    page_title="SmartEar COP-DOA",
     page_icon="📡",
     layout="wide",
     initial_sidebar_state="collapsed",
 )
 
-# ── Futuristic Cyber CSS ──
+# ── ElevenLabs-inspired Warm Minimalism CSS ──
 st.markdown("""
 <style>
-    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
+    /* === Page Background === */
     .stApp {
-        background: radial-gradient(ellipse at 20% 50%, #0a0f1a 0%, #050810 50%, #020308 100%);
+        background-color: #FDFCFC;
     }
 
-    /* Animated scan line */
+    /* Warm peach edge accents */
     .stApp::before {
         content: '';
         position: fixed;
-        top: 0; left: 0; right: 0;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #00f0ff, #00ff88, transparent);
-        animation: scanline 4s ease-in-out infinite;
+        top: 0; left: 0; bottom: 0;
+        width: 4px;
+        background: linear-gradient(180deg, #BEDBFF, #FDFCFC 80%);
         z-index: 999;
-        opacity: 0.7;
     }
-    @keyframes scanline {
-        0%, 100% { transform: translateX(-100%); }
-        50% { transform: translateX(100%); }
-    }
-
-    /* Grid background */
     .stApp::after {
         content: '';
         position: fixed;
-        top: 0; left: 0; right: 0; bottom: 0;
-        background-image:
-            linear-gradient(rgba(0, 240, 255, 0.03) 1px, transparent 1px),
-            linear-gradient(90deg, rgba(0, 240, 255, 0.03) 1px, transparent 1px);
-        background-size: 60px 60px;
-        pointer-events: none;
-        z-index: 0;
+        top: 0; right: 0; bottom: 0;
+        width: 4px;
+        background: linear-gradient(180deg, #BEDBFF, #FDFCFC 80%);
+        z-index: 999;
+    }
+
+    /* === Typography === */
+    * {
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif !important;
     }
 
     .main-title {
         text-align: center;
-        font-family: 'Orbitron', monospace;
-        font-size: 2.6em;
-        font-weight: 900;
+        font-size: 2.8em;
+        font-weight: 300;
+        color: #0C0A09;
         margin-bottom: 0;
-        background: linear-gradient(135deg, #00f0ff 0%, #00ff88 50%, #00d4ff 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        text-shadow: 0 0 40px rgba(0, 240, 255, 0.3);
-        letter-spacing: 3px;
+        letter-spacing: -0.5px;
+        line-height: 1.1;
+    }
+    .main-title span {
+        color: #0447FF;
     }
     .sub-title {
         text-align: center;
-        font-family: 'Rajdhani', sans-serif;
-        color: rgba(0, 240, 255, 0.6);
-        font-size: 1.2em;
-        margin-top: 0;
-        letter-spacing: 4px;
-        text-transform: uppercase;
+        color: #777169;
+        font-size: 1.15em;
+        margin-top: 8px;
+        font-weight: 400;
+        letter-spacing: 0.5px;
     }
 
+    /* === Cards === */
     .metric-card {
-        background: linear-gradient(135deg, rgba(0, 240, 255, 0.05), rgba(0, 255, 136, 0.03));
-        border-radius: 16px;
-        padding: 24px 16px;
+        background: #F5F3F1;
+        border-radius: 20px;
+        padding: 28px 16px;
         text-align: center;
-        border: 1px solid rgba(0, 240, 255, 0.15);
-        backdrop-filter: blur(10px);
-        position: relative;
-        overflow: hidden;
+        border: 1px solid #EBE8E4;
         transition: all 0.3s ease;
     }
     .metric-card:hover {
-        border-color: rgba(0, 240, 255, 0.5);
-        box-shadow: 0 0 30px rgba(0, 240, 255, 0.1), inset 0 0 30px rgba(0, 240, 255, 0.03);
-    }
-    .metric-card::before {
-        content: '';
-        position: absolute;
-        top: 0; left: 0; right: 0;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #00f0ff, transparent);
+        border-color: #D4D0CC;
+        box-shadow: 0 4px 24px rgba(0,0,0,0.04);
+        transform: translateY(-2px);
     }
     .metric-value {
-        font-family: 'Orbitron', monospace;
         font-size: 2.8em;
         font-weight: 700;
+        color: #0C0A09;
+        line-height: 1.1;
     }
     .metric-label {
-        font-family: 'Rajdhani', sans-serif;
-        color: rgba(255, 255, 255, 0.5);
-        font-size: 0.95em;
+        color: #777169;
+        font-size: 0.85em;
         text-transform: uppercase;
-        letter-spacing: 2px;
+        letter-spacing: 1.5px;
+        margin-top: 4px;
+        font-weight: 500;
+    }
+    .metric-sub {
+        color: #A59F97;
+        font-size: 0.8em;
+        margin-top: 4px;
     }
 
     .highlight-box {
-        background: linear-gradient(135deg, rgba(0, 240, 255, 0.08), rgba(0, 50, 80, 0.3));
-        border-left: 3px solid #00f0ff;
+        background: #F5F3F1;
+        border-left: 3px solid #0447FF;
         padding: 18px 20px;
-        border-radius: 0 12px 12px 0;
+        border-radius: 0 16px 16px 0;
         margin: 12px 0;
-        font-family: 'Rajdhani', sans-serif;
-        backdrop-filter: blur(5px);
-        border-top: 1px solid rgba(0, 240, 255, 0.1);
-        border-bottom: 1px solid rgba(0, 240, 255, 0.1);
+        color: #44403B;
+        border-top: 1px solid #EBE8E4;
+        border-bottom: 1px solid #EBE8E4;
+    }
+    .highlight-box h4 {
+        color: #0C0A09 !important;
+        margin: 0 0 8px 0;
+        font-weight: 600;
+    }
+    .highlight-box b {
+        color: #0C0A09;
     }
 
-    /* Tab styling */
+    /* === Tabs === */
     .stTabs [data-baseweb="tab-list"] {
         gap: 4px;
-        background: rgba(0, 15, 30, 0.8);
-        border-radius: 12px;
+        background: #F5F3F1;
+        border-radius: 16px;
         padding: 4px;
-        border: 1px solid rgba(0, 240, 255, 0.1);
+        border: 1px solid #EBE8E4;
     }
     .stTabs [data-baseweb="tab"] {
-        font-family: 'Rajdhani', sans-serif;
-        font-weight: 600;
-        letter-spacing: 1px;
-        color: rgba(0, 240, 255, 0.6);
-        border-radius: 8px;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+        color: #57534E;
+        border-radius: 12px;
         padding: 8px 20px;
     }
     .stTabs [aria-selected="true"] {
-        background: linear-gradient(135deg, rgba(0, 240, 255, 0.15), rgba(0, 255, 136, 0.08)) !important;
-        color: #00f0ff !important;
-        border: 1px solid rgba(0, 240, 255, 0.3);
+        background: #FFFFFF !important;
+        color: #0C0A09 !important;
+        border: 1px solid #EBE8E4;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.04);
     }
 
-    /* Slider & inputs */
-    .stSlider > div > div > div > div {
-        background: linear-gradient(90deg, #00f0ff, #00ff88) !important;
-    }
-    .stSelectbox label, .stSlider label, .stRadio label {
-        font-family: 'Rajdhani', sans-serif;
-        color: rgba(0, 240, 255, 0.7) !important;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-    }
-
-    /* Buttons */
+    /* === Buttons === */
     .stButton > button {
-        font-family: 'Rajdhani', sans-serif;
-        font-weight: 600;
-        letter-spacing: 1px;
-        border: 1px solid rgba(0, 240, 255, 0.3);
-        background: rgba(0, 240, 255, 0.08);
-        color: #00f0ff;
-        transition: all 0.3s ease;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+        border: 1px solid #EBE8E4;
+        background: #FFFFFF;
+        color: #0C0A09;
+        border-radius: 9999px;
+        padding: 8px 20px;
+        transition: all 0.2s ease;
     }
     .stButton > button:hover {
-        background: rgba(0, 240, 255, 0.2);
-        border-color: #00f0ff;
-        box-shadow: 0 0 20px rgba(0, 240, 255, 0.2);
+        background: #0C0A09;
+        color: #FFFFFF;
+        border-color: #0C0A09;
     }
 
-    /* Metrics */
+    /* === Slider & Inputs === */
+    .stSlider > div > div > div > div {
+        background: #0447FF !important;
+    }
+    .stSelectbox label, .stSlider label, .stRadio label {
+        color: #44403B !important;
+        font-weight: 500;
+        letter-spacing: 0.3px;
+    }
+
+    /* === Metrics === */
     [data-testid="stMetricValue"] {
-        font-family: 'Orbitron', monospace;
-        color: #00f0ff;
+        font-weight: 700;
+        color: #0C0A09;
     }
     [data-testid="stMetricLabel"] {
-        font-family: 'Rajdhani', sans-serif;
         text-transform: uppercase;
         letter-spacing: 1px;
+        color: #777169;
+        font-weight: 500;
     }
 
-    /* Section headers */
+    /* === Section Headers === */
     .stMarkdown h3 {
-        font-family: 'Orbitron', monospace;
-        color: #00f0ff !important;
-        letter-spacing: 2px;
-        border-bottom: 1px solid rgba(0, 240, 255, 0.15);
+        color: #0C0A09 !important;
+        letter-spacing: -0.3px;
+        font-weight: 600;
+        border-bottom: 1px solid #EBE8E4;
         padding-bottom: 10px;
     }
 
-    /* Warning/Error boxes */
-    .stAlert {
-        font-family: 'Rajdhani', sans-serif;
-        border-radius: 8px;
-    }
-
-    /* Divider */
+    /* === Divider === */
     hr {
-        border-color: rgba(0, 240, 255, 0.1) !important;
+        border-color: #EBE8E4 !important;
     }
 
-    /* Use-case cards */
+    /* === Use-case cards === */
     .use-card {
-        background: linear-gradient(135deg, rgba(0, 240, 255, 0.05), rgba(0, 20, 40, 0.5));
-        border: 1px solid rgba(0, 240, 255, 0.12);
-        border-radius: 16px;
+        background: #FFFFFF;
+        border: 1px solid #EBE8E4;
+        border-radius: 20px;
         padding: 28px 16px;
         text-align: center;
-        position: relative;
-        overflow: hidden;
-        transition: all 0.4s ease;
+        transition: all 0.3s ease;
     }
     .use-card:hover {
-        transform: translateY(-4px);
-        border-color: rgba(0, 240, 255, 0.4);
-        box-shadow: 0 8px 32px rgba(0, 240, 255, 0.1);
+        transform: translateY(-3px);
+        border-color: #D4D0CC;
+        box-shadow: 0 8px 32px rgba(0,0,0,0.06);
     }
-    .use-card::after {
-        content: '';
-        position: absolute;
-        bottom: 0; left: 0; right: 0;
-        height: 2px;
-        background: linear-gradient(90deg, transparent, #00f0ff, #00ff88, transparent);
-        opacity: 0;
-        transition: opacity 0.3s ease;
-    }
-    .use-card:hover::after { opacity: 1; }
     .use-icon { font-size: 2.5em; margin-bottom: 8px; }
     .use-title {
-        font-family: 'Orbitron', monospace;
-        color: #00f0ff;
+        color: #0C0A09;
         font-weight: 700;
-        font-size: 0.9em;
+        font-size: 0.85em;
         letter-spacing: 1px;
         margin: 8px 0;
+        text-transform: uppercase;
     }
     .use-desc {
-        font-family: 'Rajdhani', sans-serif;
-        color: rgba(255,255,255,0.5);
+        color: #777169;
         font-size: 0.9em;
         line-height: 1.5;
     }
 
+    /* Accent dot */
+    .dot-orange { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #DC2626; margin-right: 6px; }
+    .dot-blue { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #0447FF; margin-right: 6px; }
+
     /* Footer */
     .footer-text {
         text-align: center;
-        font-family: 'Rajdhani', sans-serif;
-        color: rgba(0, 240, 255, 0.25);
+        color: #A59F97;
         font-size: 0.85em;
-        letter-spacing: 2px;
-        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    /* Alert boxes */
+    .stAlert {
+        border-radius: 12px;
+    }
+
+    /* Tag pill */
+    .tag-cop {
+        display: inline-block;
+        background: #0447FF;
+        color: #FFFFFF;
+        padding: 2px 10px;
+        border-radius: 9999px;
+        font-size: 0.75em;
+        font-weight: 600;
+        letter-spacing: 0.5px;
+    }
+    .tag-conv {
+        display: inline-block;
+        background: #EBE8E4;
+        color: #57534E;
+        padding: 2px 10px;
+        border-radius: 9999px;
+        font-size: 0.75em;
+        font-weight: 600;
+        letter-spacing: 0.5px;
     }
 </style>
 """, unsafe_allow_html=True)
@@ -333,26 +343,29 @@ def run_k_sweep(M, snr_db, T, K_range):
     return all_results
 
 
-CYBER_LAYOUT = dict(
-    template="plotly_dark",
-    paper_bgcolor='rgba(5, 8, 16, 0.8)',
-    plot_bgcolor='rgba(5, 12, 25, 0.9)',
-    font=dict(family='Rajdhani, sans-serif', color='rgba(0, 240, 255, 0.8)'),
-    title_font=dict(family='Orbitron, monospace', color='#00f0ff'),
-    xaxis=dict(gridcolor='rgba(0, 240, 255, 0.08)', zerolinecolor='rgba(0, 240, 255, 0.15)'),
-    yaxis=dict(gridcolor='rgba(0, 240, 255, 0.08)', zerolinecolor='rgba(0, 240, 255, 0.15)'),
+# ElevenLabs-style Plotly layout
+CLEAN_LAYOUT = dict(
+    template="plotly_white",
+    paper_bgcolor='#FFFFFF',
+    plot_bgcolor='#FDFCFC',
+    font=dict(family='Inter, -apple-system, sans-serif', color='#44403B', size=13),
+    title_font=dict(family='Inter, sans-serif', color='#0C0A09', size=16, weight=600),
+    xaxis=dict(gridcolor='#F5F3F1', zerolinecolor='#EBE8E4', linecolor='#EBE8E4'),
+    yaxis=dict(gridcolor='#F5F3F1', zerolinecolor='#EBE8E4', linecolor='#EBE8E4'),
 )
 
-def make_spectrum_plot(results, true_doas, scan_deg, title=""):
-    """Create spectrum comparison plot — cyber style."""
-    colors = {
-        'MUSIC': 'rgba(150, 150, 170, 0.7)',
-        'Capon': 'rgba(0, 200, 200, 0.7)',
-        'COP-CBF': '#39ff14',
-        'COP-MVDR': '#ff6e00',
-        'COP-4th': '#00f0ff',
-    }
+# Color palette: orange for COP (proposed), stone/gray for conventional
+COLORS = {
+    'MUSIC': '#A59F97',
+    'Capon': '#57534E',
+    'COP-CBF': '#3B82F6',
+    'COP-MVDR': '#0447FF',
+    'COP-4th': '#0C0A09',
+}
 
+
+def make_spectrum_plot(results, true_doas, scan_deg, title=""):
+    """Create spectrum comparison — clean style."""
     fig = go.Figure()
 
     for name, data in results.items():
@@ -364,58 +377,59 @@ def make_spectrum_plot(results, true_doas, scan_deg, title=""):
             fig.add_trace(go.Scatter(
                 x=scan_deg, y=spec_db,
                 name=f"{name} ({data['n_detected']}/{len(true_doas)})",
-                line=dict(color=colors.get(name, '#fff'),
-                          width=3 if is_cop else 1.5,
+                line=dict(color=COLORS.get(name, '#A59F97'),
+                          width=2.5 if is_cop else 1.2,
                           dash='solid' if is_cop else 'dot'),
                 fill='tozeroy' if name == 'COP-4th' else None,
-                fillcolor='rgba(0, 240, 255, 0.05)' if name == 'COP-4th' else None,
+                fillcolor='rgba(12, 10, 9, 0.04)' if name == 'COP-4th' else None,
             ))
 
     for doa in true_doas:
-        fig.add_vline(x=doa, line_dash="dash", line_color="rgba(255, 215, 0, 0.5)",
-                      line_width=1)
+        fig.add_vline(x=doa, line_dash="dash", line_color="#DC2626",
+                      line_width=1, opacity=0.35)
 
     fig.update_layout(
-        **CYBER_LAYOUT,
-        title=dict(text=title, font=dict(size=16, family='Orbitron', color='#00f0ff')),
-        xaxis_title="ANGLE (DEG)",
-        yaxis_title="SPECTRUM (dB)",
+        **CLEAN_LAYOUT,
+        title=dict(text=title),
+        xaxis_title="Angle (deg)",
+        yaxis_title="Spectrum (dB)",
         height=450,
-        legend=dict(font=dict(size=11, family='Rajdhani'), bgcolor='rgba(0,0,0,0.3)'),
+        legend=dict(font=dict(size=12), bgcolor='rgba(255,255,255,0.9)',
+                    bordercolor='#EBE8E4', borderwidth=1),
         margin=dict(l=60, r=20, t=60, b=50),
     )
     return fig
 
 
 def make_radar_plot(results, true_doas, title=""):
-    """Create radar/polar display — cyber HUD style."""
+    """Create radar display — clean style."""
     fig = go.Figure()
 
-    # Radar sweep rings
+    # Range rings
     for r in [0.25, 0.5, 0.75, 1.0]:
         theta_ring = np.linspace(0, 180, 90)
         fig.add_trace(go.Scatterpolar(
             r=[r] * 90, theta=theta_ring,
-            mode='lines', line=dict(color='rgba(0, 240, 255, 0.08)', width=1),
+            mode='lines', line=dict(color='#EBE8E4', width=1),
             showlegend=False, hoverinfo='skip',
         ))
 
-    # True DOAs — glowing markers
+    # True DOAs
     for i_doa, doa in enumerate(true_doas):
         fig.add_trace(go.Scatterpolar(
             r=[1], theta=[doa + 90],
             mode='markers',
-            marker=dict(size=16, color='#FFD700', symbol='star',
-                       line=dict(color='rgba(255,215,0,0.4)', width=3)),
+            marker=dict(size=14, color='#DC2626', symbol='star',
+                       line=dict(color='rgba(220,38,38,0.3)', width=3)),
             name='True Target' if (i_doa == 0) else None,
             showlegend=bool(i_doa == 0),
         ))
 
     # Algorithm detections
     alg_styles = {
-        'MUSIC': ('#666688', 'square', 0.85),
-        'COP-MVDR': ('#ff6e00', 'diamond', 0.7),
-        'COP-4th': ('#00f0ff', 'circle', 0.55),
+        'MUSIC': ('#A59F97', 'square', 0.85),
+        'COP-MVDR': ('#0447FF', 'diamond', 0.7),
+        'COP-4th': ('#0C0A09', 'circle', 0.55),
     }
 
     for name in ['MUSIC', 'COP-MVDR', 'COP-4th']:
@@ -426,81 +440,79 @@ def make_radar_plot(results, true_doas, title=""):
                 fig.add_trace(go.Scatterpolar(
                     r=[r_val], theta=[doa + 90],
                     mode='markers',
-                    marker=dict(size=13, color=color, symbol=symbol,
-                               line=dict(color=color, width=2)),
+                    marker=dict(size=11, color=color, symbol=symbol,
+                               line=dict(color=color, width=1.5)),
                     name=f"{name}: {data['n_detected']}/{len(true_doas)}",
                     showlegend=False,
                 ))
 
     fig.update_layout(
-        title=dict(text=title, font=dict(size=14, family='Orbitron', color='#00f0ff')),
+        title=dict(text=title, font=dict(size=14, color='#0C0A09')),
         polar=dict(
-            bgcolor='rgba(5, 8, 16, 0.95)',
+            bgcolor='#FDFCFC',
             radialaxis=dict(visible=False, range=[0, 1.15]),
             angularaxis=dict(
                 tickvals=[0, 30, 60, 90, 120, 150, 180],
                 ticktext=['-90°', '-60°', '-30°', '0°', '+30°', '+60°', '+90°'],
-                gridcolor='rgba(0, 240, 255, 0.1)',
-                linecolor='rgba(0, 240, 255, 0.2)',
-                tickfont=dict(family='Orbitron', size=10, color='rgba(0,240,255,0.5)'),
+                gridcolor='#EBE8E4',
+                linecolor='#D4D0CC',
+                tickfont=dict(size=11, color='#777169'),
             ),
         ),
-        paper_bgcolor='rgba(5, 8, 16, 0.8)',
-        template="plotly_dark",
+        paper_bgcolor='#FFFFFF',
+        template="plotly_white",
         height=420,
         showlegend=True,
-        legend=dict(font=dict(size=10, family='Rajdhani'), bgcolor='rgba(0,0,0,0.3)'),
+        legend=dict(font=dict(size=11), bgcolor='rgba(255,255,255,0.9)',
+                    bordercolor='#EBE8E4', borderwidth=1),
         margin=dict(l=40, r=40, t=60, b=40),
     )
     return fig
 
 
 def make_performance_bars(results, true_doas):
-    """Create Pd/RMSE bar comparison."""
+    """Create Pd/RMSE bar comparison — clean style."""
     names = list(results.keys())
     pds = [results[n]['pd'] for n in names]
     rmses = [results[n]['rmse'] for n in names]
 
-    colors_pd = ['rgba(100,100,120,0.5)' if 'COP' not in n else
-                  'rgba(0, 240, 255, 0.7)' for n in names]
-    colors_rmse = ['rgba(100,100,120,0.5)' if 'COP' not in n else
-                   'rgba(255, 110, 0, 0.8)' for n in names]
+    bar_colors = [COLORS.get(n, '#A59F97') for n in names]
 
-    fig = make_subplots(rows=1, cols=2, subplot_titles=["DETECTION RATE (Pd)", "RMSE (DEG)"])
+    fig = make_subplots(rows=1, cols=2, subplot_titles=["Detection Rate (Pd)", "RMSE (deg)"])
 
     fig.add_trace(go.Bar(
-        x=names, y=pds, marker_color=colors_pd,
-        marker_line=dict(color='rgba(0,240,255,0.3)', width=1),
+        x=names, y=pds, marker_color=bar_colors,
+        marker_line=dict(color='#EBE8E4', width=0),
         text=[f"{p:.0%}" for p in pds], textposition='auto',
-        textfont=dict(family='Orbitron', size=12),
+        textfont=dict(size=13, color='white', weight=700),
     ), row=1, col=1)
 
     fig.add_trace(go.Bar(
-        x=names, y=rmses, marker_color=colors_rmse,
-        marker_line=dict(color='rgba(255,110,0,0.3)', width=1),
+        x=names, y=rmses, marker_color=bar_colors,
+        marker_line=dict(color='#EBE8E4', width=0),
         text=[f"{r:.1f}°" for r in rmses], textposition='auto',
-        textfont=dict(family='Orbitron', size=12),
+        textfont=dict(size=13, color='white', weight=700),
     ), row=1, col=2)
 
     fig.update_layout(
-        **CYBER_LAYOUT,
+        **CLEAN_LAYOUT,
         height=350,
         showlegend=False,
         margin=dict(l=40, r=20, t=40, b=50),
     )
+    fig.update_xaxes(tickangle=30, tickfont=dict(size=11))
     return fig
 
 
 @st.cache_data
 def run_tracking_simulation(M, n_scans, snr_db, T, scenario_type="crossing"):
-    """Run multi-target tracking simulation: COP + simple GM-PHD tracker."""
+    """Run multi-target tracking simulation."""
     np.random.seed(42)
     array = UniformLinearArray(M=M, d=0.5)
     rho = 2
     scan_angles = np.linspace(-np.pi / 2, np.pi / 2, 361)
     dt = 0.1
 
-    # Target trajectory generators
     if scenario_type == "crossing":
         def get_doas(scan):
             d = []
@@ -520,17 +532,16 @@ def run_tracking_simulation(M, n_scans, snr_db, T, scenario_type="crossing"):
             if n_scans * 0.2 < scan < n_scans * 0.5:
                 d.append(60)
             return np.array(d)
-    else:  # swarm
+    else:
         def get_doas(scan):
             center = -30 + 60 * scan / n_scans
             d = [center + 8 * (i - 2) + 2 * np.sin(2 * np.pi * scan / (n_scans / 3) + i)
                  for i in range(5)]
             return np.array(d)
 
-    # Simple GM-PHD-like tracker
-    tracks = []  # list of {id, theta, vel, weight, hits, miss}
+    tracks = []
     next_id = 0
-    gate = 10.0  # degrees
+    gate = 10.0
 
     history = {'scan': [], 'true_doas': [], 'cop_doas': [], 'tracks': [], 'spectrum': []}
 
@@ -542,7 +553,6 @@ def run_tracking_simulation(M, n_scans, snr_db, T, scenario_type="crossing"):
         np.random.seed(42 + scan * 7)
         X, _, _ = generate_snapshots(array, true_doas_rad, snr_db, T, "non_stationary")
 
-        # COP DOA estimation
         try:
             cop = SubspaceCOP(array, rho=rho, num_sources=min(K, rho * (M - 1)),
                               spectrum_type="combined")
@@ -552,11 +562,9 @@ def run_tracking_simulation(M, n_scans, snr_db, T, scenario_type="crossing"):
             doas_deg = np.array([])
             spectrum = np.zeros(len(scan_angles))
 
-        # --- Predict ---
         for tr in tracks:
             tr['theta'] += tr['vel'] * dt
 
-        # --- Associate (greedy nearest neighbor) ---
         used_meas = set()
         for tr in tracks:
             if len(doas_deg) == 0:
@@ -564,7 +572,6 @@ def run_tracking_simulation(M, n_scans, snr_db, T, scenario_type="crossing"):
             dists = np.abs(doas_deg - tr['theta'])
             best_i = np.argmin(dists)
             if dists[best_i] < gate and best_i not in used_meas:
-                # Update
                 innovation = doas_deg[best_i] - tr['theta']
                 tr['vel'] = 0.7 * tr['vel'] + 0.3 * (innovation / max(dt, 0.01))
                 tr['theta'] += 0.6 * innovation
@@ -576,7 +583,6 @@ def run_tracking_simulation(M, n_scans, snr_db, T, scenario_type="crossing"):
                 tr['miss'] += 1
                 tr['weight'] *= 0.8
 
-        # --- Birth (unassociated measurements) ---
         for i, d in enumerate(doas_deg):
             if i not in used_meas:
                 tracks.append({
@@ -585,10 +591,8 @@ def run_tracking_simulation(M, n_scans, snr_db, T, scenario_type="crossing"):
                 })
                 next_id += 1
 
-        # --- Prune (dead tracks) ---
         tracks = [tr for tr in tracks if tr['weight'] > 0.05 and tr['miss'] < 5]
 
-        # Record
         track_tuples = [(tr['theta'], tr['vel'], tr['weight'], tr['id']) for tr in tracks]
         history['scan'].append(scan)
         history['true_doas'].append(true_doas_deg.tolist())
@@ -600,7 +604,7 @@ def run_tracking_simulation(M, n_scans, snr_db, T, scenario_type="crossing"):
 
 
 def make_tracking_plot(history, current_scan=None):
-    """Create multi-target tracking visualization."""
+    """Create tracking visualization — clean style."""
     n_scans = len(history['scan'])
     if current_scan is None:
         current_scan = n_scans - 1
@@ -608,25 +612,25 @@ def make_tracking_plot(history, current_scan=None):
     fig = make_subplots(
         rows=2, cols=2,
         subplot_titles=["DOA Track History", "Current Spectrum",
-                        "Track Velocity", "Track Table"],
+                        "Track Velocity", "Active Tracks"],
         specs=[[{"type": "scatter"}, {"type": "scatter"}],
                [{"type": "scatter"}, {"type": "table"}]],
         vertical_spacing=0.12, horizontal_spacing=0.08,
     )
 
-    # (1,1) Track history - true DOAs
+    # True DOAs
     for scan_i in range(current_scan + 1):
         for doa in history['true_doas'][scan_i]:
             fig.add_trace(go.Scatter(
                 x=[scan_i], y=[doa],
-                mode='markers', marker=dict(size=4, color='#FFD700', opacity=0.4),
+                mode='markers', marker=dict(size=4, color='#0447FF', opacity=0.3),
                 showlegend=False,
             ), row=1, col=1)
 
-    # Track history - estimated tracks (colored by track ID)
-    track_colors = ['#00f0ff', '#ff6e00', '#39ff14', '#ff3366', '#aa88ff',
-                    '#ffaa00', '#ff66cc', '#00ffaa']
-    track_histories = {}  # label -> [(scan, doa)]
+    # Tracks
+    track_colors = ['#0447FF', '#DC2626', '#10B981', '#F59E0B', '#8B5CF6',
+                    '#EC4899', '#2E86AB', '#0C0A09']
+    track_histories = {}
 
     for scan_i in range(current_scan + 1):
         for theta, theta_dot, weight, label in history['tracks'][scan_i]:
@@ -643,18 +647,17 @@ def make_tracking_plot(history, current_scan=None):
             x=th['scans'], y=th['doas'],
             mode='lines+markers',
             line=dict(color=color, width=2),
-            marker=dict(size=5, color=color),
+            marker=dict(size=4, color=color),
             name=f'Track {label}',
             showlegend=True,
         ), row=1, col=1)
 
-    # True DOA reference lines for current scan
     if current_scan < len(history['true_doas']):
         for doa in history['true_doas'][current_scan]:
-            fig.add_hline(y=doa, line_dash="dot", line_color="#FFD700",
+            fig.add_hline(y=doa, line_dash="dot", line_color="#DC2626",
                          opacity=0.3, row=1, col=1)
 
-    # (1,2) Current spectrum
+    # Spectrum
     if current_scan < len(history['spectrum']):
         spec = history['spectrum'][current_scan]
         if len(spec) > 0:
@@ -663,16 +666,15 @@ def make_tracking_plot(history, current_scan=None):
             spec_db = np.clip(spec_db, -40, 0)
             fig.add_trace(go.Scatter(
                 x=angles, y=spec_db,
-                mode='lines', line=dict(color='#0088FF', width=2),
+                mode='lines', line=dict(color='#0C0A09', width=2),
                 name='COP Spectrum', showlegend=False,
             ), row=1, col=2)
 
-            # Mark detected DOAs
             for doa in history['cop_doas'][current_scan]:
-                fig.add_vline(x=doa, line_dash="solid", line_color="#FF6600",
-                             line_width=1, opacity=0.7, row=1, col=2)
+                fig.add_vline(x=doa, line_dash="solid", line_color="#0447FF",
+                             line_width=1.5, opacity=0.6, row=1, col=2)
 
-    # (2,1) Track velocity over time
+    # Velocity
     for label, th in track_histories.items():
         color = track_colors[label % len(track_colors)]
         fig.add_trace(go.Scatter(
@@ -681,17 +683,18 @@ def make_tracking_plot(history, current_scan=None):
             name=f'T{label} vel', showlegend=False,
         ), row=2, col=1)
 
-    # (2,2) Current tracks table
+    # Table
     current_tracks = history['tracks'][current_scan] if current_scan < len(history['tracks']) else []
     confirmed = [(t, d, w, l) for t, d, w, l in current_tracks if w >= 0.5]
 
     if confirmed:
         fig.add_trace(go.Table(
             header=dict(
-                values=['Track ID', 'DOA (°)', 'Vel (°/s)', 'Weight'],
-                fill_color='rgba(0, 20, 40, 0.9)',
-                font=dict(color='#00f0ff', size=12, family='Orbitron'),
+                values=['Track', 'DOA (deg)', 'Vel (deg/s)', 'Weight'],
+                fill_color='#F5F3F1',
+                font=dict(color='#0C0A09', size=12, weight=600),
                 align='center',
+                line_color='#EBE8E4',
             ),
             cells=dict(
                 values=[
@@ -700,31 +703,26 @@ def make_tracking_plot(history, current_scan=None):
                     [f'{d:.2f}' for _, d, _, _ in confirmed],
                     [f'{w:.2f}' for _, _, w, _ in confirmed],
                 ],
-                fill_color='rgba(5, 8, 16, 0.95)',
-                font=dict(color='rgba(0,240,255,0.7)', size=11, family='Rajdhani'),
+                fill_color='#FFFFFF',
+                font=dict(color='#44403B', size=12),
                 align='center',
+                line_color='#EBE8E4',
             ),
         ), row=2, col=2)
 
     fig.update_layout(
-        **CYBER_LAYOUT,
+        **CLEAN_LAYOUT,
         height=650,
         margin=dict(l=50, r=20, t=40, b=40),
-        legend=dict(font=dict(size=10, family='Rajdhani'), x=0.01, y=0.99,
-                    bgcolor='rgba(0,0,0,0.3)'),
+        legend=dict(font=dict(size=11), x=0.01, y=0.99,
+                    bgcolor='rgba(255,255,255,0.9)', bordercolor='#EBE8E4', borderwidth=1),
     )
-    fig.update_xaxes(title_text="SCAN", row=1, col=1,
-                     gridcolor='rgba(0,240,255,0.08)')
-    fig.update_yaxes(title_text="DOA (DEG)", row=1, col=1,
-                     gridcolor='rgba(0,240,255,0.08)')
-    fig.update_xaxes(title_text="ANGLE (DEG)", row=1, col=2,
-                     gridcolor='rgba(0,240,255,0.08)')
-    fig.update_yaxes(title_text="dB", row=1, col=2,
-                     gridcolor='rgba(0,240,255,0.08)')
-    fig.update_xaxes(title_text="SCAN", row=2, col=1,
-                     gridcolor='rgba(0,240,255,0.08)')
-    fig.update_yaxes(title_text="VELOCITY (DEG/S)", row=2, col=1,
-                     gridcolor='rgba(0,240,255,0.08)')
+    fig.update_xaxes(title_text="Scan", row=1, col=1, gridcolor='#F5F3F1')
+    fig.update_yaxes(title_text="DOA (deg)", row=1, col=1, gridcolor='#F5F3F1')
+    fig.update_xaxes(title_text="Angle (deg)", row=1, col=2, gridcolor='#F5F3F1')
+    fig.update_yaxes(title_text="dB", row=1, col=2, gridcolor='#F5F3F1')
+    fig.update_xaxes(title_text="Scan", row=2, col=1, gridcolor='#F5F3F1')
+    fig.update_yaxes(title_text="Velocity (deg/s)", row=2, col=1, gridcolor='#F5F3F1')
 
     return fig
 
@@ -732,38 +730,48 @@ def make_tracking_plot(history, current_scan=None):
 # ============================================================
 # Header
 # ============================================================
-st.markdown('<p class="main-title">📡 SmartEar COP-DOA Technology Demo</p>', unsafe_allow_html=True)
-st.markdown('<p class="sub-title">Higher-Order Cumulant-Based DOA Estimation — Fewer Mics, More Targets</p>', unsafe_allow_html=True)
+st.markdown("""
+<div style="text-align:center; padding: 40px 0 20px 0;">
+    <p style="font-size:0.85em; font-weight:600; color:#0447FF; letter-spacing:3px; text-transform:uppercase; margin-bottom:12px;">SmartEar Technology</p>
+    <p style="font-size:3.5em; font-weight:300; color:#0C0A09; margin:0; letter-spacing:-1.5px; line-height:1.05;">
+        4 Mics. 6 Targets.<br><span style="color:#0447FF; font-weight:700;">Impossible</span> Made Real.
+    </p>
+    <p style="font-size:1.2em; color:#777169; margin-top:16px; font-weight:400;">
+        COP-DOA breaks the physical limit &mdash; resolving more sources than sensors,<br>
+        in real time, on a $4 chip.
+    </p>
+</div>
+""", unsafe_allow_html=True)
 
 # ============================================================
 # Tabs
 # ============================================================
 tab1, tab2, tab_track, tab3, tab4 = st.tabs([
-    "🎯 Live Radar", "⚔️ Algorithm Showdown", "🎯 Multi-Target Tracking",
-    "🔬 M=4 Small Array", "📊 Benchmarks"
+    "Live Radar", "Algorithm Showdown", "Multi-Target Tracking",
+    "M=4 Small Array", "Benchmarks"
 ])
 
 # ============================================================
 # Tab 1: Live Radar
 # ============================================================
 with tab1:
-    st.markdown("### Real-Time DOA Detection: MUSIC vs COP")
+    st.markdown("### Real-Time DOA Detection")
 
     col_ctrl, col_viz = st.columns([1, 3])
 
     with col_ctrl:
         st.markdown("**Scenario**")
         scenario = st.selectbox("Select", [
-            "3 targets (Easy — all methods work)",
+            "3 targets (Easy)",
             "5 targets (Hard — MUSIC fails)",
-            "6 targets (Extreme — only COP works)",
+            "6 targets (Extreme — only COP)",
             "8 targets (COP-MVDR shines)",
         ], index=2)
 
         K_map = {
-            "3 targets (Easy — all methods work)": 3,
+            "3 targets (Easy)": 3,
             "5 targets (Hard — MUSIC fails)": 5,
-            "6 targets (Extreme — only COP works)": 6,
+            "6 targets (Extreme — only COP)": 6,
             "8 targets (COP-MVDR shines)": 8,
         }
         K = K_map[scenario]
@@ -791,13 +799,19 @@ with tab1:
     for i, (name, data) in enumerate(results.items()):
         with cols[i]:
             is_cop = 'COP' in name
-            pd_color = "#00ff88" if data['pd'] >= 0.8 else "#ffaa00" if data['pd'] >= 0.5 else "#ff4444"
+            if data['pd'] >= 0.8:
+                pd_color = "#0447FF"
+            elif data['pd'] >= 0.5:
+                pd_color = "#F59E0B"
+            else:
+                pd_color = "#DC2626"
+            tag = '<span class="tag-cop">PROPOSED</span>' if is_cop else '<span class="tag-conv">CONV.</span>'
             st.markdown(f"""
             <div class="metric-card">
-                <div style="color: {'#00d4ff' if is_cop else '#aaa'}; font-weight:bold">{name}</div>
+                <div style="font-weight:600; color:#44403B; margin-bottom:4px">{name} {tag}</div>
                 <div class="metric-value" style="color: {pd_color}">{data['pd']:.0%}</div>
                 <div class="metric-label">Detection Rate</div>
-                <div style="color: #aaa; font-size:0.85em">{data['n_detected']}/{len(true_doas)} detected | RMSE {data['rmse']:.1f}°</div>
+                <div class="metric-sub">{data['n_detected']}/{len(true_doas)} detected &middot; RMSE {data['rmse']:.1f}&deg;</div>
             </div>
             """, unsafe_allow_html=True)
 
@@ -819,13 +833,13 @@ with tab2:
 
         st.markdown("---")
         st.markdown("**Quick Presets**")
-        if st.button("✅ Easy (K=3, SNR=20)", use_container_width=True):
+        if st.button("Easy (K=3, SNR=20)", use_container_width=True):
             st.session_state['preset'] = (4, 3, 20, 256)
             st.rerun()
-        if st.button("⚠️ Hard (K=5, SNR=5)", use_container_width=True):
+        if st.button("Hard (K=5, SNR=5)", use_container_width=True):
             st.session_state['preset'] = (4, 5, 5, 256)
             st.rerun()
-        if st.button("🔥 Impossible for MUSIC", use_container_width=True):
+        if st.button("Impossible for MUSIC", use_container_width=True):
             st.session_state['preset'] = (4, 6, 10, 256)
             st.rerun()
 
@@ -833,17 +847,17 @@ with tab2:
         cop_limit = 2 * (M_show - 1)
         st.markdown(f"""
         <div class="highlight-box">
-            <b>M={M_show} Array Limits:</b><br>
-            MUSIC/Capon: K ≤ <b>{conv_limit}</b><br>
-            COP (ρ=2): K ≤ <b>{cop_limit}</b><br>
-            Virtual array: M_v = <b>{cop_limit + 1}</b>
+            <h4>M={M_show} Array Limits</h4>
+            <span class="dot-orange"></span>MUSIC/Capon: K &le; <b>{conv_limit}</b><br>
+            <span class="dot-blue"></span>COP (&rho;=2): K &le; <b>{cop_limit}</b><br>
+            Virtual array: M<sub>v</sub> = <b>{cop_limit + 1}</b>
         </div>
         """, unsafe_allow_html=True)
 
         if K_show > conv_limit:
-            st.warning(f"⚡ K={K_show} > M-1={conv_limit}: MUSIC/Capon will FAIL")
+            st.warning(f"K={K_show} > M-1={conv_limit}: MUSIC/Capon will fail")
         if K_show > cop_limit:
-            st.error(f"🔥 K={K_show} > COP limit={cop_limit}: Need SD-COP")
+            st.error(f"K={K_show} > COP limit={cop_limit}: Need SD-COP")
 
     results2, true_doas2, scan_deg2 = run_doa_comparison(M_show, K_show, snr_show, T_show)
 
@@ -860,11 +874,12 @@ with tab2:
 # Tab: Multi-Target Tracking
 # ============================================================
 with tab_track:
-    st.markdown("### COP-RFS Multi-Target Tracking")
+    st.markdown("### COP + GM-PHD Multi-Target Tracking")
     st.markdown("""
     <div class="highlight-box">
-        COP DOA estimation + GM-PHD tracker: automatic <b>birth/death</b> detection,
-        <b>crossing targets</b> resolution, and <b>velocity estimation</b> — all with M=4 mics.
+        <h4>Track, Detect, Resolve</h4>
+        COP DOA + GM-PHD tracker: automatic <b>birth/death</b>, <b>crossing targets</b>,
+        and <b>velocity estimation</b> &mdash; all with M=4 mics.
     </div>
     """, unsafe_allow_html=True)
 
@@ -874,9 +889,9 @@ with tab_track:
         track_scenario = st.selectbox("Scenario", [
             "crossing", "birth_death", "swarm"
         ], format_func=lambda x: {
-            "crossing": "🔀 Crossing Targets",
-            "birth_death": "💀 Birth & Death",
-            "swarm": "🐝 Swarm (5 targets)",
+            "crossing": "Crossing Targets",
+            "birth_death": "Birth & Death",
+            "swarm": "Swarm (5 targets)",
         }[x])
 
         M_track = st.radio("Array (M)", [4, 8], index=0, horizontal=True, key="m_track")
@@ -885,12 +900,13 @@ with tab_track:
 
         st.markdown("---")
         st.markdown(f"""
-        **Config:**
-        - M={M_track}, M_v={2*(M_track-1)+1}
-        - COP limit: K={2*(M_track-1)}
-        - GM-PHD tracker
-        - T-COP temporal fusion
-        """)
+        <div class="highlight-box">
+            <b>Config</b><br>
+            M={M_track}, M<sub>v</sub>={2*(M_track-1)+1}<br>
+            COP limit: K={2*(M_track-1)}<br>
+            GM-PHD tracker
+        </div>
+        """, unsafe_allow_html=True)
 
     history = run_tracking_simulation(M_track, n_scans, snr_track, 64, track_scenario)
 
@@ -904,8 +920,8 @@ with tab_track:
     total_true = sum(len(d) for d in history['true_doas'])
     total_detected = sum(len(d) for d in history['cop_doas'])
     unique_tracks = set()
-    for tracks in history['tracks']:
-        for _, _, w, l in tracks:
+    for tracks_list in history['tracks']:
+        for _, _, w, l in tracks_list:
             if w >= 0.5:
                 unique_tracks.add(l)
 
@@ -921,52 +937,51 @@ with tab_track:
 
 
 # ============================================================
-# Tab 3: M=4 Small Array — Cortex-M7 Pitch
+# Tab 3: M=4 Small Array
 # ============================================================
 with tab3:
-    st.markdown("### M=4 Small Array: The Hardware Advantage")
+    st.markdown("### The Hardware Advantage")
 
     col_a, col_b = st.columns(2)
 
     with col_a:
         st.markdown("""
         <div class="highlight-box">
-            <h4 style="color:#00d4ff">Virtual Aperture Expansion</h4>
-            <p>4th-order cumulants create a <b>virtual array</b> with more elements than physical sensors.</p>
+            <h4>Virtual Aperture Expansion</h4>
+            4th-order cumulants create a <b>virtual array</b> with more elements than physical sensors.
         </div>
         """, unsafe_allow_html=True)
 
-        # Virtual array visualization
         fig_va = go.Figure()
-
-        # Physical array (M=4)
         phys_pos = np.arange(4) * 0.5
         fig_va.add_trace(go.Scatter(
             x=phys_pos, y=[1] * 4,
             mode='markers+text',
-            marker=dict(size=20, color='#00d4ff', symbol='circle'),
+            marker=dict(size=20, color='#0C0A09', symbol='circle'),
             text=[f'M{i+1}' for i in range(4)],
             textposition='top center',
+            textfont=dict(color='#44403B'),
             name='Physical (M=4)',
         ))
-
-        # Virtual array (M_v=7)
         virt_pos = np.arange(7) * 0.5
         fig_va.add_trace(go.Scatter(
             x=virt_pos, y=[0] * 7,
             mode='markers+text',
-            marker=dict(size=18, color='#FF6600', symbol='diamond'),
+            marker=dict(size=18, color='#0447FF', symbol='diamond'),
             text=[f'V{i+1}' for i in range(7)],
             textposition='bottom center',
+            textfont=dict(color='#44403B'),
             name='Virtual (M_v=7)',
         ))
-
         fig_va.update_layout(
-            title="Physical → Virtual Array",
-            template="plotly_dark",
+            title="Physical to Virtual Array",
+            template="plotly_white",
+            paper_bgcolor='#FFFFFF',
+            plot_bgcolor='#FDFCFC',
             height=250,
             yaxis=dict(range=[-0.5, 1.8], visible=False),
             xaxis_title="Position (wavelengths)",
+            font=dict(family='Inter, sans-serif', color='#44403B'),
             margin=dict(l=40, r=20, t=50, b=40),
         )
         st.plotly_chart(fig_va, use_container_width=True)
@@ -974,16 +989,15 @@ with tab3:
     with col_b:
         st.markdown("""
         <div class="highlight-box">
-            <h4 style="color:#FF6600">Cost & Performance</h4>
+            <h4>Cost & Performance</h4>
         </div>
         """, unsafe_allow_html=True)
 
-        # Cost comparison table
         cost_data = {
             'Metric': ['Microphones', 'Max Sources (Conv.)', 'Max Sources (COP)',
                        'Hardware Cost', 'Power', 'Cortex-M7 Latency', 'PCB Size'],
-            'M=4 Array': ['4', '3', '6', '$4', '~50mW', '~12ms', '15×15mm'],
-            'M=8 Array': ['8', '7', '14', '$12', '~120mW', '~45ms', '30×30mm'],
+            'M=4 Array': ['4', '3', '6', '$4', '~50mW', '~12ms', '15x15mm'],
+            'M=8 Array': ['8', '7', '14', '$12', '~120mW', '~45ms', '30x30mm'],
             'Advantage': ['2x fewer', 'COP closes gap', '2x COP range', '3x cheaper',
                          '2.4x less', '3.7x faster', '4x smaller'],
         }
@@ -997,31 +1011,30 @@ with tab3:
             with cols3[2]:
                 st.markdown(f"`{cost_data['M=8 Array'][i]}`")
             with cols3[3]:
-                st.markdown(f"✅ {cost_data['Advantage'][i]}")
+                st.markdown(f"{cost_data['Advantage'][i]}")
 
     st.markdown("---")
 
-    # Use cases
     st.markdown("### Target Applications")
     col_u1, col_u2, col_u3, col_u4 = st.columns(4)
 
     use_cases = [
-        ("🛩️", "DRONE DETECTION", "360° surveillance with 4 mics<br>Multiple drones simultaneously"),
-        ("🔊", "SMART SPEAKER", "Multi-user voice tracking<br>6 users with 4 mics"),
-        ("🦻", "HEARING AID", "Selective listening<br>Ultra-low power COP"),
-        ("🏭", "INDUSTRIAL IoT", "Acoustic anomaly detection<br>Multi-source localization"),
+        ("drone", "Drone Detection", "360 deg surveillance with 4 mics. Multiple drones simultaneously."),
+        ("speaker", "Smart Speaker", "Multi-user voice tracking. 6 users with 4 mics."),
+        ("hearing", "Hearing Aid", "Selective listening. Ultra-low power COP."),
+        ("factory", "Industrial IoT", "Acoustic anomaly detection. Multi-source localization."),
     ]
-    for i, (icon, title, desc) in enumerate(use_cases):
+    icons = {"drone": "&#9992;", "speaker": "&#128266;", "hearing": "&#129467;", "factory": "&#127981;"}
+    for i, (key, title, desc) in enumerate(use_cases):
         with [col_u1, col_u2, col_u3, col_u4][i]:
             st.markdown(f"""
             <div class="use-card">
-                <div class="use-icon">{icon}</div>
+                <div style="font-size:2.5em; margin-bottom:8px">{icons[key]}</div>
                 <div class="use-title">{title}</div>
                 <div class="use-desc">{desc}</div>
             </div>
             """, unsafe_allow_html=True)
 
-    # Live M=4 demo
     st.markdown("---")
     st.markdown("### M=4 Live Comparison")
     K_m4 = st.slider("Number of sources", 2, 8, 5, key="k_m4")
@@ -1041,7 +1054,7 @@ with tab3:
 # Tab 4: Benchmark Results
 # ============================================================
 with tab4:
-    st.markdown("### Publication-Quality Benchmark Results")
+    st.markdown("### Benchmark Results")
 
     bench_tab1, bench_tab2 = st.tabs(["M=8 Results", "M=4 Results"])
 
@@ -1081,8 +1094,8 @@ with tab4:
 st.markdown("---")
 st.markdown("""
 <div class="footer-text">
-    SmartEar Co., Ltd. &nbsp;|&nbsp; COP-DOA Technology Demo &nbsp;|&nbsp; Confidential<br>
-    "COP-RFS: Higher-Order Cumulant DOA Estimation with Multi-Target Tracking"<br>
+    SmartEar Co., Ltd. &nbsp;&middot;&nbsp; COP-DOA Technology Demo &nbsp;&middot;&nbsp; Confidential<br>
+    <i>COP-RFS: Higher-Order Cumulant DOA Estimation with Multi-Target Tracking</i><br>
     IEEE Trans. Signal Processing (Under Review)
 </div>
 """, unsafe_allow_html=True)
