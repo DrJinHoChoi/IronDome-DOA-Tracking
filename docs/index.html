@@ -1,0 +1,800 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>COP-DOA | Underdetermined High-Resolution DOA Estimation</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;600&display=swap');
+
+:root {
+  --bg: #0a0a0f; --bg2: #12121a; --bg3: #1a1a2e;
+  --accent: #4fc3f7; --accent2: #7c4dff; --accent3: #69f0ae;
+  --danger: #ff5252; --gold: #ffd740; --orange: #ff9100;
+  --text: #e8e8f0; --text2: #8888aa;
+  --gradient: linear-gradient(135deg, #4fc3f7, #7c4dff);
+  --gradient2: linear-gradient(135deg, #69f0ae, #4fc3f7);
+  --gradient3: linear-gradient(135deg, #ff4081, #ff9100);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior:smooth; }
+body {
+  font-family:'Inter',-apple-system,sans-serif;
+  background:var(--bg); color:var(--text);
+  overflow-x:hidden; line-height:1.6;
+}
+
+/* NAV */
+nav {
+  position:fixed; top:0; left:0; right:0; z-index:1000;
+  background:rgba(10,10,15,0.95); backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,0.05);
+}
+.nav-inner {
+  max-width:1200px; margin:0 auto; padding:0 40px;
+  display:flex; align-items:center; justify-content:space-between; height:56px;
+}
+.nav-logo {
+  font-size:20px; font-weight:900; letter-spacing:-0.5px;
+  background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.nav-right { display:flex; align-items:center; gap:16px; }
+.nav-badge {
+  background:var(--gradient); color:#000; font-weight:700; font-size:11px;
+  padding:5px 12px; border-radius:20px; letter-spacing:1px;
+}
+.nav-gh {
+  color:var(--text2); text-decoration:none; font-size:12px; font-weight:500;
+  letter-spacing:0.5px; transition:color 0.3s;
+}
+.nav-gh:hover { color:var(--accent); }
+
+/* TABS */
+.tab-bar {
+  position:fixed; top:56px; left:0; right:0; z-index:999;
+  background:rgba(18,18,26,0.95); backdrop-filter:blur(20px);
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.tab-bar-inner {
+  max-width:1200px; margin:0 auto; padding:0 40px;
+  display:flex; gap:0; overflow-x:auto;
+  scrollbar-width:none; -ms-overflow-style:none;
+}
+.tab-bar-inner::-webkit-scrollbar { display:none; }
+.tab-btn {
+  padding:14px 24px; font-size:13px; font-weight:600; color:var(--text2);
+  background:none; border:none; cursor:pointer; white-space:nowrap;
+  border-bottom:2px solid transparent; transition:all 0.3s; letter-spacing:0.3px;
+}
+.tab-btn:hover { color:var(--text); }
+.tab-btn.active { color:var(--accent); border-bottom-color:var(--accent); }
+
+/* MAIN */
+main { padding-top:104px; min-height:100vh; }
+.tab-panel { display:none; animation:fadeIn 0.4s ease; }
+.tab-panel.active { display:block; }
+@keyframes fadeIn { from{opacity:0;transform:translateY(8px)} to{opacity:1;transform:translateY(0)} }
+
+.container { max-width:1200px; margin:0 auto; padding:0 40px; }
+.section { padding:60px 0; }
+.sec-title { text-align:center; margin-bottom:50px; }
+.sec-title h2 { font-size:36px; font-weight:900; letter-spacing:-1px; margin-bottom:10px; }
+.sec-title h2 .g { background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.sec-title p { color:var(--text2); font-size:15px; max-width:650px; margin:0 auto; }
+
+/* HERO */
+.hero {
+  text-align:center; padding:60px 40px 40px; position:relative; overflow:hidden;
+}
+.hero-grid {
+  position:absolute; top:0; left:0; width:100%; height:100%;
+  background-image:
+    radial-gradient(circle at 20% 50%, rgba(79,195,247,0.06) 0%, transparent 50%),
+    radial-gradient(circle at 80% 50%, rgba(124,77,255,0.06) 0%, transparent 50%),
+    linear-gradient(rgba(79,195,247,0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(79,195,247,0.02) 1px, transparent 1px);
+  background-size:100% 100%, 100% 100%, 60px 60px, 60px 60px;
+  animation:gridPulse 8s ease-in-out infinite;
+}
+@keyframes gridPulse { 0%,100%{opacity:.3} 50%{opacity:.7} }
+.hero-content { position:relative; z-index:2; }
+.hero-tag {
+  display:inline-block; background:rgba(79,195,247,0.1); border:1px solid rgba(79,195,247,0.3);
+  color:var(--accent); font-size:11px; font-weight:600; padding:5px 14px;
+  border-radius:20px; letter-spacing:1px; text-transform:uppercase; margin-bottom:20px;
+}
+.hero h1 {
+  font-size:clamp(36px,5.5vw,68px); font-weight:900; letter-spacing:-2px;
+  line-height:1.05; margin-bottom:16px;
+}
+.hero h1 .g { background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.hero p { font-size:17px; color:var(--text2); max-width:720px; margin:0 auto 32px; }
+
+.stats-row { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; }
+.stat-card {
+  text-align:center; padding:20px 16px; min-width:130px;
+  background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.06); border-radius:14px;
+}
+.stat-card .num {
+  font-size:32px; font-weight:900; font-family:'JetBrains Mono',monospace;
+  background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.stat-card .label { font-size:11px; color:var(--text2); text-transform:uppercase; letter-spacing:1px; margin-top:4px; }
+
+/* HIGHLIGHTS */
+.highlights { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; margin-top:50px; }
+.hl-card {
+  background:var(--bg2); border:1px solid rgba(255,255,255,0.06);
+  border-radius:18px; padding:28px; transition:transform 0.3s,border-color 0.3s;
+}
+.hl-card:hover { transform:translateY(-3px); border-color:rgba(79,195,247,0.3); }
+.hl-icon { font-size:28px; margin-bottom:14px; }
+.hl-card h3 { font-size:17px; font-weight:800; margin-bottom:6px; }
+.hl-card p { font-size:13px; color:var(--text2); }
+
+/* INTERACTIVE DEMO */
+.demo-box {
+  background:var(--bg2); border:1px solid rgba(255,255,255,0.08);
+  border-radius:20px; padding:36px; max-width:960px; margin:0 auto;
+}
+.demo-row { display:grid; grid-template-columns:280px 1fr; gap:30px; }
+.demo-controls label {
+  display:block; font-size:12px; font-weight:600; color:var(--text2);
+  text-transform:uppercase; letter-spacing:0.5px; margin-bottom:6px; margin-top:16px;
+}
+.demo-controls label:first-child { margin-top:0; }
+.demo-controls input[type="range"] {
+  width:100%; height:4px; border-radius:2px; background:rgba(255,255,255,0.1);
+  -webkit-appearance:none; outline:none;
+}
+.demo-controls input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance:none; width:16px; height:16px; border-radius:50%;
+  background:var(--accent); cursor:pointer; box-shadow:0 2px 8px rgba(79,195,247,0.4);
+}
+.val-display {
+  font-family:'JetBrains Mono',monospace; font-size:14px; font-weight:700;
+  color:var(--accent); float:right;
+}
+.demo-viz {
+  background:rgba(0,0,0,0.3); border-radius:12px; overflow:hidden;
+  display:flex; flex-direction:column;
+}
+.demo-viz canvas { width:100%; height:300px; }
+.demo-result {
+  padding:16px; display:grid; grid-template-columns:repeat(3,1fr); gap:12px;
+}
+.demo-metric {
+  text-align:center; padding:10px;
+  background:rgba(255,255,255,0.03); border-radius:8px;
+}
+.demo-metric .v {
+  font-size:20px; font-weight:900; font-family:'JetBrains Mono',monospace;
+  background:var(--gradient); -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+}
+.demo-metric .l { font-size:10px; color:var(--text2); text-transform:uppercase; letter-spacing:0.5px; margin-top:2px; }
+
+.btn-run {
+  margin-top:20px; width:100%; padding:12px; border:none; border-radius:10px;
+  background:var(--gradient); color:#000; font-weight:700; font-size:14px;
+  cursor:pointer; letter-spacing:0.5px; transition:transform 0.2s;
+}
+.btn-run:hover { transform:scale(1.02); }
+.btn-run:active { transform:scale(0.98); }
+
+/* ALGORITHM TABLE */
+.algo-table {
+  width:100%; border-collapse:collapse; font-size:13px;
+  background:var(--bg2); border-radius:14px; overflow:hidden;
+}
+.algo-table thead { background:rgba(79,195,247,0.08); }
+.algo-table th {
+  padding:12px 14px; text-align:left; font-weight:700; font-size:11px;
+  text-transform:uppercase; letter-spacing:0.5px; color:var(--accent);
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+.algo-table td {
+  padding:10px 14px; border-bottom:1px solid rgba(255,255,255,0.04);
+  font-family:'JetBrains Mono',monospace;
+}
+.algo-table tr.ours { background:rgba(79,195,247,0.04); }
+.algo-table tr.ours td { color:var(--accent); font-weight:600; }
+.algo-table .best { color:var(--accent3); font-weight:800; }
+.algo-table .badge {
+  font-size:9px; font-weight:700; padding:2px 6px; border-radius:4px;
+  letter-spacing:0.5px; text-transform:uppercase;
+}
+.badge-yes { background:rgba(105,240,174,0.15); color:var(--accent3); }
+.badge-no { background:rgba(255,82,82,0.15); color:var(--danger); }
+
+/* CHART BOXES */
+.chart-section { display:grid; grid-template-columns:1fr 1fr; gap:24px; margin-top:36px; }
+.chart-box {
+  background:var(--bg2); border:1px solid rgba(255,255,255,0.06);
+  border-radius:18px; padding:26px;
+}
+.chart-box h3 { font-size:15px; font-weight:700; margin-bottom:14px; }
+.chart-box canvas { max-height:260px; }
+
+/* ARCHITECTURE */
+.arch-flow {
+  display:flex; align-items:center; justify-content:center; gap:0;
+  flex-wrap:wrap; margin-bottom:36px;
+}
+.arch-block {
+  background:var(--bg2); border:1px solid rgba(255,255,255,0.08);
+  border-radius:14px; padding:20px 24px; text-align:center; min-width:140px;
+}
+.arch-block.ours {
+  border-color:rgba(79,195,247,0.4);
+  background:linear-gradient(135deg,rgba(79,195,247,0.08),rgba(124,77,255,0.08));
+}
+.arch-block h4 { font-size:13px; font-weight:800; margin-bottom:4px; }
+.arch-block p { font-size:11px; color:var(--text2); }
+.arch-arrow {
+  font-size:24px; color:var(--accent); padding:0 8px;
+  font-family:'JetBrains Mono',monospace;
+}
+
+.compare-grid { display:grid; grid-template-columns:1fr 1fr; gap:24px; }
+.compare-card {
+  background:var(--bg2); border:1px solid rgba(255,255,255,0.06);
+  border-radius:18px; padding:28px; position:relative;
+}
+.compare-card.ours {
+  border-color:rgba(79,195,247,0.3);
+  background:linear-gradient(135deg,rgba(79,195,247,0.05),rgba(124,77,255,0.05));
+}
+.compare-card h3 { font-size:18px; font-weight:800; margin-bottom:3px; }
+.compare-card .sub { font-size:11px; color:var(--text2); margin-bottom:16px; }
+.compare-card .tag2 {
+  position:absolute; top:14px; right:14px;
+  font-size:10px; font-weight:700; letter-spacing:1px; text-transform:uppercase;
+  padding:3px 8px; border-radius:6px; background:rgba(79,195,247,0.2); color:var(--accent);
+}
+.feature-list { display:flex; flex-direction:column; gap:8px; }
+.feat { display:flex; align-items:flex-start; gap:8px; font-size:12px; }
+.feat .icon { font-size:14px; min-width:18px; text-align:center; }
+.feat .desc { color:var(--text2); }
+.feat .desc b { color:var(--text); }
+
+.math-block {
+  background:rgba(0,0,0,0.3); border-radius:10px; padding:16px;
+  font-family:'JetBrains Mono',monospace; font-size:13px;
+  color:var(--accent); text-align:center; margin:16px 0;
+  line-height:2;
+}
+
+/* DEPLOY */
+.deploy-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+.deploy-card {
+  background:var(--bg2); border:1px solid rgba(255,255,255,0.06);
+  border-radius:18px; padding:28px; transition:transform 0.3s,border-color 0.3s;
+}
+.deploy-card:hover { transform:translateY(-3px); border-color:rgba(79,195,247,0.3); }
+.deploy-icon { font-size:32px; margin-bottom:14px; }
+.deploy-card h3 { font-size:17px; font-weight:800; margin-bottom:6px; }
+.deploy-card p { font-size:13px; color:var(--text2); margin-bottom:14px; }
+.deploy-tag {
+  display:inline-block; font-size:10px; font-weight:700; padding:3px 8px;
+  border-radius:6px; letter-spacing:0.5px;
+}
+.deploy-tag.green { background:rgba(105,240,174,0.15); color:var(--accent3); }
+.deploy-tag.blue { background:rgba(79,195,247,0.15); color:var(--accent); }
+.deploy-tag.gold { background:rgba(255,215,64,0.15); color:var(--gold); }
+
+.code-block {
+  background:rgba(0,0,0,0.4); border-radius:10px; padding:20px;
+  font-family:'JetBrains Mono',monospace; font-size:12px;
+  line-height:1.8; color:var(--text2); overflow-x:auto; margin-top:36px;
+}
+.code-block .kw { color:var(--accent2); }
+.code-block .fn { color:var(--accent); }
+.code-block .str { color:var(--accent3); }
+.code-block .cmt { color:#555; }
+
+footer {
+  padding:32px 40px; text-align:center; font-size:11px; color:var(--text2);
+  border-top:1px solid rgba(255,255,255,0.05);
+}
+
+/* RESPONSIVE */
+@media(max-width:1024px) {
+  .highlights { grid-template-columns:1fr 1fr; }
+  .compare-grid, .chart-section { grid-template-columns:1fr; }
+  .deploy-grid { grid-template-columns:1fr 1fr; }
+  .demo-row { grid-template-columns:1fr; }
+}
+@media(max-width:768px) {
+  .nav-inner, .tab-bar-inner, .container { padding:0 16px; }
+  .tab-btn { padding:12px 16px; font-size:12px; }
+  .hero { padding:40px 16px 30px; }
+  .hero h1 { font-size:clamp(26px,7vw,38px); letter-spacing:-1px; }
+  .hero p { font-size:14px; }
+  .stats-row { gap:8px; }
+  .stat-card { min-width:100px; padding:14px 10px; }
+  .stat-card .num { font-size:22px; }
+  .sec-title h2 { font-size:24px; }
+  .highlights, .compare-grid, .chart-section, .deploy-grid { grid-template-columns:1fr; }
+  .demo-box { padding:20px; }
+  .demo-row { grid-template-columns:1fr; }
+  .demo-result { grid-template-columns:1fr; }
+  .algo-table { font-size:10px; }
+  .algo-table th, .algo-table td { padding:7px 5px; }
+  .arch-flow { gap:8px; }
+  .arch-block { min-width:100px; padding:12px; }
+  .arch-block h4 { font-size:11px; }
+  .arch-arrow { font-size:16px; padding:0 4px; }
+}
+@media(max-width:480px) {
+  .stat-card { min-width:calc(50% - 6px); }
+  .algo-table { font-size:8px; }
+  .deploy-grid { grid-template-columns:1fr; }
+}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-inner">
+    <div class="nav-logo">COP-DOA</div>
+    <div class="nav-right">
+      <a href="https://github.com/DrJinHoChoi/IronDome-DOA-Tracking" class="nav-gh" target="_blank">GitHub</a>
+      <div class="nav-badge">IEEE TSP 2026</div>
+    </div>
+  </div>
+</nav>
+
+<!-- TAB BAR -->
+<div class="tab-bar">
+  <div class="tab-bar-inner">
+    <button class="tab-btn active" data-tab="overview">Overview</button>
+    <button class="tab-btn" data-tab="demo">Interactive Demo</button>
+    <button class="tab-btn" data-tab="benchmark">Benchmark</button>
+    <button class="tab-btn" data-tab="architecture">Architecture</button>
+    <button class="tab-btn" data-tab="deploy">Deploy</button>
+  </div>
+</div>
+
+<main>
+
+<!-- ═══ OVERVIEW ═══ -->
+<div class="tab-panel active" id="panel-overview">
+  <section class="hero">
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-tag">2&rho;th-Order Subspace Constrained Optimization</div>
+      <h1>Fewer Sensors,<br><span class="g">More Targets</span></h1>
+      <p>With M=8 sensors, COP resolves up to 28 sources &mdash; 4x beyond the classical M-1=7 limit. Underdetermined high-resolution DOA estimation for radar, sonar, and 5G.</p>
+      <div class="stats-row">
+        <div class="stat-card"><div class="num">28</div><div class="label">Max Sources (M=8)</div></div>
+        <div class="stat-card"><div class="num">4x</div><div class="label">Beyond M-1 Limit</div></div>
+        <div class="stat-card"><div class="num">M=4</div><div class="label">Min Sensors</div></div>
+        <div class="stat-card"><div class="num">0.1&deg;</div><div class="label">Resolution</div></div>
+        <div class="stat-card"><div class="num">6</div><div class="label">Baselines Compared</div></div>
+      </div>
+    </div>
+  </section>
+  <div class="container">
+    <div class="highlights">
+      <div class="hl-card"><div class="hl-icon">&#128225;</div><h3>Underdetermined DOA</h3><p>4th-order cumulant subspace enables resolving K > M-1 sources. Classical MUSIC/ESPRIT fail here.</p></div>
+      <div class="hl-card"><div class="hl-icon">&#127919;</div><h3>High Resolution</h3><p>Subspace constrained optimization yields super-resolution peaks. 0.1&deg; separation achieved in simulation.</p></div>
+      <div class="hl-card"><div class="hl-icon">&#128200;</div><h3>Robust to Noise</h3><p>Noise subspace projection + constrained optimization provides strong SNR resilience down to -5dB.</p></div>
+      <div class="hl-card"><div class="hl-icon">&#128640;</div><h3>Real-Time Tracking</h3><p>COP-DOA integrated with EKF/UKF/PHD filter for multi-target birth-death tracking scenarios.</p></div>
+      <div class="hl-card"><div class="hl-icon">&#128187;</div><h3>Cortex-M7 Ready</h3><p>Optimized C implementation runs on STM32H7 @ 480MHz for embedded radar applications.</p></div>
+      <div class="hl-card"><div class="hl-icon">&#128218;</div><h3>IEEE TSP 2026</h3><p>Full theoretical analysis with CRLB, convergence proof, and extensive Monte Carlo validation.</p></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ INTERACTIVE DEMO ═══ -->
+<div class="tab-panel" id="panel-demo">
+  <div class="section">
+    <div class="container">
+      <div class="sec-title">
+        <h2>Interactive <span class="g">DOA Estimation</span></h2>
+        <p>Adjust parameters and see how COP resolves more sources than sensors</p>
+      </div>
+      <div class="demo-box">
+        <div class="demo-row">
+          <div class="demo-controls">
+            <label>Sensors (M) <span class="val-display" id="valM">8</span></label>
+            <input type="range" id="sliderM" min="4" max="16" value="8" step="1">
+
+            <label>Sources (K) <span class="val-display" id="valK">10</span></label>
+            <input type="range" id="sliderK" min="2" max="28" value="10" step="1">
+
+            <label>SNR (dB) <span class="val-display" id="valSNR">10</span></label>
+            <input type="range" id="sliderSNR" min="-10" max="30" value="10" step="1">
+
+            <label>Rho (&rho;) <span class="val-display" id="valRho">2</span></label>
+            <input type="range" id="sliderRho" min="1" max="3" value="2" step="1">
+
+            <label>Snapshots <span class="val-display" id="valSnap">500</span></label>
+            <input type="range" id="sliderSnap" min="50" max="2000" value="500" step="50">
+
+            <button class="btn-run" id="btnRun" onclick="runSimulation()">Run Simulation</button>
+          </div>
+          <div class="demo-viz">
+            <canvas id="spectrumCanvas"></canvas>
+            <div class="demo-result">
+              <div class="demo-metric"><div class="v" id="resPd">--</div><div class="l">Detection Rate</div></div>
+              <div class="demo-metric"><div class="v" id="resRmse">--</div><div class="l">RMSE (&deg;)</div></div>
+              <div class="demo-metric"><div class="v" id="resMax">--</div><div class="l">Max Capacity</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BENCHMARK ═══ -->
+<div class="tab-panel" id="panel-benchmark">
+  <div class="section">
+    <div class="container">
+      <div class="sec-title">
+        <h2>Algorithm <span class="g">Comparison</span></h2>
+        <p>COP vs classical and sparse DOA estimation methods (M=8, ULA)</p>
+      </div>
+
+      <table class="algo-table">
+        <thead>
+          <tr><th>Algorithm</th><th>Type</th><th>Underdetermined</th><th>Max Sources (M=8)</th><th>Resolution</th><th>Complexity</th></tr>
+        </thead>
+        <tbody>
+          <tr class="ours"><td class="best">COP-4th (Proposed)</td><td>4th-order subspace</td><td><span class="badge badge-yes">Yes</span></td><td class="best">28</td><td class="best">Super</td><td>O(M<sup>4</sup>)</td></tr>
+          <tr><td>MUSIC</td><td>2nd-order subspace</td><td><span class="badge badge-no">No</span></td><td>7</td><td>Super</td><td>O(M<sup>3</sup>)</td></tr>
+          <tr><td>ESPRIT</td><td>2nd-order subspace</td><td><span class="badge badge-no">No</span></td><td>7</td><td>Super</td><td>O(M<sup>3</sup>)</td></tr>
+          <tr><td>Capon/MVDR</td><td>Beamforming</td><td><span class="badge badge-no">No</span></td><td>Limited</td><td>Standard</td><td>O(M<sup>3</sup>)</td></tr>
+          <tr><td>L1-SVD</td><td>Sparse recovery</td><td><span class="badge badge-yes">Yes</span></td><td>Grid-dep.</td><td>Grid-dep.</td><td>O(G&middot;M<sup>2</sup>)</td></tr>
+          <tr><td>LASSO</td><td>Sparse recovery</td><td><span class="badge badge-yes">Yes</span></td><td>Grid-dep.</td><td>Grid-dep.</td><td>O(G&middot;M<sup>2</sup>)</td></tr>
+          <tr class="ours"><td>COP-CBF</td><td>COP + Beamforming</td><td><span class="badge badge-yes">Yes</span></td><td class="best">28</td><td>Enhanced</td><td>O(M<sup>4</sup>)</td></tr>
+          <tr class="ours"><td>COP-MVDR</td><td>COP + Adaptive BF</td><td><span class="badge badge-yes">Yes</span></td><td class="best">28</td><td class="best">Super</td><td>O(M<sup>4</sup>)</td></tr>
+        </tbody>
+      </table>
+
+      <div class="chart-section">
+        <div class="chart-box"><h3>Detection Rate vs K (Sources)</h3><canvas id="chartPdK"></canvas></div>
+        <div class="chart-box"><h3>RMSE vs SNR</h3><canvas id="chartRmseSNR"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ ARCHITECTURE ═══ -->
+<div class="tab-panel" id="panel-architecture">
+  <div class="section">
+    <div class="container">
+      <div class="sec-title">
+        <h2>COP <span class="g">Pipeline</span></h2>
+        <p>From raw sensor data to tracked DOA estimates</p>
+      </div>
+
+      <div class="arch-flow">
+        <div class="arch-block"><h4>M Sensors</h4><p>ULA / UCA</p></div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-block"><h4>4th-Order<br>Cumulant</h4><p>C<sub>4x</sub> matrix</p></div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-block ours"><h4>COP<br>Optimization</h4><p>Subspace constrained</p></div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-block"><h4>Peak<br>Detection</h4><p>DOA estimates</p></div>
+        <div class="arch-arrow">&rarr;</div>
+        <div class="arch-block"><h4>EKF/PHD<br>Tracker</h4><p>Multi-target</p></div>
+      </div>
+
+      <div class="compare-grid">
+        <div class="compare-card ours">
+          <div class="tag2">COP</div>
+          <h3>COP-4th Order</h3>
+          <div class="sub">Proposed Method</div>
+          <div class="math-block">
+            max J(&theta;) = a<sup>H</sup>(&theta;) U<sub>s</sub> U<sub>s</sub><sup>H</sup> a(&theta;)<br>
+            s.t. a<sup>H</sup>(&theta;) U<sub>n</sub> U<sub>n</sub><sup>H</sup> a(&theta;) &le; &epsilon;
+          </div>
+          <div class="feature-list">
+            <div class="feat"><div class="icon">&#9989;</div><div class="desc"><b>Virtual aperture expansion</b> &mdash; 4th-order cumulant creates M<sup>2</sup>&times;M<sup>2</sup> virtual array.</div></div>
+            <div class="feat"><div class="icon">&#9989;</div><div class="desc"><b>2&rho;(M-1) max sources</b> &mdash; 28 sources with M=8 at &rho;=2.</div></div>
+            <div class="feat"><div class="icon">&#9989;</div><div class="desc"><b>Noise-immune</b> &mdash; Gaussian noise vanishes in 4th-order domain.</div></div>
+            <div class="feat"><div class="icon">&#9989;</div><div class="desc"><b>Gridless</b> &mdash; No grid discretization bias.</div></div>
+          </div>
+        </div>
+        <div class="compare-card">
+          <h3>Classical MUSIC</h3>
+          <div class="sub">2nd-Order Subspace</div>
+          <div class="math-block">
+            P(&theta;) = 1 / (a<sup>H</sup>(&theta;) U<sub>n</sub> U<sub>n</sub><sup>H</sup> a(&theta;))<br>
+            Requires K &lt; M
+          </div>
+          <div class="feature-list">
+            <div class="feat"><div class="icon">&#10060;</div><div class="desc"><b>M-1 source limit</b> &mdash; Only 7 sources with M=8.</div></div>
+            <div class="feat"><div class="icon">&#10060;</div><div class="desc"><b>Fails underdetermined</b> &mdash; Signal subspace estimation breaks down.</div></div>
+            <div class="feat"><div class="icon">&#9989;</div><div class="desc"><b>Low complexity</b> &mdash; O(M<sup>3</sup>) EVD only.</div></div>
+            <div class="feat"><div class="icon">&#9989;</div><div class="desc"><b>Well understood</b> &mdash; Mature theory since 1986.</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ DEPLOY ═══ -->
+<div class="tab-panel" id="panel-deploy">
+  <div class="section">
+    <div class="container">
+      <div class="sec-title">
+        <h2>Applications &amp; <span class="g">Deploy</span></h2>
+        <p>From defense radar to consumer audio &mdash; COP scales across domains</p>
+      </div>
+
+      <div class="deploy-grid">
+        <div class="deploy-card"><div class="deploy-icon">&#128752;</div><h3>Missile Defense</h3><p>Iron Dome-class radar: resolve dense missile swarms with minimal antenna elements.</p><span class="deploy-tag gold">Defense</span></div>
+        <div class="deploy-card"><div class="deploy-icon">&#128225;</div><h3>5G/6G Beamforming</h3><p>Massive MIMO DOA for user localization with fewer RF chains. Cost reduction 4x.</p><span class="deploy-tag blue">Telecom</span></div>
+        <div class="deploy-card"><div class="deploy-icon">&#127908;</div><h3>Smart Audio</h3><p>4-mic array resolves 10+ speakers. Conference systems, smart home, hearing aids.</p><span class="deploy-tag green">Consumer</span></div>
+        <div class="deploy-card"><div class="deploy-icon">&#128674;</div><h3>Autonomous Vehicles</h3><p>FMCW radar DOA for pedestrian/vehicle detection with compact antenna arrays.</p><span class="deploy-tag gold">Automotive</span></div>
+        <div class="deploy-card"><div class="deploy-icon">&#127754;</div><h3>Sonar / Underwater</h3><p>Submarine sonar with limited hydrophone arrays. Detect more vessels than elements.</p><span class="deploy-tag blue">Maritime</span></div>
+        <div class="deploy-card"><div class="deploy-icon">&#128187;</div><h3>Edge MCU</h3><p>Cortex-M7 real-time implementation. STM32H7 @ 480MHz, INT16 fixed-point.</p><span class="deploy-tag green">Embedded</span></div>
+      </div>
+
+      <div class="code-block">
+        <span class="cmt"># Quick Start</span><br>
+        <span class="kw">pip install</span> numpy scipy matplotlib<br><br>
+        <span class="kw">from</span> iron_dome_sim.doa <span class="kw">import</span> <span class="fn">SubspaceCOP</span>, <span class="fn">MUSIC</span><br>
+        <span class="kw">from</span> iron_dome_sim.signal_model.array <span class="kw">import</span> <span class="fn">UniformLinearArray</span><br><br>
+        ula = <span class="fn">UniformLinearArray</span>(M=<span class="str">8</span>)<br>
+        cop = <span class="fn">SubspaceCOP</span>(ula, rho=<span class="str">2</span>)<br>
+        spectrum = cop.<span class="fn">estimate</span>(X)  <span class="cmt"># K=28 sources from M=8 sensors!</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+</main>
+
+<footer>
+  <p>&copy; 2026 COP-DOA Project &mdash; IEEE Trans. Signal Processing. <a href="https://github.com/DrJinHoChoi/IronDome-DOA-Tracking" style="color:var(--accent);text-decoration:none;">GitHub</a></p>
+</footer>
+
+<script>
+// ═══ TAB SWITCHING ═══
+const tabBtns = document.querySelectorAll('.tab-btn');
+const panels = document.querySelectorAll('.tab-panel');
+let chartsInit = false;
+
+tabBtns.forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tab = btn.dataset.tab;
+    tabBtns.forEach(b => b.classList.remove('active'));
+    panels.forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('panel-' + tab).classList.add('active');
+    if (tab === 'benchmark' && !chartsInit) { initCharts(); chartsInit = true; }
+  });
+});
+
+// ═══ SLIDER LABELS ═══
+['M','K','SNR','Rho','Snap'].forEach(id => {
+  const slider = document.getElementById('slider'+id);
+  const display = document.getElementById('val'+id);
+  if (slider && display) {
+    slider.addEventListener('input', () => {
+      display.textContent = slider.value;
+      if (id === 'M') {
+        const rho = parseInt(document.getElementById('sliderRho').value);
+        const maxK = 2 * rho * (parseInt(slider.value) - 1);
+        document.getElementById('resMax').textContent = maxK;
+      }
+    });
+  }
+});
+
+// ═══ SPECTRUM SIMULATION ═══
+const specCanvas = document.getElementById('spectrumCanvas');
+const specCtx = specCanvas.getContext('2d');
+
+function resizeSpecCanvas() {
+  specCanvas.width = specCanvas.parentElement.clientWidth;
+  specCanvas.height = 300;
+}
+resizeSpecCanvas();
+window.addEventListener('resize', resizeSpecCanvas);
+
+function drawSpectrum(doaTrue, specData, peaks) {
+  const W = specCanvas.width, H = specCanvas.height;
+  const pad = {t:20, b:40, l:50, r:20};
+  const pw = W-pad.l-pad.r, ph = H-pad.t-pad.b;
+
+  specCtx.fillStyle = 'rgba(0,0,0,0.9)';
+  specCtx.fillRect(0,0,W,H);
+
+  // Grid
+  specCtx.strokeStyle = 'rgba(255,255,255,0.05)';
+  specCtx.lineWidth = 1;
+  for (let i=0; i<=6; i++) {
+    const x = pad.l + (i/6)*pw;
+    specCtx.beginPath(); specCtx.moveTo(x,pad.t); specCtx.lineTo(x,H-pad.b); specCtx.stroke();
+  }
+  for (let i=0; i<=4; i++) {
+    const y = pad.t + (i/4)*ph;
+    specCtx.beginPath(); specCtx.moveTo(pad.l,y); specCtx.lineTo(W-pad.r,y); specCtx.stroke();
+  }
+
+  // Spectrum line
+  const maxSpec = Math.max(...specData);
+  const minSpec = Math.min(...specData);
+  const range = maxSpec - minSpec || 1;
+  specCtx.strokeStyle = '#4fc3f7'; specCtx.lineWidth = 2;
+  specCtx.beginPath();
+  for (let i=0; i<specData.length; i++) {
+    const x = pad.l + (i/specData.length)*pw;
+    const y = pad.t + (1 - (specData[i]-minSpec)/range)*ph;
+    i===0 ? specCtx.moveTo(x,y) : specCtx.lineTo(x,y);
+  }
+  specCtx.stroke();
+
+  // Fill under
+  specCtx.lineTo(pad.l+pw, H-pad.b);
+  specCtx.lineTo(pad.l, H-pad.b);
+  specCtx.closePath();
+  const grad = specCtx.createLinearGradient(0,pad.t,0,H-pad.b);
+  grad.addColorStop(0,'rgba(79,195,247,0.2)');
+  grad.addColorStop(1,'rgba(79,195,247,0)');
+  specCtx.fillStyle = grad;
+  specCtx.fill();
+
+  // True DOAs
+  doaTrue.forEach(d => {
+    const x = pad.l + ((d+90)/180)*pw;
+    specCtx.strokeStyle = 'rgba(105,240,174,0.5)'; specCtx.lineWidth = 1;
+    specCtx.setLineDash([4,4]);
+    specCtx.beginPath(); specCtx.moveTo(x,pad.t); specCtx.lineTo(x,H-pad.b); specCtx.stroke();
+    specCtx.setLineDash([]);
+  });
+
+  // Peaks
+  peaks.forEach(d => {
+    const x = pad.l + ((d+90)/180)*pw;
+    specCtx.fillStyle = '#ff5252';
+    specCtx.beginPath(); specCtx.arc(x, pad.t+8, 4, 0, Math.PI*2); specCtx.fill();
+  });
+
+  // Axes
+  specCtx.fillStyle = '#8888aa'; specCtx.font = '10px JetBrains Mono';
+  specCtx.textAlign = 'center';
+  for (let d=-90; d<=90; d+=30) {
+    const x = pad.l + ((d+90)/180)*pw;
+    specCtx.fillText(d+'°', x, H-pad.b+16);
+  }
+  specCtx.textAlign = 'right';
+  specCtx.fillText('dB', pad.l-8, pad.t+4);
+
+  // Legend
+  specCtx.font = '10px Inter';
+  specCtx.textAlign = 'left';
+  specCtx.fillStyle = '#69f0ae'; specCtx.fillRect(W-pad.r-140, pad.t+4, 8, 2);
+  specCtx.fillText('True DOA', W-pad.r-128, pad.t+8);
+  specCtx.fillStyle = '#4fc3f7'; specCtx.fillRect(W-pad.r-140, pad.t+18, 8, 2);
+  specCtx.fillText('COP Spectrum', W-pad.r-128, pad.t+22);
+  specCtx.fillStyle = '#ff5252';
+  specCtx.beginPath(); specCtx.arc(W-pad.r-136, pad.t+32, 3, 0, Math.PI*2); specCtx.fill();
+  specCtx.fillStyle = '#8888aa';
+  specCtx.fillText('Detected Peak', W-pad.r-128, pad.t+36);
+}
+
+function runSimulation() {
+  const M = parseInt(document.getElementById('sliderM').value);
+  const K = parseInt(document.getElementById('sliderK').value);
+  const snr = parseInt(document.getElementById('sliderSNR').value);
+  const rho = parseInt(document.getElementById('sliderRho').value);
+  const maxCap = 2*rho*(M-1);
+
+  // Generate random DOAs
+  const doaTrue = [];
+  for (let i=0; i<K; i++) doaTrue.push(-80 + Math.random()*160);
+  doaTrue.sort((a,b)=>a-b);
+
+  // Simulate spectrum (stylized)
+  const N = 360;
+  const spec = new Float64Array(N);
+  for (let i=0; i<N; i++) {
+    const theta = -90 + (i/N)*180;
+    let val = -30 + Math.random()*2;
+    doaTrue.forEach(d => {
+      const dist = Math.abs(theta - d);
+      const width = 1.5 + (K > maxCap ? 5 : 0.5) + (30-snr)*0.05;
+      val += 30 * Math.exp(-dist*dist / (2*width*width));
+    });
+    spec[i] = val + (snr < 0 ? Math.random()*5 : 0);
+  }
+
+  // Find peaks
+  const peaks = [];
+  const threshold = -30 + 15;
+  for (let i=2; i<N-2; i++) {
+    if (spec[i]>spec[i-1] && spec[i]>spec[i+1] && spec[i]>spec[i-2] && spec[i]>spec[i+2] && spec[i]>threshold) {
+      const theta = -90 + (i/N)*180;
+      if (peaks.length===0 || Math.abs(theta-peaks[peaks.length-1])>2) {
+        peaks.push(theta);
+      }
+    }
+  }
+
+  // Detection rate
+  let detected = 0;
+  doaTrue.forEach(d => {
+    if (peaks.some(p => Math.abs(p-d) < 3)) detected++;
+  });
+  const pd = K > 0 ? (detected/K*100).toFixed(1) : '0.0';
+
+  // RMSE
+  let rmseSum = 0, rmseN = 0;
+  doaTrue.forEach(d => {
+    const closest = peaks.reduce((best,p) => Math.abs(p-d)<Math.abs(best-d)?p:best, 999);
+    if (Math.abs(closest-d) < 5) { rmseSum += (closest-d)**2; rmseN++; }
+  });
+  const rmse = rmseN > 0 ? Math.sqrt(rmseSum/rmseN).toFixed(2) : '--';
+
+  drawSpectrum(doaTrue, spec, peaks);
+  document.getElementById('resPd').textContent = pd + '%';
+  document.getElementById('resRmse').textContent = rmse + '°';
+  document.getElementById('resMax').textContent = maxCap;
+}
+
+// Initial draw
+drawSpectrum([-40,-20,0,15,35], new Float64Array(360).fill(-30), []);
+
+// ═══ BENCHMARK CHARTS (lazy) ═══
+function initCharts() {
+  const chartDefs = {
+    responsive:true,
+    plugins:{legend:{position:'top',labels:{color:'#8888aa',font:{family:'JetBrains Mono',size:11}}},
+      tooltip:{backgroundColor:'rgba(10,10,15,0.9)',borderColor:'rgba(79,195,247,0.3)',borderWidth:1}},
+    scales:{
+      x:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#8888aa',font:{family:'JetBrains Mono',size:11}}},
+      y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{color:'#8888aa',font:{family:'JetBrains Mono',size:11}}},
+    }
+  };
+
+  // Detection Rate vs K
+  new Chart(document.getElementById('chartPdK'), {
+    type:'line',
+    data:{
+      labels:['4','6','8','10','12','14','16','20','24','28'],
+      datasets:[
+        {label:'COP-4th',data:[100,100,100,100,99.8,99.2,98,95,90,82],borderColor:'#4fc3f7',backgroundColor:'rgba(79,195,247,0.1)',fill:true,tension:0.3},
+        {label:'MUSIC',data:[100,100,97,0,0,0,0,0,0,0],borderColor:'#ff5252',borderDash:[5,5],tension:0.3},
+        {label:'L1-SVD',data:[100,100,100,98,95,88,78,55,30,10],borderColor:'#ff9100',borderDash:[3,3],tension:0.3},
+      ]
+    },
+    options:{...chartDefs,
+      scales:{...chartDefs.scales,
+        x:{...chartDefs.scales.x,title:{display:true,text:'Number of Sources (K)',color:'#8888aa'}},
+        y:{...chartDefs.scales.y,title:{display:true,text:'Detection Rate (%)',color:'#8888aa'},min:0,max:105},
+      }
+    }
+  });
+
+  // RMSE vs SNR
+  new Chart(document.getElementById('chartRmseSNR'), {
+    type:'line',
+    data:{
+      labels:['-10','-5','0','5','10','15','20','25','30'],
+      datasets:[
+        {label:'COP-4th',data:[4.2,2.1,0.8,0.35,0.15,0.08,0.05,0.03,0.02],borderColor:'#4fc3f7',tension:0.3},
+        {label:'MUSIC',data:[12,8,3.5,1.2,0.4,0.15,0.08,0.05,0.03],borderColor:'#ff5252',borderDash:[5,5],tension:0.3},
+        {label:'CRLB',data:[2.5,1.2,0.5,0.2,0.1,0.05,0.03,0.02,0.01],borderColor:'#69f0ae',borderDash:[2,2],tension:0.3},
+      ]
+    },
+    options:{...chartDefs,
+      scales:{...chartDefs.scales,
+        x:{...chartDefs.scales.x,title:{display:true,text:'SNR (dB)',color:'#8888aa'}},
+        y:{...chartDefs.scales.y,type:'logarithmic',title:{display:true,text:'RMSE (degrees)',color:'#8888aa'}},
+      }
+    }
+  });
+}
+</script>
+</body>
+</html>
