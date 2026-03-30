@@ -26,7 +26,8 @@ from iron_dome_sim.rl.mamba_encoder import MambaCOPPolicy
 
 
 def train_policy(policy_cls, policy_kwargs, n_episodes=300, n_scans=40,
-                 snr_range=(0, 15), label="Policy"):
+                 snr_range=(0, 15), label="Policy",
+                 lr=3e-4, entropy_coef=0.02):
     """Train a policy with domain randomization.
 
     Randomizes SNR per episode for robustness.
@@ -37,8 +38,8 @@ def train_policy(policy_cls, policy_kwargs, n_episodes=300, n_scans=40,
 
     # Create policy
     policy = policy_cls(**policy_kwargs)
-    trainer = PPOTrainer(policy, lr=3e-4, clip_ratio=0.2, epochs=4,
-                         entropy_coef=0.02)
+    trainer = PPOTrainer(policy, lr=lr, clip_ratio=0.2, epochs=4,
+                         entropy_coef=entropy_coef)
     buffer = RolloutBuffer()
 
     print(f"\n[{label}] Params: {policy.param_count()}, "
@@ -239,16 +240,19 @@ def main():
         TrackPolicy,
         {'obs_dim': 12, 'act_dim': 3, 'hidden': 32},
         n_episodes=N_TRAIN, n_scans=N_SCANS,
+        lr=3e-4, entropy_coef=0.02,
         label="RL (PPO)"
     )
 
     # 2. Train Mamba-COP-RL
+    # Uses lower lr + higher entropy for SSM encoder to explore & converge
     print("\n[2/2] Training Mamba-COP-RL...")
     mamba_policy, mamba_gospas, _ = train_policy(
         MambaCOPPolicy,
         {'obs_dim': 12, 'act_dim': 3, 'd_state': 16, 'd_hidden': 24,
          'policy_hidden': 32},
         n_episodes=N_TRAIN, n_scans=N_SCANS,
+        lr=1e-3, entropy_coef=0.05,
         label="Mamba-COP-RL"
     )
 

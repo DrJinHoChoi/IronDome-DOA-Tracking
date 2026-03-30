@@ -342,9 +342,16 @@ class MambaCOPPolicy(nn.Module):
                 value.item())
 
     def evaluate(self, obs, actions):
-        """Evaluate for PPO update (batch, no temporal)."""
+        """Evaluate for PPO update (with temporal encoding).
+
+        obs is (T, obs_dim) — full episode sequence in temporal order.
+        Processes through SSM encoder so gradients flow through temporal encoder.
+        """
         from torch.distributions import Normal
-        mean, std, values = self.forward(obs)
+        # Re-process full episode sequence through SSM encoder
+        # encoder.forward() handles (T, obs_dim) → (T, obs_dim) with residual
+        enriched, _ = self.encoder(obs)  # (T, obs_dim)
+        mean, std, values = self.forward(enriched)
         dist = Normal(mean, std)
         log_probs = dist.log_prob(actions).sum(-1)
         entropy = dist.entropy().sum(-1)
