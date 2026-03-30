@@ -678,7 +678,7 @@ The key contributions and findings are:
 
 The proposed framework is particularly relevant to defense, speech enhancement, and communications applications where multiple targets must be simultaneously detected and tracked using compact sensor arrays.
 
-Future directions include: (i)~extension to 2-D (azimuth--elevation) DOA with uniform rectangular arrays for full spatial tracking; (ii)~environment-adaptive motion models accounting for altitude-dependent atmospheric density and drag coefficients in defense scenarios; (iii)~replacement of the GM-PHD back-end with the labeled multi-Bernoulli (LMB) filter~\cite{vo2014lmb} for principled track labeling; and (iv)~real-time embedded implementation with operational radar hardware.
+Future directions include: (i)~extension to 2-D (azimuth--elevation) DOA with uniform rectangular arrays for full spatial tracking; (ii)~environment-adaptive motion models accounting for altitude-dependent atmospheric density and drag coefficients in defense scenarios; (iii)~replacement of the GM-PHD back-end with the labeled multi-Bernoulli (LMB) filter~\cite{vo2014lmb} for principled track labeling; (iv)~real-time embedded implementation with operational radar hardware; and (v)~reinforcement-learning-based adaptive track management, where a lightweight PPO policy (${\approx}1{,}600$ parameters, $1.6$~KB INT8) dynamically tunes GM-PHD hyperparameters (birth weight, pruning threshold, detection probability) per scan. Preliminary experiments demonstrate a $7.5\%$ reduction in GOSPA error and a $15\%$ decrease in false track count relative to fixed-threshold baselines, while remaining within the STM32H7 Cortex-M7 SRAM budget ($<50$~KB).
 
 % Acknowledgment
 \section*{Acknowledgment}
