@@ -26,9 +26,9 @@ SSM vs.\ MLP in RL-Based Track Management}
 \author{
   \IEEEauthorblockN{Jin Ho Choi}
   \IEEEauthorblockA{
-    \textit{Department of ...}\\
-    \textit{University of ...}\\
-    jinho@...edu
+    \textit{SmartEar}\\
+    Seoul, South Korea\\
+    jinhochoi@smartear.co.kr
   }
 }
 
@@ -558,6 +558,20 @@ result: with 12-dim statistics ($T{=}40$), MLP wins and
 Mamba hurts, because the sufficient-statistic condition
 does not hold.
 
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig_tracking.pdf}
+  \caption{Stealth scenario tracking ($K{=}3$, $T{=}200$, $M{=}8$).
+  \emph{Left}: DOA trajectories — true targets (black), estimates
+  (colored dots), false alarms ($\times$).
+  Target~3 is invisible during scans 60--105 (yellow band).
+  Mamba-COP-RL re-acquires within $+3$ scans via hidden-state memory;
+  Fixed threshold requires $+15$ scans.
+  \emph{Right}: Smoothed per-scan GOSPA — Mamba maintains the lowest
+  error across the stealth window and recovers fastest on reappearance.
+  Mean GOSPA: Fixed $= 0.250$, MLP $= 0.201$, Mamba $= \mathbf{0.187}$.}
+  \label{fig:tracking}
+\end{figure}
 
 % =========================================================
 \section{Conclusion}
