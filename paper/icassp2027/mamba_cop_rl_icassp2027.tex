@@ -127,26 +127,47 @@ We verify this with a controlled ablation:
 \section{Related Work}
 \label{sec:related}
 
-\textbf{RL for sensor management and tracking.}
-Boers \emph{et al.}\ \cite{boers2005track_rl} applied Q-learning to
-track initiation in PHD filters.
-Svensson \emph{et al.}\ \cite{svensson2014phd_rl} used MLP policies
-to adapt clutter rate and detection probability in GM-PHD.
-These works use low-dimensional hand-crafted state representations,
-where our analysis predicts MLP suffices.
+\textbf{RL for multi-target tracking.}
+Rosello and Kochenderfer \cite{rosello2018marlmot} modeled track
+initiation and termination as MDP actions in a multi-agent RL
+framework, but used hand-crafted low-dimensional state features.
+Stephan \emph{et al.}\ \cite{stephan2022scene} adapted radar tracker
+parameters with DRL using variance-aware rewards; their observation
+is also a compact feature vector, consistent with our finding that
+MLP suffices in the low-dimensional regime.
+Most relevant to our work, Ewers \emph{et al.}\ \cite{ewers2025multitarget}
+recently compared sequence-capable architectures (BiGRU,
+self-attention) against flat MLP for radar search-and-track RL.
+Unlike their work, we focus specifically on the \emph{conditions}
+under which temporal memory helps, provide a formal proposition, and
+use a selective SSM (Mamba) rather than LSTM/GRU.
 
-\textbf{Recurrent RL.}
-LSTM-based policies have been applied to POMDPs \cite{hausknecht2015drqn}
-and partially observable tracking \cite{meng2021recurrent_tracking}.
-Our work differs in using a \emph{selective} SSM (Mamba) rather than
-LSTM, which provides $O(d_s)$ per-step inference versus $O(d_h^2)$ for
-LSTM, critical for edge deployment.
+\textbf{Recurrent and memory-augmented RL.}
+Hausknecht and Stone \cite{hausknecht2015drqn} showed that replacing
+a DQN layer with LSTM (DRQN) improves performance in partially
+observable environments.
+Kapturowski \emph{et al.}\ \cite{kapturowski2019r2d2} scaled recurrent
+RL to distributed settings (R2D2) with burn-in for stable hidden
+state initialization.
+Dorka \cite{dorka2022recurrent} systematically analyzed the
+generalization limits of recurrent PPO, motivating our controlled
+ablation study.
+Unlike LSTM-based policies ($O(d_h^2)$ per step), our Mamba encoder
+runs in $O(d_s)$ per scan---critical for embedded edge deployment.
 
-\textbf{Mamba in signal processing.}
-Mamba \cite{gu2023mamba} has been applied to audio \cite{goel2022s4_audio}
-and radar \cite{li2024mamba_radar} sequences.
-We are the first to use Mamba as a temporal encoder for RL policy
-learning in DOA tracking.
+\textbf{Selective SSMs and Mamba.}
+Gu \emph{et al.}\ introduced structured SSMs (S4 \cite{gu2022s4},
+S5 \cite{smith2023s5}) for long-range sequence modeling, and Mamba
+\cite{gu2023mamba} extended them with input-dependent selectivity.
+Han \emph{et al.}\ \cite{han2024audiomamba} demonstrated Audio Mamba
+for spectrogram-based audio classification, motivating our use of
+raw COP spectra as SSM input.
+Ota \cite{ota2024decisionmamba} proposed Decision Mamba, replacing
+the Transformer backbone in Decision Transformer with Mamba for
+offline RL, achieving $28\times$ faster inference.
+We are the first to use Mamba as an online RL \emph{temporal encoder}
+for adaptive filter parameter tuning in DOA tracking, and the first
+to study when such temporal encoding is actually beneficial.
 
 
 % =========================================================
