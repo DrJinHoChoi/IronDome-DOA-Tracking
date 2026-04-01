@@ -239,29 +239,48 @@ We formalize the intuition behind our ablation study.
 
 \begin{proposition}[SSM Advantage Condition]
 \label{prop:ssm_advantage}
-Let $\mathcal{I}(\vec{o}_t; \vec{o}_{1:t-1})$ denote the mutual
-information between the current observation and the history.
-A temporal encoder (SSM, LSTM) provides advantage over a memoryless
-MLP if and only if:
+Let $f: \mathbb{R}^{d_o} \to \mathbb{R}^{d_f}$ be any hand-crafted
+observation summary ($d_f \ll d_o$).
+A temporal encoder provides advantage over a memoryless MLP fed
+$f(\vec{o}_t)$ if and only if $f$ is \emph{not} a sufficient
+statistic for the policy-relevant history, i.e.,
 \begin{equation}
-  \mathcal{I}(\vec{o}_t;\, \vec{o}_{1:t-1}) \;\gg\;
+  \mathcal{I}(\vec{o}_t;\, \vec{o}_{1:t-1}) \;>\;
   \mathcal{I}(f(\vec{o}_t);\, \vec{o}_{1:t-1})
   \label{eq:prop}
 \end{equation}
-where $f(\cdot)$ is any hand-crafted summarization of $\vec{o}_t$.
+where $\mathcal{I}(\cdot;\cdot)$ denotes mutual information.
 \end{proposition}
 
-Informally: if the raw observation $\vec{o}_t$ contains significantly
-more information about the history than a hand-crafted summary
-$f(\vec{o}_t)$, a temporal encoder can exploit that information
-whereas an MLP operating on $f(\vec{o}_t)$ cannot.
+\begin{proof}[Proof sketch]
+By the data processing inequality, $\mathcal{I}(f(\vec{o}_t);
+\vec{o}_{1:t-1}) \leq \mathcal{I}(\vec{o}_t; \vec{o}_{1:t-1})$
+always holds.
+Equality iff $f$ is a sufficient statistic for $\vec{o}_{1:t-1}$
+given $\vec{o}_t$.
+When equality holds, an MLP on $f(\vec{o}_t)$ has access to all
+history-relevant information; a temporal encoder cannot improve it.
+When strict inequality holds, $\vec{o}_t$ carries additional history
+signal destroyed by $f$; an SSM with input $\vec{o}_t$ can
+selectively integrate this signal into $\vec{h}_t$ and improve
+the policy.
+\end{proof}
 
-\textbf{Corollary}: For 12-dim statistics (n\_tracks, weight sums,
-etc.), $f(\vec{o}_t) \approx \vec{o}_t$ since the statistics already
-encode the relevant filter state.
-For 183-dim raw spectrum, $f(\vec{o}_t) \ll \vec{o}_t$ since
-spectral shape, peak width, and jamming signatures are lost under
-scalar summaries---satisfying the SSM advantage condition.
+\textbf{Application to our settings.}
+The 12-dim hand-crafted statistics
+$f(\vec{o}_t){=}[K_t, \bar{w}_t, w_t^{\max}, \ldots]$
+aggregate the GM-PHD state into scalars that approximately capture
+all filter-state information relevant to choosing $\{w_b, \tau_p,
+p_D\}$.
+Hence $f$ is nearly sufficient and the MLP wins (Section~\ref{sec:experiments}).
+
+For the 181-dim raw COP spectrum, $f$ is not sufficient: spectral
+\emph{shape} (peak width, sidelobe profile), \emph{jamming signatures}
+(broadband noise floor elevation), and \emph{spectral drift} across
+scans are all lost under scalar summaries yet are causally relevant
+to recovery decisions 50+ scans later.
+The strict inequality in~\eqref{eq:prop} holds, enabling the SSM
+to outperform the MLP.
 
 
 \subsection{MDP Formulation}
@@ -323,12 +342,45 @@ The \textbf{actor-critic} is a two-layer MLP
 During each PPO update epoch, the full episode sequence
 $(\vec{o}_1,\ldots,\vec{o}_T)$ is re-processed through the SSM
 encoder (starting from $\vec{h}_0 = \vec{0}$), so that gradients
-backpropagate through the temporal encoder.
-This differs from naive recurrent PPO implementations that detach
-hidden states between updates.
+backpropagate through the temporal encoder (Algorithm~\ref{alg:train}).
+This differs from naive recurrent PPO that detaches hidden states
+between rollouts, which would prevent gradient flow through the SSM.
 
 \textbf{Model size}: 42,375 params, 41.4\,KB INT8
 ($<$ 50\,KB STM32H7 SRAM budget).
+
+\begin{algorithm}[t]
+\caption{Mamba-COP-RL Training}
+\label{alg:train}
+\begin{algorithmic}[1]
+\REQUIRE CombatTrackEnv, policy $\pi_\theta$, epochs $E{=}4$,
+         clip $\epsilon{=}0.2$
+\FOR{episode $= 1$ \TO $N_{\rm train}$}
+  \STATE Sample SNR $\sim \mathcal{U}(5,15)$, scenario type
+  \STATE $\vec{o}_1 \leftarrow$ \textsc{env.reset}();
+         $\vec{h}_0 \leftarrow \vec{0}$
+  \FOR{$t = 1$ \TO $T$}  \hfill\COMMENT{Rollout with SSM step}
+    \STATE $\tilde{\vec{o}}_t, \vec{h}_t \leftarrow
+           \textsc{SSM.step}(\vec{o}_t, \vec{h}_{t-1})$
+    \STATE $\vec{a}_t, \ell_t, v_t \leftarrow
+           \pi_\theta(\tilde{\vec{o}}_t)$;
+           $\;\vec{h}_{t-1} \leftarrow \vec{h}_t.\texttt{detach}()$
+    \STATE $\vec{o}_{t+1}, r_t \leftarrow$ \textsc{env.step}($\vec{a}_t$)
+  \ENDFOR
+  \STATE Compute GAE advantages $\hat{A}_t$, returns $\hat{R}_t$
+  \FOR{epoch $= 1$ \TO $E$}  \hfill\COMMENT{PPO update with BPTT}
+    \STATE $\tilde{\vec{o}}_{1:T} \leftarrow
+           \textsc{SSM.forward}(\vec{o}_{1:T})$
+           \hfill$\triangleright$ Re-run SSM; gradients flow
+    \STATE $\vec{\ell}', \vec{v}', \mathcal{H} \leftarrow
+           \pi_\theta(\tilde{\vec{o}}_{1:T})$
+    \STATE $\mathcal{L} \leftarrow \mathcal{L}^{\rm CLIP} +
+           c_v \mathcal{L}^{\rm value} - c_e \mathcal{H}$
+    \STATE $\theta \leftarrow \theta - \nabla_\theta \mathcal{L}$
+  \ENDFOR
+\ENDFOR
+\end{algorithmic}
+\end{algorithm}
 
 
 % =========================================================
