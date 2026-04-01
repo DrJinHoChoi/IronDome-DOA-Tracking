@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.2.20)  1 APR 2026 17:31
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.2.20)  2 APR 2026 05:29
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -352,12 +352,12 @@ Package epstopdf-base Info: Redefining graphics rule for `.eps' on input line 4
 fg
 File: epstopdf-sys.cfg 2021/03/18 v2.0 Configuration of epstopdf for MiKTeX
 ))
-LaTeX Font Info:    Trying to load font information for U+msa on input line 76.
+LaTeX Font Info:    Trying to load font information for U+msa on input line 59.
 
  (C:\Users\jinho\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsa.fd
 File: umsa.fd 2013/01/14 v3.01 AMS symbols A
 )
-LaTeX Font Info:    Trying to load font information for U+msb on input line 76.
+LaTeX Font Info:    Trying to load font information for U+msb on input line 59.
 
 
 (C:\Users\jinho\AppData\Local\Programs\MiKTeX\tex/latex/amsfonts\umsb.fd
@@ -368,24 +368,24 @@ nho/AppData/Local/Programs/MiKTeX/fonts/enc/dvips/base/8r.enc}
 
 
 ]
-Underfull \hbox (badness 5908) in paragraph at lines 191--197
+Underfull \hbox (badness 5908) in paragraph at lines 195--201
 []\OT1/ptm/m/n/10 The GM-PHD fil-ter prop-a-gates in-ten-sity $\OML/cmm/m/it/10
  ^^W[]\OT1/cmr/m/n/10 (\OT1/cmr/bx/n/10 x\OT1/cmr/m/n/10 ) =
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 256--267
+Underfull \hbox (badness 10000) in paragraph at lines 260--271
 []\OT1/ptm/m/n/10 By the data pro-cess-ing in-equal-ity,
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 297--301
+Underfull \hbox (badness 10000) in paragraph at lines 301--305
 \OT1/ptm/m/n/10 where $[]$ is max-normalized, $\OML/cmm/m/it/10 ^^Z[] \OT1/cmr/
 m/n/10 =
  []
 
 
-Overfull \hbox (7.30014pt too wide) detected at line 312
+Overfull \hbox (7.30014pt too wide) detected at line 316
 []\OML/cmm/m/it/10 r[] \OT1/cmr/m/n/10 = \OMS/cmsy/m/n/10 ^^@[]\OT1/cmr/m/n/10 
 ([]\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 ^^B[]) \OMS/cmsy/m/n/10 ^^@ \OT1/cmr/m/n/
 10 0\OML/cmm/m/it/10 :\OT1/cmr/m/n/10 01\OMS/cmsy/m/n/10 j[] ^^@ \OML/cmm/m/it/
@@ -393,38 +393,42 @@ Overfull \hbox (7.30014pt too wide) detected at line 312
  001 [](0\OML/cmm/m/it/10 ; J[] \OMS/cmsy/m/n/10 ^^@ \OT1/cmr/m/n/10 50)
  []
 
-<fig_architecture.pdf, id=15, 660.86902pt x 290.72714pt>
+<fig_architecture.pdf, id=16, 660.86902pt x 290.72714pt>
 File: fig_architecture.pdf Graphic file (type pdf)
 <use fig_architecture.pdf>
-Package pdftex.def Info: fig_architecture.pdf  used on input line 318.
+Package pdftex.def Info: fig_architecture.pdf  used on input line 322.
 (pdftex.def)             Requested size: 252.0pt x 110.85895pt.
-[2 <./fig_architecture.pdf>]
 LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 3
-65.
-
+69.
 (C:\Users\jinho\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
 LaTeX Font Info:    Trying to load font information for OMS+ptm on input line 3
-71.
+75.
 
 (C:\Users\jinho\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omsptm.fd
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 371.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 375.
 
-Underfull \hbox (badness 10000) in paragraph at lines 404--405
+[2]
+Underfull \hbox (badness 10000) in paragraph at lines 408--409
 []\OT1/ptm/m/n/8 Per-target in-er-tia dur-ing
  []
 
 
-Underfull \hbox (badness 10000) in paragraph at lines 436--440
+Underfull \hbox (badness 10000) in paragraph at lines 440--444
 []\OT1/ptm/b/n/10 Training\OT1/ptm/m/n/10 : 300 episodes, domain-randomized SNR
 
  []
 
-[3] (mamba_cop_rl_icassp2027.bbl)
+<fig_ablation.pdf, id=27, 647.1968pt x 253.2662pt>
+File: fig_ablation.pdf Graphic file (type pdf)
+<use fig_ablation.pdf>
+Package pdftex.def Info: fig_ablation.pdf  used on input line 452.
+(pdftex.def)             Requested size: 252.0pt x 98.61497pt.
+[3 <./fig_architecture.pdf> <./fig_ablation.pdf>] (mamba_cop_rl_icassp2027.bbl)
 
 ** Conference Paper **
 Before submitting the final camera ready copy, remember to:
@@ -443,13 +447,13 @@ L3 programming layer <2025-12-24>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 4652 strings out of 467871
- 74077 string characters out of 5418376
- 506528 words of memory out of 5000000
- 33462 multiletter control sequences out of 15000+600000
- 672514 words of font info for 126 fonts, out of 8000000 for 9000
+ 4670 strings out of 467871
+ 74371 string characters out of 5418376
+ 504550 words of memory out of 5000000
+ 33476 multiletter control sequences out of 15000+600000
+ 674059 words of font info for 132 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 57i,10n,65p,440b,585s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 57i,10n,65p,554b,585s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/
 cmbx10.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
 fonts/cm/cmbx7.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/pu
@@ -460,24 +464,27 @@ rams/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi5.pfb><C:/Users/jinho/AppData/Lo
 cal/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi6.pfb><C:/Users/jinho/Ap
 pData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi7.pfb><C:/Users/
 jinho/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi8.pfb><C
-:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmr1
-0.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts
-/cm/cmr5.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/public/a
-msfonts/cm/cmr6.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/p
-ublic/amsfonts/cm/cmr7.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/
-type1/public/amsfonts/cm/cmr8.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX
-/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/jinho/AppData/Local/Progra
-ms/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/jinho/AppData/Loca
-l/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/Users/jinho/AppD
-ata/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/msbm10.pfb><C:/Us
-ers/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/courier/ucrr8a.pfb><C:/
-Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmb8a.pfb><C:/
-Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmbi8a.pfb><C:
-/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmr8a.pfb><C:
-/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/utmri8a.pfb>
-Output written on mamba_cop_rl_icassp2027.pdf (4 pages, 338246 bytes).
+:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmmi
+9.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts
+/cm/cmr10.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/public/
+amsfonts/cm/cmr5.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/
+public/amsfonts/cm/cmr6.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts
+/type1/public/amsfonts/cm/cmr7.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTe
+X/fonts/type1/public/amsfonts/cm/cmr8.pfb><C:/Users/jinho/AppData/Local/Program
+s/MiKTeX/fonts/type1/public/amsfonts/cm/cmr9.pfb><C:/Users/jinho/AppData/Local/
+Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy10.pfb><C:/Users/jinho/AppDa
+ta/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy7.pfb><C:/Users/jin
+ho/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/cmsy8.pfb><C:/U
+sers/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/ms
+bm10.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/courier/
+ucrr8a.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/
+utmb8a.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/
+utmbi8a.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times
+/utmr8a.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times
+/utmri8a.pfb>
+Output written on mamba_cop_rl_icassp2027.pdf (4 pages, 406089 bytes).
 PDF statistics:
- 267 PDF objects out of 1000 (max. 8388607)
+ 404 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
- 6 words of extra memory for PDF output out of 10000 (max. 10000000)
+ 11 words of extra memory for PDF output out of 10000 (max. 10000000)
 

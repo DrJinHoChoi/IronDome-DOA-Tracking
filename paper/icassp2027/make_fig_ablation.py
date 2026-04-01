@@ -60,19 +60,19 @@ ax.set_facecolor(C_BG)
 ax.set_title('183-dim raw COP spectrum\n($T=200$ scans)',
              fontsize=9, fontweight='bold', color='#212121', pad=6)
 
-# Placeholder bars with expected ordering
-gospa_183 = [0.290, 0.265, 0.240]   # expected: Mamba best
+# Actual results
+gospa_183 = [0.2599, 0.2241, 0.2130]
 bar_colors = [C_FIXED, C_MLP, C_MAMBA]
 bars = ax.bar(methods, gospa_183, color=bar_colors, width=0.5,
               edgecolor='white', linewidth=1.2, alpha=0.88)
 
 for bar, v in zip(bars, gospa_183):
     ax.text(bar.get_x() + bar.get_width()/2, v + 0.003,
-            '(est.)', ha='center', va='bottom', fontsize=7.5,
-            color='#757575', style='italic')
+            f'{v:.4f}', ha='center', va='bottom', fontsize=8,
+            fontweight='bold', color='#212121')
 
-ax.annotate('Mamba wins\n(expected)',
-            xy=(2, gospa_183[2]), xytext=(2, gospa_183[2] - 0.035),
+ax.annotate('Mamba wins\n$-18.0\\%$ vs Fixed\n$-5.0\\%$ vs MLP',
+            xy=(2, gospa_183[2]), xytext=(2, gospa_183[2] - 0.04),
             ha='center', fontsize=8, color=C_MAMBA, fontweight='bold',
             arrowprops=dict(arrowstyle='->', color=C_MAMBA, lw=1.2))
 
@@ -84,12 +84,8 @@ ax.text(0.5, 0.97,
         bbox=dict(facecolor='#E8EAF6', edgecolor='#9FA8DA',
                   boxstyle='round,pad=0.3', alpha=0.9))
 
-ax.text(0.5, 0.05, '(pending training completion)',
-        transform=ax.transAxes, ha='center', va='bottom',
-        fontsize=7, color='#9E9E9E', style='italic')
-
 ax.set_ylabel('Avg GOSPA ($\\downarrow$ better)', fontsize=8.5)
-ax.set_ylim(0.18, 0.33)
+ax.set_ylim(0.16, 0.30)
 ax.grid(axis='y', alpha=0.3)
 ax.spines[['top','right']].set_visible(False)
 
