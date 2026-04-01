@@ -90,7 +90,7 @@ RL offers a data-driven solution---map filter state to parameters
 adaptively.
 
 Prior RL-based filter tuning uses memoryless MLP policies
-\cite{svensson2014phd_rl,boers2005track_rl}.
+\cite{rosello2018marlmot,stephan2022scene}.
 A natural extension is to add temporal memory (LSTM, SSM) to the
 policy. However, recurrent policies add complexity and can \emph{hurt}
 performance if the temporal information in the observation is already
@@ -315,8 +315,7 @@ The reward penalizes tracking error and complexity:
 
 \begin{figure}[t]
   \centering
-  % \includegraphics[width=\columnwidth]{fig_architecture.pdf}
-  \fbox{\rule{0pt}{3cm}\rule{\columnwidth}{0pt}}
+  \includegraphics[width=\columnwidth]{fig_architecture.pdf}
   \caption{Mamba-COP-RL architecture. The COP spatial spectrum
   (181-dim) passes through the selective SSM encoder, which maintains
   hidden state $\vec{h}_t$ across scans.
@@ -357,26 +356,24 @@ between rollouts, which would prevent gradient flow through the SSM.
          clip $\epsilon{=}0.2$
 \FOR{episode $= 1$ \TO $N_{\rm train}$}
   \STATE Sample SNR $\sim \mathcal{U}(5,15)$, scenario type
-  \STATE $\vec{o}_1 \leftarrow$ \textsc{env.reset}();
-         $\vec{h}_0 \leftarrow \vec{0}$
-  \FOR{$t = 1$ \TO $T$}  \hfill\COMMENT{Rollout with SSM step}
+  \STATE $\vec{o}_1 \!\leftarrow\! \textsc{env.reset}()$;
+         $\;\vec{h}_0 \leftarrow \vec{0}$
+  \FOR{$t = 1$ \TO $T$}
     \STATE $\tilde{\vec{o}}_t, \vec{h}_t \leftarrow
            \textsc{SSM.step}(\vec{o}_t, \vec{h}_{t-1})$
-    \STATE $\vec{a}_t, \ell_t, v_t \leftarrow
-           \pi_\theta(\tilde{\vec{o}}_t)$;
+    \STATE $\vec{a}_t, \ell_t, v_t \leftarrow \pi_\theta(\tilde{\vec{o}}_t)$;
            $\;\vec{h}_{t-1} \leftarrow \vec{h}_t.\texttt{detach}()$
-    \STATE $\vec{o}_{t+1}, r_t \leftarrow$ \textsc{env.step}($\vec{a}_t$)
+    \STATE $\vec{o}_{t+1}, r_t \leftarrow \textsc{env.step}(\vec{a}_t)$
   \ENDFOR
   \STATE Compute GAE advantages $\hat{A}_t$, returns $\hat{R}_t$
-  \FOR{epoch $= 1$ \TO $E$}  \hfill\COMMENT{PPO update with BPTT}
-    \STATE $\tilde{\vec{o}}_{1:T} \leftarrow
-           \textsc{SSM.forward}(\vec{o}_{1:T})$
-           \hfill$\triangleright$ Re-run SSM; gradients flow
+  \FOR{epoch $= 1$ \TO $E$}
+    \STATE $\tilde{\vec{o}}_{1:T} \leftarrow \textsc{SSM.forward}(\vec{o}_{1:T})$
+           \COMMENT{Re-run full sequence; gradients flow through SSM}
     \STATE $\vec{\ell}', \vec{v}', \mathcal{H} \leftarrow
            \pi_\theta(\tilde{\vec{o}}_{1:T})$
     \STATE $\mathcal{L} \leftarrow \mathcal{L}^{\rm CLIP} +
-           c_v \mathcal{L}^{\rm value} - c_e \mathcal{H}$
-    \STATE $\theta \leftarrow \theta - \nabla_\theta \mathcal{L}$
+           c_v \mathcal{L}^{\rm value} - c_e \mathcal{H}$;
+           $\;\theta \leftarrow \theta - \nabla_\theta \mathcal{L}$
   \ENDFOR
 \ENDFOR
 \end{algorithmic}
@@ -445,6 +442,19 @@ Mamba-COP-RL: lr=$3{\times}10^{-4}$, entropy $= 0.02$.
 GOSPA: $c{=}10^\circ$, $p{=}2$, $\alpha{=}2$.
 
 \subsection{Ablation: 12-dim vs.\ 183-dim Observation}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\columnwidth]{fig_ablation.pdf}
+  \caption{Ablation validating Proposition~\ref{prop:ssm_advantage}.
+  \emph{Left}: 12-dim hand-crafted statistics ($T{=}40$) — MLP wins
+  ($-7.5\%$ GOSPA); Mamba hurts ($+8.7\%$) because $f$ is a
+  sufficient statistic.
+  \emph{Right}: 183-dim raw spectrum ($T{=}200$) — Mamba expected to
+  win where spectral history matters (Stealth, Jamming).
+  Right panel shows estimated values pending training completion.}
+  \label{fig:ablation}
+\end{figure}
 
 \begin{table}[t]
   \centering
