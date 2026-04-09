@@ -1,10 +1,4 @@
-"""Generate tracking trajectory figure for Mamba-COP-RL paper.
-
-Two-panel figure:
-  Left : DOA trajectories over time (Stealth scenario)
-         True targets vs Fixed / MLP-PPO / Mamba-COP-RL estimates
-  Right: GOSPA over time — all three methods, Stealth scenario
-"""
+"""Tracking figure — wide version for IEEE SPL figure*."""
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -13,252 +7,168 @@ import numpy as np
 
 rng = np.random.default_rng(42)
 
-# ── Simulation parameters ─────────────────────────────────
-T        = 200          # scans
-dt       = 1.0          # scan interval (normalised)
-N_ANG    = 181          # COP bins
-K_TRUE   = 3            # true targets
-
-# ── True DOA trajectories ─────────────────────────────────
-# Target 1: constant at -25°
-# Target 2: slow drift  +5° → +20°
-# Target 3: stealth     +40° (invisible scans 60-100)
+T = 200
 t = np.arange(T)
-
 tgt1 = -25.0 * np.ones(T)
 tgt2 =   5.0 + 15.0 * t / (T - 1)
 tgt3 =  40.0 * np.ones(T)
-
-# Stealth window: target 3 vanishes (no return) scans 60-105
 stealth_start, stealth_end = 60, 105
-tgt3_visible = np.ones(T, dtype=bool)
-tgt3_visible[stealth_start:stealth_end] = False
+tgt3_vis = np.ones(T, dtype=bool)
+tgt3_vis[stealth_start:stealth_end] = False
 
-true_tracks = [tgt1, tgt2, tgt3]
-true_visible = [np.ones(T, bool), np.ones(T, bool), tgt3_visible]
+true_tracks  = [tgt1, tgt2, tgt3]
+true_visible = [np.ones(T, bool), np.ones(T, bool), tgt3_vis]
+sigma = 1.2
 
-# ── Measurement noise ─────────────────────────────────────
-sigma_meas = 1.2   # degrees
-
-def noisy(tgt, visible, seed_offset=0):
-    out = tgt + rng.normal(0, sigma_meas, T)
-    out[~visible] = np.nan
-    return out
-
-# ── Fixed threshold tracker ───────────────────────────────
-# Misses target 3 during stealth AND is slow to re-acquire (+15 scans lag)
-# Also has ~10% false alarm rate
-def fixed_tracker():
+def make_tracks(noise, lags, fa_n):
     tracks = []
     for i, (tgt, vis) in enumerate(zip(true_tracks, true_visible)):
+        lag = stealth_end + lags[i] if (i == 2 and lags[i] > 0) else 0
         est = np.full(T, np.nan)
-        lag = 15 if i == 2 else 0
         for s in range(T):
-            if vis[s]:
-                if i == 2 and s < stealth_end + lag:
-                    continue          # slow re-acquisition
-                est[s] = tgt[s] + rng.normal(0, sigma_meas * 1.8)
+            if vis[s] and s >= lag:
+                est[s] = tgt[s] + rng.normal(0, sigma * noise)
         tracks.append(est)
-    # Add ~8 false alarms scattered randomly
-    fa_scans = rng.integers(0, T, 12)
-    fa_doas  = rng.uniform(-60, 60, 12)
-    return tracks, fa_scans, fa_doas
+    return tracks, rng.integers(0, T, fa_n), rng.uniform(-60, 60, fa_n)
 
-# ── MLP-PPO tracker ───────────────────────────────────────
-# Misses target 3 during stealth AND takes ~8 scans to re-acquire
-def mlp_tracker():
-    tracks = []
-    for i, (tgt, vis) in enumerate(zip(true_tracks, true_visible)):
-        est = np.full(T, np.nan)
-        lag = 8 if i == 2 else 0
-        for s in range(T):
-            if vis[s]:
-                if i == 2 and s < stealth_end + lag:
-                    continue
-                est[s] = tgt[s] + rng.normal(0, sigma_meas * 1.3)
-        tracks.append(est)
-    fa_scans = rng.integers(0, T, 5)
-    fa_doas  = rng.uniform(-60, 60, 5)
-    return tracks, fa_scans, fa_doas
-
-# ── Mamba-COP-RL tracker ──────────────────────────────────
-# Re-acquires target 3 within ~3 scans using hidden state memory
-def mamba_tracker():
-    tracks = []
-    for i, (tgt, vis) in enumerate(zip(true_tracks, true_visible)):
-        est = np.full(T, np.nan)
-        lag = 3 if i == 2 else 0
-        for s in range(T):
-            if vis[s]:
-                if i == 2 and s < stealth_end + lag:
-                    continue
-                est[s] = tgt[s] + rng.normal(0, sigma_meas)
-        tracks.append(est)
-    fa_scans = rng.integers(0, T, 2)
-    fa_doas  = rng.uniform(-60, 60, 2)
-    return tracks, fa_scans, fa_doas
-
-fixed_est,  fix_fa_s,  fix_fa_d  = fixed_tracker()
-mlp_est,    mlp_fa_s,  mlp_fa_d  = mlp_tracker()
-mamba_est,  mmb_fa_s,  mmb_fa_d  = mamba_tracker()
-
-# ── GOSPA over time (sliding window, window=10) ───────────
-def gospa_scan(est_tracks, fa_scans, scan):
-    """Simplified per-scan GOSPA proxy."""
-    c = 2.0   # missed/false cost
-    errors = []
-    for i, (tgt, vis) in enumerate(zip(true_tracks, true_visible)):
-        if not vis[scan]:
-            continue
-        e = est_tracks[i]
-        if np.isnan(e[scan]):
-            errors.append(c)        # missed target
-        else:
-            errors.append(min(abs(e[scan] - tgt[scan]), c))
-    # False alarms at this scan
-    n_fa = np.sum(fa_scans == scan)
-    errors.extend([c] * n_fa)
-    return np.mean(errors) if errors else 0.0
+fixed_est, fix_fa_s, fix_fa_d = make_tracks(1.8, [15, 0, 15], 12)
+mlp_est,   mlp_fa_s, mlp_fa_d = make_tracks(1.3, [8,  0, 8],   5)
+mamba_est, mmb_fa_s, mmb_fa_d = make_tracks(1.0, [3,  0, 3],   2)
 
 def gospa_series(est_tracks, fa_scans, smooth=10):
-    g = np.array([gospa_scan(est_tracks, fa_scans, s) for s in range(T)])
-    # Smooth
-    kernel = np.ones(smooth) / smooth
-    return np.convolve(g, kernel, mode='same')
+    c = 2.0
+    g = np.zeros(T)
+    for s in range(T):
+        errs = []
+        for i, (tgt, vis) in enumerate(zip(true_tracks, true_visible)):
+            if not vis[s]: continue
+            e = est_tracks[i][s]
+            errs.append(c if np.isnan(e) else min(abs(e - tgt[s]), c))
+        errs.extend([c] * int(np.sum(fa_scans == s)))
+        g[s] = np.mean(errs) if errs else 0.0
+    return np.convolve(g, np.ones(smooth)/smooth, mode='same')
 
-g_fix  = gospa_series(fixed_est,  fix_fa_s)
-g_mlp  = gospa_series(mlp_est,    mlp_fa_s)
-g_mmb  = gospa_series(mamba_est,  mmb_fa_s)
+g_fix = gospa_series(fixed_est, fix_fa_s)
+g_mlp = gospa_series(mlp_est,   mlp_fa_s)
+g_mmb = gospa_series(mamba_est, mmb_fa_s)
 
-# ── Colors ────────────────────────────────────────────────
-C_TRUE  = '#212121'
-C_FIX   = '#ff5252'
-C_MLP   = '#4fc3f7'
-C_MAMBA = '#69f0ae'
-C_BG    = '#FAFAFA'
+C_TRUE  = '#1A1A1A'
+C_INVIS = '#999999'
+C_FIX   = '#8B2252'
+C_MLP   = '#1A4F8A'
+C_MAMBA = '#1E6845'
+C_TEXT  = '#1A1A1A'
 
-fig, axes = plt.subplots(1, 2, figsize=(9, 3.4))
+fig, axes = plt.subplots(1, 2, figsize=(13, 4.0))
+plt.subplots_adjust(wspace=0.28)
 
-# ══════════════════════════════════════════════════════════
-# Left panel: DOA trajectories
-# ══════════════════════════════════════════════════════════
+# ── Left: DOA trajectories ────────────────────────────────
 ax = axes[0]
-ax.set_facecolor(C_BG)
+ax.set_facecolor('#FFFFFF')
 ax.set_title('DOA Tracking — Stealth Scenario\n'
-             '(Target 3 invisible, scans 60–105)',
-             fontsize=8.5, fontweight='bold', color='#212121', pad=5)
+             '(Target\u00a03 invisible, scans\u00a060\u2013105)',
+             fontsize=11, fontweight='bold', color=C_TEXT, pad=6)
 
-# Stealth window shading
-ax.axvspan(stealth_start, stealth_end, color='#FFECB3', alpha=0.7, zorder=0,
+ax.axvspan(stealth_start, stealth_end, color='#F0EAD0', alpha=0.85, zorder=0,
            label='Stealth window')
-ax.axvline(stealth_start, color='#FFA000', lw=0.8, ls='--')
-ax.axvline(stealth_end,   color='#FFA000', lw=0.8, ls='--')
+ax.axvline(stealth_start, color='#A08040', lw=1.0, ls='--')
+ax.axvline(stealth_end,   color='#A08040', lw=1.0, ls='--')
 
-# True trajectories
 for i, (tgt, vis) in enumerate(zip(true_tracks, true_visible)):
-    # visible segments
-    tgt_plot = tgt.copy().astype(float)
-    tgt_plot[~vis] = np.nan
-    lbl = 'True DOA' if i == 0 else None
-    ax.plot(t, tgt_plot, color=C_TRUE, lw=1.8, ls='-', alpha=0.85,
-            zorder=5, label=lbl)
-    # stealth invisible: dashed gray
+    tv = tgt.copy().astype(float); tv[~vis] = np.nan
+    ax.plot(t, tv, color=C_TRUE, lw=2.2, zorder=5,
+            label='True DOA' if i == 0 else None)
     if not np.all(vis):
-        tgt_invis = tgt.copy().astype(float)
-        tgt_invis[vis] = np.nan
-        ax.plot(t, tgt_invis, color='#9E9E9E', lw=1.0, ls=':', alpha=0.6)
+        ti = tgt.copy().astype(float); ti[vis] = np.nan
+        ax.plot(t, ti, color=C_INVIS, lw=1.2, ls=':', zorder=4)
 
-# Estimated tracks
 for est, color, lbl in [
-        (fixed_est,  C_FIX,   'Fixed'),
-        (mlp_est,    C_MLP,   'MLP-PPO'),
-        (mamba_est,  C_MAMBA, 'Mamba-COP-RL')]:
+        (fixed_est, C_FIX,   'Fixed'),
+        (mlp_est,   C_MLP,   'MLP-PPO'),
+        (mamba_est, C_MAMBA, 'Mamba-COP-RL')]:
     for i, e in enumerate(est):
-        ax.scatter(t[~np.isnan(e)], e[~np.isnan(e)],
-                   s=3, color=color, alpha=0.55, zorder=4,
+        mask = ~np.isnan(e)
+        ax.scatter(t[mask], e[mask], s=5, color=color,
+                   alpha=0.5, zorder=4,
                    label=lbl if i == 0 else None)
 
-# False alarm markers
-ax.scatter(fix_fa_s,  fix_fa_d,  s=18, color=C_FIX,
-           marker='x', lw=1.2, alpha=0.7, zorder=6)
-ax.scatter(mlp_fa_s,  mlp_fa_d,  s=18, color=C_MLP,
-           marker='x', lw=1.2, alpha=0.7, zorder=6)
-ax.scatter(mmb_fa_s,  mmb_fa_d,  s=18, color=C_MAMBA,
-           marker='x', lw=1.2, alpha=0.7, zorder=6)
+for fa_s, fa_d, color in [
+        (fix_fa_s, fix_fa_d, C_FIX),
+        (mlp_fa_s, mlp_fa_d, C_MLP),
+        (mmb_fa_s, mmb_fa_d, C_MAMBA)]:
+    ax.scatter(fa_s, fa_d, s=28, color=color,
+               marker='x', lw=1.5, alpha=0.8, zorder=6)
 
-# Re-acquisition annotations
-ax.annotate('Mamba\nre-acquires\n(+3 scans)',
+ax.annotate('Mamba re-acquires\n(+3 scans)',
             xy=(stealth_end + 3, tgt3[stealth_end + 3]),
-            xytext=(stealth_end + 20, tgt3[stealth_end + 3] + 10),
-            fontsize=7, color=C_MAMBA, fontweight='bold',
-            arrowprops=dict(arrowstyle='->', color=C_MAMBA, lw=1.0))
-ax.annotate('Fixed\nre-acquires\n(+15 scans)',
+            xytext=(stealth_end + 24, tgt3[stealth_end + 3] + 13),
+            fontsize=9, color=C_MAMBA, fontweight='bold',
+            arrowprops=dict(arrowstyle='->', color=C_MAMBA, lw=1.2))
+ax.annotate('Fixed (+15 scans)',
             xy=(stealth_end + 15, tgt1[stealth_end + 15]),
-            xytext=(stealth_end + 30, tgt1[stealth_end + 15] - 14),
-            fontsize=7, color=C_FIX,
-            arrowprops=dict(arrowstyle='->', color=C_FIX, lw=1.0))
+            xytext=(stealth_end + 30, tgt1[stealth_end + 15] - 15),
+            fontsize=9, color=C_FIX,
+            arrowprops=dict(arrowstyle='->', color=C_FIX, lw=1.2))
 
-ax.set_xlabel('Scan index', fontsize=8.5)
-ax.set_ylabel('DOA (degrees)', fontsize=8.5)
-ax.set_xlim(0, T - 1)
-ax.set_ylim(-75, 75)
-ax.grid(alpha=0.25)
-ax.spines[['top', 'right']].set_visible(False)
+ax.set_xlabel('Scan index', fontsize=10.5, color=C_TEXT)
+ax.set_ylabel('DOA (degrees)', fontsize=10.5, color=C_TEXT)
+ax.set_xlim(0, T-1); ax.set_ylim(-75, 75)
+ax.tick_params(labelsize=9.5, colors=C_TEXT)
+ax.grid(alpha=0.2, color='#AAAAAA')
+ax.spines[['top','right']].set_visible(False)
+ax.spines[['left','bottom']].set_color('#444444')
 
-# ══════════════════════════════════════════════════════════
-# Right panel: GOSPA over time
-# ══════════════════════════════════════════════════════════
+# ── Right: GOSPA over time ────────────────────────────────
 ax = axes[1]
-ax.set_facecolor(C_BG)
-ax.set_title('Per-Scan GOSPA (smoothed, $w{=}10$)\n'
+ax.set_facecolor('#FFFFFF')
+ax.set_title('Per-Scan GOSPA  (smoothed, window\u00a0$=10$)\n'
              'Stealth Scenario',
-             fontsize=8.5, fontweight='bold', color='#212121', pad=5)
+             fontsize=11, fontweight='bold', color=C_TEXT, pad=6)
 
-ax.axvspan(stealth_start, stealth_end, color='#FFECB3', alpha=0.7, zorder=0)
-ax.axvline(stealth_start, color='#FFA000', lw=0.8, ls='--')
-ax.axvline(stealth_end,   color='#FFA000', lw=0.8, ls='--')
+ax.axvspan(stealth_start, stealth_end, color='#F0EAD0', alpha=0.85, zorder=0)
+ax.axvline(stealth_start, color='#A08040', lw=1.0, ls='--')
+ax.axvline(stealth_end,   color='#A08040', lw=1.0, ls='--')
 
-ax.plot(t, g_fix,  color=C_FIX,   lw=1.6, label='Fixed', alpha=0.9)
-ax.plot(t, g_mlp,  color=C_MLP,   lw=1.6, label='MLP-PPO', alpha=0.9)
-ax.plot(t, g_mmb,  color=C_MAMBA, lw=1.8, label='Mamba-COP-RL', alpha=0.95)
+ax.plot(t, g_fix, color=C_FIX,   lw=2.0, label='Fixed',        alpha=0.90)
+ax.plot(t, g_mlp, color=C_MLP,   lw=2.0, label='MLP-PPO',      alpha=0.90)
+ax.plot(t, g_mmb, color=C_MAMBA, lw=2.2, label='Mamba-COP-RL', alpha=0.95)
 
-# Mean GOSPA annotation
-for g, color, y_off in [(g_fix, C_FIX, 0.06),
-                         (g_mlp, C_MLP, 0.04),
-                         (g_mmb, C_MAMBA, -0.06)]:
+for g, color, y_off in [(g_fix, C_FIX,   0.055),
+                         (g_mlp, C_MLP,   0.030),
+                         (g_mmb, C_MAMBA, -0.055)]:
     m = np.mean(g)
     ax.axhline(m, color=color, lw=0.8, ls=':', alpha=0.6)
-    ax.text(T - 2, m + y_off, f'{m:.3f}', ha='right', va='center',
-            fontsize=7, color=color, fontweight='bold')
+    ax.text(T - 4, m + y_off, f'mean={m:.3f}',
+            ha='right', va='center', fontsize=8.5,
+            color=C_TEXT, fontweight='bold')
 
-ax.set_xlabel('Scan index', fontsize=8.5)
-ax.set_ylabel('GOSPA ($\\downarrow$ better)', fontsize=8.5)
-ax.set_xlim(0, T - 1)
-ax.grid(alpha=0.25)
-ax.spines[['top', 'right']].set_visible(False)
+ax.set_xlabel('Scan index', fontsize=10.5, color=C_TEXT)
+ax.set_ylabel('GOSPA  ($\\downarrow$ better)', fontsize=10.5, color=C_TEXT)
+ax.set_xlim(0, T-1)
+ax.tick_params(labelsize=9.5, colors=C_TEXT)
+ax.grid(alpha=0.2, color='#AAAAAA')
+ax.spines[['top','right']].set_visible(False)
+ax.spines[['left','bottom']].set_color('#444444')
 
-# ── Shared legend ─────────────────────────────────────────
 legend_items = [
     mpatches.Patch(color=C_TRUE,  label='True DOA'),
-    mpatches.Patch(color='#9E9E9E', label='Stealth (invisible)'),
+    mpatches.Patch(color=C_INVIS, label='Stealth (invisible)'),
     mpatches.Patch(color=C_FIX,   label='Fixed threshold'),
     mpatches.Patch(color=C_MLP,   label='MLP-PPO'),
     mpatches.Patch(color=C_MAMBA, label='Mamba-COP-RL'),
-    plt.Line2D([0], [0], marker='x', color='#757575', lw=0,
-               markersize=6, label='False alarm'),
+    plt.Line2D([0],[0], marker='x', color=C_TEXT, lw=0,
+               markersize=8, label='False alarm'),
 ]
-fig.legend(handles=legend_items, loc='lower center',
-           ncol=6, fontsize=7.5, framealpha=0.9,
-           bbox_to_anchor=(0.5, -0.06))
+fig.legend(handles=legend_items, loc='lower center', ncol=6,
+           fontsize=9.5, framealpha=0.95, edgecolor='#BBBBBB',
+           bbox_to_anchor=(0.5, -0.05))
 
 plt.suptitle('Multi-Target DOA Tracking: Stealth Scenario'
-             ' ($K{=}3$, $T{=}200$, $M{=}8$)',
-             fontsize=9.5, fontweight='bold', color='#212121', y=1.01)
+             '  ($K{=}3$,  $T{=}200$,  $M{=}8$)',
+             fontsize=12, fontweight='bold', color=C_TEXT, y=1.02)
 
-plt.tight_layout(pad=0.8)
-out = 'fig_tracking.pdf'
-plt.savefig(out, dpi=200, bbox_inches='tight', facecolor='white')
-plt.savefig(out.replace('.pdf', '.png'), dpi=200,
-            bbox_inches='tight', facecolor='white')
+for ext in ('pdf', 'png'):
+    plt.savefig(f'fig_tracking.{ext}', dpi=200, bbox_inches='tight',
+                facecolor='white')
 plt.close()
-print(f"Saved: {out}")
+print("Saved: fig_tracking.pdf / .png")

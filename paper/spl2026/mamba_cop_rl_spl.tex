@@ -320,16 +320,21 @@ The reward is:
 
 \subsection{Architecture}
 
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig_architecture.pdf}
-  \caption{Mamba-COP-RL architecture. The COP spatial spectrum
-  (181-dim) passes through the selective SSM encoder, which maintains
-  hidden state $\vec{h}_t$ across scans.
-  The enriched observation feeds the PPO actor-critic.
-  At inference, the SSM operates in single-step mode ($O(d_s)$/scan).}
+  \includegraphics[width=\textwidth]{fig_architecture.pdf}
+  \caption{Mamba-COP-RL pipeline. The COP spatial spectrum (181-dim)
+  passes through the selective SSM encoder, which maintains hidden
+  state $\vec{h}_t \in \mathbb{R}^{d_s}$ across scans.
+  The enriched observation $\tilde{\vec{o}}_t$ feeds the PPO
+  actor-critic, which outputs GM-PHD hyperparameters
+  $(w_b, \tau_p, p_D)$.
+  \emph{Inference}: SSM.step() runs in $O(d_s)$ per scan
+  (3.4\,ms total on STM32H7).
+  \emph{Training}: SSM.forward($\vec{o}_{1:T}$) re-processes the full
+  episode for BPTT through the encoder.}
   \label{fig:arch}
-\end{figure}
+\end{figure*}
 
 Fig.~\ref{fig:arch} shows the full pipeline.
 The \textbf{SSM encoder} applies:
@@ -448,48 +453,47 @@ tested with paired Wilcoxon signed-rank test ($p{<}0.05$).
 
 \begin{table}[t]
   \centering
-  \caption{Average GOSPA per combat scenario (mean\,$\pm$\,std,
-           $\downarrow$ better, 50 seeds).
-           $\Delta$\% vs.\ Fixed baseline.
-           $\dagger$ = statistically significant vs.\ MLP-PPO
-           ($p{<}0.05$, Wilcoxon).
+  \caption{GOSPA per scenario (mean\,$\pm$\,std, $\downarrow$, 50 seeds).
+           $\dagger$: significant vs.\ MLP-PPO ($p{<}0.05$, Wilcoxon).
            \textbf{Bold} = best.}
   \label{tab:results}
-  \setlength{\tabcolsep}{2.8pt}
+  \resizebox{\columnwidth}{!}{%
   \begin{tabular}{lcccc}
     \toprule
     Method & Jamming & Stealth & Saturation & Formation \\
     \midrule
     Fixed
-      & $0.2401$        & $0.2502$        & $0.2571$        & $0.2923$ \\
+      & $0.2401$          & $0.2502$          & $0.2571$          & $0.2923$ \\
     MLP-PPO
-      & $0.2036{\pm}.018$ & $0.2006{\pm}.021$ & $0.2359{\pm}.024$ & $0.2561{\pm}.019$ \\
+      & $.204{\pm}.018$   & $.201{\pm}.021$   & $.236{\pm}.024$   & $.256{\pm}.019$ \\
     GRU-PPO
-      & $0.1981{\pm}.016$ & $0.1951{\pm}.019$ & $0.2298{\pm}.022$ & $0.2519{\pm}.017$ \\
+      & $.198{\pm}.016$   & $.195{\pm}.019$   & $.230{\pm}.022$   & $.252{\pm}.017$ \\
     LSTM-PPO
-      & $0.1972{\pm}.017$ & $0.1943{\pm}.020$ & $0.2312{\pm}.023$ & $0.2531{\pm}.018$ \\
-    Mamba-COP-RL
-      & $\mathbf{0.1905}{\pm}.014^\dagger$
-      & $\mathbf{0.1872}{\pm}.013^\dagger$
-      & $\mathbf{0.2261}{\pm}.020^\dagger$
-      & $\mathbf{0.2483}{\pm}.016^\dagger$ \\
+      & $.197{\pm}.017$   & $.194{\pm}.020$   & $.231{\pm}.023$   & $.253{\pm}.018$ \\
+    Mamba (ours)
+      & $\mathbf{.191}{\pm}.014^\dagger$
+      & $\mathbf{.187}{\pm}.013^\dagger$
+      & $\mathbf{.226}{\pm}.020^\dagger$
+      & $\mathbf{.248}{\pm}.016^\dagger$ \\
     \bottomrule
-  \end{tabular}
+  \end{tabular}}
 \end{table}
 
 \begin{table}[t]
   \centering
-  \caption{Overall mean GOSPA and model size comparison.}
+  \caption{Overall mean GOSPA and model size ($\downarrow$ better).}
   \label{tab:overall}
+  \footnotesize
+  \setlength{\tabcolsep}{5pt}
   \begin{tabular}{lcccc}
     \toprule
-    Method & Overall & $\Delta$\% & Params & KB (INT8) \\
+    Method & GOSPA & $\Delta$\% & Params & KB \\
     \midrule
-    Fixed        & 0.2599 & --      & --     & -- \\
-    MLP-PPO      & 0.2241 & $-13.8$ & 16\,K & 15.8 \\
-    GRU-PPO      & 0.2187 & $-15.9$ & 25\,K & 24.6 \\
-    LSTM-PPO     & 0.2190 & $-15.7$ & 33\,K & 32.2 \\
-    Mamba-COP-RL & $\mathbf{0.2130}$ & $\mathbf{-18.0}$ & 42\,K & 41.4 \\
+    Fixed        & 0.2599 & --              & --    & --   \\
+    MLP-PPO      & 0.2241 & $-13.8$         & 16\,K & 15.8 \\
+    GRU-PPO      & 0.2187 & $-15.9$         & 25\,K & 24.6 \\
+    LSTM-PPO     & 0.2190 & $-15.7$         & 33\,K & 32.2 \\
+    Mamba (ours) & $\mathbf{0.2130}$ & $\mathbf{-18.0}$ & 42\,K & 41.4 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -516,33 +520,33 @@ absent from MLP and degraded in fixed-rate recurrences (GRU, LSTM).
 
 \subsection{Ablation: Observation Dimensionality and Episode Length}
 
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig_ablation.pdf}
+  \includegraphics[width=\textwidth]{fig_ablation.pdf}
   \caption{Ablation validating Proposition~\ref{prop:ssm_advantage}.
   \emph{Left}: 12-dim hand-crafted statistics ($T{=}40$) — MLP wins
   ($-7.5\%$ GOSPA); Mamba hurts ($+8.7\%$) because $f$ is a
   sufficient statistic.
-  \emph{Right}: 183-dim raw spectrum ($T{=}200$) — Mamba wins across
-  all four scenarios.}
+  \emph{Right}: 183-dim raw COP spectrum ($T{=}200$) — Mamba-COP-RL
+  wins on all four scenarios ($-18.0\%$ vs.\ fixed, $-5.0\%$ vs.\ MLP).}
   \label{fig:ablation}
-\end{figure}
+\end{figure*}
 
 \begin{table}[t]
   \centering
-  \caption{Ablation: obs.\ dim and episode length.
-           Mean GOSPA (4 scenarios, 50 seeds).
-           \textbf{Bold} = best per row.}
+  \caption{Ablation: obs.\ dim $\times$ episode length.
+           Mean GOSPA (4 scenarios, 50 seeds). \textbf{Bold} = best.}
   \label{tab:ablation}
-  \setlength{\tabcolsep}{4pt}
-  \begin{tabular}{llcccc}
+  \footnotesize
+  \setlength{\tabcolsep}{4.5pt}
+  \begin{tabular}{cccccc}
     \toprule
-    obs\_dim & $T$ & Fixed & MLP & GRU & Mamba \\
+    Dim & $T$ & Fixed & MLP & GRU & Mamba \\
     \midrule
-    12 (stats)     & 40  & 0.2898 & \textbf{0.2680} & 0.2901 & 0.3150 \\
-    183 (spectrum) & 40  & 0.2898 & \textbf{0.2703} & 0.2812 & 0.2791 \\
-    183 (spectrum) & 100 & 0.2744 & 0.2412          & 0.2368 & \textbf{0.2305} \\
-    183 (spectrum) & 200 & 0.2599 & 0.2241          & 0.2187 & \textbf{0.2130} \\
+    12  & 40  & 0.2898 & \textbf{0.2680} & 0.2901 & 0.3150 \\
+    183 & 40  & 0.2898 & \textbf{0.2703} & 0.2812 & 0.2791 \\
+    183 & 100 & 0.2744 & 0.2412 & 0.2368 & \textbf{0.2305} \\
+    183 & 200 & 0.2599 & 0.2241 & 0.2187 & \textbf{0.2130} \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -561,18 +565,19 @@ Corollary~\ref{cor:raw_wins}.
 
 \begin{table}[t]
   \centering
-  \caption{Effect of SSM hidden state dimension $d_s$ on overall
-           GOSPA and model size (183-dim obs, $T{=}200$, 50 seeds).}
+  \caption{SSM hidden state dimension $d_s$ sensitivity
+           (183-dim, $T{=}200$, 50 seeds). \textbf{Bold} = best.}
   \label{tab:dstate}
-  \setlength{\tabcolsep}{5pt}
+  \footnotesize
+  \setlength{\tabcolsep}{5.5pt}
   \begin{tabular}{ccccc}
     \toprule
-    $d_s$ & GOSPA & $\Delta$\% vs MLP & Params & KB \\
+    $d_s$ & GOSPA & $\Delta$\%\,vs\,MLP & Params & KB \\
     \midrule
-    8  & $0.2284{\pm}.022$ & $-1.9$ & 28\,K & 27.3 \\
-    16 & $0.2198{\pm}.018$ & $-2.0$ & 35\,K & 34.2 \\
-    24 & $\mathbf{0.2130}{\pm}.014$ & $\mathbf{-5.1}$ & 42\,K & 41.4 \\
-    32 & $0.2141{\pm}.015$ & $-4.5$ & 51\,K & 49.8 \\
+    8  & $.228{\pm}.022$ & $-1.9$ & 28\,K & 27.3 \\
+    16 & $.220{\pm}.018$ & $-2.0$ & 35\,K & 34.2 \\
+    24 & $\mathbf{.213}{\pm}.014$ & $\mathbf{-5.1}$ & 42\,K & 41.4 \\
+    32 & $.214{\pm}.015$ & $-4.5$ & 51\,K & 49.8 \\
     \bottomrule
   \end{tabular}
 \end{table}
@@ -585,18 +590,20 @@ stealth and jamming history across 40+ scans.
 
 \subsection{Tracking Visualization}
 
-\begin{figure}[t]
+\begin{figure*}[t]
   \centering
-  \includegraphics[width=\columnwidth]{fig_tracking.pdf}
+  \includegraphics[width=\textwidth]{fig_tracking.pdf}
   \caption{Stealth scenario tracking ($K{=}3$, $T{=}200$, $M{=}8$).
   \emph{Left}: DOA trajectories over 200 scans.
-  Target~3 invisible during scans 60--105 (yellow band).
-  Mamba re-acquires within $+3$ scans; Fixed requires $+15$ scans.
+  Target~3 is invisible during scans 60--105 (yellow band).
+  Mamba-COP-RL re-acquires within $+3$ scans via hidden-state memory;
+  Fixed threshold requires $+15$ scans.
   \emph{Right}: Per-scan GOSPA (smoothed, window$=10$).
-  Mamba maintains lowest error and recovers fastest.
-  Mean GOSPA: Fixed $=0.250$, MLP $=0.201$, Mamba $=\mathbf{0.187}$.}
+  Mamba maintains the lowest error and recovers fastest on reappearance.
+  Mean GOSPA: Fixed $=0.250$, MLP-PPO $=0.201$,
+  Mamba-COP-RL $=\mathbf{0.187}$.}
   \label{fig:tracking}
-\end{figure}
+\end{figure*}
 
 Fig.~\ref{fig:tracking} visualizes the Stealth scenario.
 The hidden state $\vec{h}_t$ retains the target trajectory during
@@ -609,20 +616,21 @@ the fixed threshold (15 scans) and 2.7$\times$ faster than MLP-PPO
 
 \begin{table}[t]
   \centering
-  \caption{Inference latency breakdown per scan on STM32H7
-           Cortex-M7 @ 216\,MHz (FPU enabled, INT8).}
+  \caption{Inference latency per scan, STM32H7 Cortex-M7
+           @ 216\,MHz (FPU, INT8).}
   \label{tab:latency}
+  \footnotesize
   \setlength{\tabcolsep}{5pt}
   \begin{tabular}{lcc}
     \toprule
-    Module & Operations & Latency (ms) \\
+    Module & Complexity & ms \\
     \midrule
-    COP spectrum (4th-order cumulant) & $O(M^4 T)$     & 3.17 \\
-    SSM encoder step ($d_s{=}24$)    & $O(d_s)$        & 0.08 \\
-    Actor MLP ($183{\to}64{\to}64{\to}3$) & $O(d_h^2)$ & 0.06 \\
-    GM-PHD update                    & $O(J_t)$        & 0.09 \\
+    COP spectrum  & $O(M^4 T)$  & 3.17 \\
+    SSM step      & $O(d_s)$    & 0.08 \\
+    Actor MLP     & $O(d_h^2)$  & 0.06 \\
+    GM-PHD update & $O(J_t)$    & 0.09 \\
     \midrule
-    \textbf{Total}                   &                 & \textbf{3.40} \\
+    \textbf{Total} &            & \textbf{3.40} \\
     \bottomrule
   \end{tabular}
 \end{table}

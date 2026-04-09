@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.2.20)  9 APR 2026 21:23
+This is pdfTeX, Version 3.141592653-2.6-1.40.28 (MiKTeX 25.12) (preloaded format=pdflatex 2026.2.20)  9 APR 2026 21:39
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -501,57 +501,51 @@ Overfull \hbox (7.30014pt too wide) detected at line 318
  001 [](0\OML/cmm/m/it/10 ; J[] \OMS/cmsy/m/n/10 ^^@ \OT1/cmr/m/n/10 50)
  []
 
-<fig_architecture.pdf, id=16, 660.86902pt x 290.72714pt>
+<fig_architecture.pdf, id=16, 1026.23402pt x 317.98799pt>
 File: fig_architecture.pdf Graphic file (type pdf)
 <use fig_architecture.pdf>
 Package pdftex.def Info: fig_architecture.pdf  used on input line 325.
-(pdftex.def)             Requested size: 252.0pt x 110.85895pt.
+(pdftex.def)             Requested size: 516.0pt x 159.89124pt.
 LaTeX Font Info:    Trying to load font information for OT1+pcr on input line 3
-69.
+74.
 (C:\Users\jinho\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\ot1pcr.fd
 File: ot1pcr.fd 2001/06/04 font definitions for OT1/pcr.
 )
 LaTeX Font Info:    Trying to load font information for OMS+ptm on input line 3
-75.
+80.
 
 (C:\Users\jinho\AppData\Local\Programs\MiKTeX\tex/latex/psnfss\omsptm.fd
 File: omsptm.fd 
 )
 LaTeX Font Info:    Font shape `OMS/ptm/m/n' in size <10> not available
-(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 375.
+(Font)              Font shape `OMS/cmsy/m/n' tried instead on input line 380.
 
 [2]
-Underfull \hbox (badness 10000) in paragraph at lines 432--438
+Underfull \hbox (badness 10000) in paragraph at lines 437--443
 \OT1/ptm/m/n/10 hid-den=48, 25K params, 24.6KB); (4) \OT1/ptm/b/n/10 LSTM-PPO
  []
 
 
-Underfull \hbox (badness 1521) in paragraph at lines 439--441
+Underfull \hbox (badness 1521) in paragraph at lines 444--446
 []\OT1/ptm/b/n/10 Training\OT1/ptm/m/n/10 : 300 episodes, SNR $\OMS/cmsy/m/n/10
  ^^X U\OT1/cmr/m/n/10 (5\OML/cmm/m/it/10 ; \OT1/cmr/m/n/10 15)$\OT1/ptm/m/n/10 
 dB, Adam,
  []
 
-
-Overfull \hbox (41.66475pt too wide) in paragraph at lines 459--478
- [][] 
- []
-
-<fig_ablation.pdf, id=27, 647.1968pt x 253.2662pt>
+[3 <./fig_architecture.pdf>]
+<fig_ablation.pdf, id=181, 784.88858pt x 315.86005pt>
 File: fig_ablation.pdf Graphic file (type pdf)
 <use fig_ablation.pdf>
-Package pdftex.def Info: fig_ablation.pdf  used on input line 521.
-(pdftex.def)             Requested size: 252.0pt x 98.61497pt.
-[3 <./fig_architecture.pdf>]
-<fig_tracking.pdf, id=174, 648.2142pt x 273.6082pt>
+Package pdftex.def Info: fig_ablation.pdf  used on input line 525.
+(pdftex.def)             Requested size: 516.0pt x 207.65375pt.
+<fig_tracking.pdf, id=182, 784.43375pt x 319.00179pt>
 File: fig_tracking.pdf Graphic file (type pdf)
 <use fig_tracking.pdf>
-Package pdftex.def Info: fig_tracking.pdf  used on input line 590.
-(pdftex.def)             Requested size: 252.0pt x 106.36859pt.
- (mamba_cop_rl_spl.bbl [4 <./fig_ablation.pdf>])
-[5
+Package pdftex.def Info: fig_tracking.pdf  used on input line 595.
+(pdftex.def)             Requested size: 516.0pt x 209.85062pt.
+ (mamba_cop_rl_spl.bbl [4] [5 <./fig_ablation.pdf> <./fig_tracking.pdf>]) [6
 
- <./fig_tracking.pdf>] (mamba_cop_rl_spl.aux)
+] (mamba_cop_rl_spl.aux)
  ***********
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-12-24>
@@ -559,12 +553,12 @@ L3 programming layer <2025-12-24>
  ) 
 Here is how much of TeX's memory you used:
  9160 strings out of 467871
- 204702 string characters out of 5418376
- 608374 words of memory out of 5000000
+ 204704 string characters out of 5418376
+ 603374 words of memory out of 5000000
  37929 multiletter control sequences out of 15000+600000
  675137 words of font info for 133 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 73i,10n,80p,549b,585s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 73i,11n,80p,669b,585s stack positions out of 10000i,1000n,20000p,200000b,200000s
 <C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/cm/
 cmbx10.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/public/ams
 fonts/cm/cmbx7.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/pu
@@ -594,9 +588,9 @@ w/times/utmb8a.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/ur
 w/times/utmbi8a.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/u
 rw/times/utmr8a.pfb><C:/Users/jinho/AppData/Local/Programs/MiKTeX/fonts/type1/u
 rw/times/utmri8a.pfb>
-Output written on mamba_cop_rl_spl.pdf (5 pages, 485341 bytes).
+Output written on mamba_cop_rl_spl.pdf (6 pages, 493315 bytes).
 PDF statistics:
- 535 PDF objects out of 1000 (max. 8388607)
+ 556 PDF objects out of 1000 (max. 8388607)
  0 named destinations out of 1000 (max. 500000)
  16 words of extra memory for PDF output out of 10000 (max. 10000000)
 
