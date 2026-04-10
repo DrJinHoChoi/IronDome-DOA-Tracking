@@ -52,22 +52,22 @@ g_fix = gospa_series(fixed_est, fix_fa_s)
 g_mlp = gospa_series(mlp_est,   mlp_fa_s)
 g_mmb = gospa_series(mamba_est, mmb_fa_s)
 
-C_TRUE  = '#1A1A1A'
-C_INVIS = '#999999'
-C_FIX   = '#8B2252'
-C_MLP   = '#1A4F8A'
-C_MAMBA = '#1E6845'
+C_TRUE  = '#2C3E50'   # dark slate
+C_INVIS = '#95A5A6'   # medium grey
+C_FIX   = '#C0392B'   # medium red
+C_MLP   = '#2980B9'   # medium blue
+C_MAMBA = '#27AE60'   # medium green
 C_TEXT  = '#1A1A1A'
 
-fig, axes = plt.subplots(1, 2, figsize=(13, 4.0))
-plt.subplots_adjust(wspace=0.28)
+fig, axes = plt.subplots(1, 2, figsize=(13, 3.1))
+plt.subplots_adjust(wspace=0.28, bottom=0.10)
 
 # ── Left: DOA trajectories ────────────────────────────────
 ax = axes[0]
 ax.set_facecolor('#FFFFFF')
-ax.set_title('DOA Tracking — Stealth Scenario\n'
-             '(Target\u00a03 invisible, scans\u00a060\u2013105)',
-             fontsize=11, fontweight='bold', color=C_TEXT, pad=6)
+ax.set_title('(a)  DOA Tracking — Stealth Scenario\n'
+             'Target\u00a03 invisible during scans\u00a060\u2013105',
+             fontsize=10.5, fontweight='bold', color=C_TEXT, pad=5)
 
 ax.axvspan(stealth_start, stealth_end, color='#F0EAD0', alpha=0.85, zorder=0,
            label='Stealth window')
@@ -102,12 +102,12 @@ for fa_s, fa_d, color in [
 ax.annotate('Mamba re-acquires\n(+3 scans)',
             xy=(stealth_end + 3, tgt3[stealth_end + 3]),
             xytext=(stealth_end + 24, tgt3[stealth_end + 3] + 13),
-            fontsize=9, color=C_MAMBA, fontweight='bold',
+            fontsize=9, color=C_TEXT, fontweight='bold',
             arrowprops=dict(arrowstyle='->', color=C_MAMBA, lw=1.2))
 ax.annotate('Fixed (+15 scans)',
             xy=(stealth_end + 15, tgt1[stealth_end + 15]),
             xytext=(stealth_end + 30, tgt1[stealth_end + 15] - 15),
-            fontsize=9, color=C_FIX,
+            fontsize=9, color=C_TEXT,
             arrowprops=dict(arrowstyle='->', color=C_FIX, lw=1.2))
 
 ax.set_xlabel('Scan index', fontsize=10.5, color=C_TEXT)
@@ -121,9 +121,9 @@ ax.spines[['left','bottom']].set_color('#444444')
 # ── Right: GOSPA over time ────────────────────────────────
 ax = axes[1]
 ax.set_facecolor('#FFFFFF')
-ax.set_title('Per-Scan GOSPA  (smoothed, window\u00a0$=10$)\n'
-             'Stealth Scenario',
-             fontsize=11, fontweight='bold', color=C_TEXT, pad=6)
+ax.set_title('(b)  Per-Scan GOSPA\n'
+             'smoothed, window\u00a0$=10$,  Stealth Scenario',
+             fontsize=10.5, fontweight='bold', color=C_TEXT, pad=5)
 
 ax.axvspan(stealth_start, stealth_end, color='#F0EAD0', alpha=0.85, zorder=0)
 ax.axvline(stealth_start, color='#A08040', lw=1.0, ls='--')
@@ -159,13 +159,19 @@ legend_items = [
     plt.Line2D([0],[0], marker='x', color=C_TEXT, lw=0,
                markersize=8, label='False alarm'),
 ]
-fig.legend(handles=legend_items, loc='lower center', ncol=6,
-           fontsize=9.5, framealpha=0.95, edgecolor='#BBBBBB',
-           bbox_to_anchor=(0.5, -0.05))
-
-plt.suptitle('Multi-Target DOA Tracking: Stealth Scenario'
-             '  ($K{=}3$,  $T{=}200$,  $M{=}8$)',
-             fontsize=12, fontweight='bold', color=C_TEXT, y=1.02)
+# Legend inside right panel — upper right (GOSPA values are low there)
+legend_items_left = [
+    mpatches.Patch(color=C_TRUE,  label='True DOA'),
+    mpatches.Patch(color=C_INVIS, label='Stealth'),
+    mpatches.Patch(color=C_FIX,   label='Fixed'),
+    mpatches.Patch(color=C_MLP,   label='MLP-PPO'),
+    mpatches.Patch(color=C_MAMBA, label='Mamba'),
+    plt.Line2D([0],[0], marker='x', color=C_TEXT, lw=0,
+               markersize=7, label='FA'),
+]
+axes[1].legend(handles=legend_items_left, loc='upper right',
+               fontsize=8.5, framealpha=0.95, edgecolor='#BBBBBB',
+               ncol=2)
 
 for ext in ('pdf', 'png'):
     plt.savefig(f'fig_tracking.{ext}', dpi=200, bbox_inches='tight',

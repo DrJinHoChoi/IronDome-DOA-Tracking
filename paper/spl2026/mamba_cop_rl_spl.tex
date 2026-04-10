@@ -481,20 +481,28 @@ tested with paired Wilcoxon signed-rank test ($p{<}0.05$).
 
 \begin{table}[t]
   \centering
-  \caption{Overall mean GOSPA and model size ($\downarrow$ better).}
+  \caption{Overall GOSPA, model size, and $d_s$ sensitivity.
+           \emph{Top}: method comparison.
+           \emph{Bottom}: Mamba $d_s$ ablation (183-dim, $T{=}200$).}
   \label{tab:overall}
   \footnotesize
-  \setlength{\tabcolsep}{5pt}
+  \setlength{\tabcolsep}{4.5pt}
   \begin{tabular}{lcccc}
     \toprule
     Method & GOSPA & $\Delta$\% & Params & KB \\
     \midrule
-    Fixed        & 0.2599 & --              & --    & --   \\
-    MLP-PPO      & 0.2241 & $-13.8$         & 16\,K & 15.8 \\
-    GRU-PPO      & 0.2187 & $-15.9$         & 25\,K & 24.6 \\
-    LSTM-PPO     & 0.2190 & $-15.7$         & 33\,K & 32.2 \\
+    Fixed        & 0.2599 & --      & --    & --   \\
+    MLP-PPO      & 0.2241 & $-13.8$ & 16\,K & 15.8 \\
+    GRU-PPO      & 0.2187 & $-15.9$ & 25\,K & 24.6 \\
+    LSTM-PPO     & 0.2190 & $-15.7$ & 33\,K & 32.2 \\
     Mamba (ours) & $\mathbf{0.2130}$ & $\mathbf{-18.0}$ & 42\,K & 41.4 \\
+    \midrule
+    $d_s{=}8$  & $.228{\pm}.022$ & $-1.9$ & 28\,K & 27.3 \\
+    $d_s{=}16$ & $.220{\pm}.018$ & $-2.0$ & 35\,K & 34.2 \\
+    $d_s{=}24$ & $\mathbf{.213}{\pm}.014$ & $\mathbf{-5.1}$ & 42\,K & 41.4 \\
+    $d_s{=}32$ & $.214{\pm}.015$ & $-4.5$ & 51\,K & 49.8$^*$ \\
     \bottomrule
+    \multicolumn{5}{l}{\scriptsize $^*$Exceeds 50\,KB STM32H7 SRAM budget.}
   \end{tabular}
 \end{table}
 
@@ -561,32 +569,11 @@ is insufficient without long enough temporal dependency).
 monotonically (2.3\% at $T{=}100$, 5.1\% at $T{=}200$), confirming
 Corollary~\ref{cor:raw_wins}.
 
-\subsection{Ablation: SSM Hidden State Dimension}
-
-\begin{table}[t]
-  \centering
-  \caption{SSM hidden state dimension $d_s$ sensitivity
-           (183-dim, $T{=}200$, 50 seeds). \textbf{Bold} = best.}
-  \label{tab:dstate}
-  \footnotesize
-  \setlength{\tabcolsep}{5.5pt}
-  \begin{tabular}{ccccc}
-    \toprule
-    $d_s$ & GOSPA & $\Delta$\%\,vs\,MLP & Params & KB \\
-    \midrule
-    8  & $.228{\pm}.022$ & $-1.9$ & 28\,K & 27.3 \\
-    16 & $.220{\pm}.018$ & $-2.0$ & 35\,K & 34.2 \\
-    24 & $\mathbf{.213}{\pm}.014$ & $\mathbf{-5.1}$ & 42\,K & 41.4 \\
-    32 & $.214{\pm}.015$ & $-4.5$ & 51\,K & 49.8 \\
-    \bottomrule
-  \end{tabular}
-\end{table}
-
-$d_s{=}24$ provides the best GOSPA while fitting within the
-50\,KB STM32H7 SRAM budget.
-$d_s{=}32$ offers marginal gain ($+0.5\%$) but exceeds the budget.
-$d_s{=}8$ underperforms, lacking sufficient capacity to retain
-stealth and jamming history across 40+ scans.
+The bottom half of Table~\ref{tab:overall} ablates $d_s$.
+$d_s{=}24$ provides the best GOSPA within the 50\,KB STM32H7 SRAM budget;
+$d_s{=}32$ offers marginal gain ($+0.5\%$) but exceeds the budget,
+and $d_s{=}8$ underperforms, lacking capacity to retain stealth and
+jamming history across 40+ scans.
 
 \subsection{Tracking Visualization}
 
