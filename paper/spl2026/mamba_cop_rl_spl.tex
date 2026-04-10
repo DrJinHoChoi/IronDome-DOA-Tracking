@@ -163,12 +163,17 @@ runs in $O(d_s)$ per scan---critical for edge deployment.
 \textbf{Selective SSMs.}
 Gu \emph{et al.}\ introduced S4 \cite{gu2022s4}, S5 \cite{smith2023s5},
 and Mamba \cite{gu2023mamba} with input-dependent selectivity.
-Han \emph{et al.}\ \cite{han2024audiomamba} demonstrated Audio Mamba
-for spectrogram classification, motivating our use of raw COP spectra.
-Ota \cite{ota2024decisionmamba} proposed Decision Mamba for offline RL.
-We are the first to use Mamba as an online RL temporal encoder for
-adaptive DOA filter tuning, and to study \emph{when} such encoding
-is beneficial.
+Mamba's input-dependent selectivity---the ability to adaptively gate
+which temporal information to retain---makes it a natural fit for
+partially observable tracking: during a stealth window the encoder can
+suppress uninformative zero-signal scans and preserve the pre-disappearance
+trajectory in $\vec{h}_t$, a capability absent from fixed-rate GRU/LSTM.
+Ota \cite{ota2024decisionmamba} proposed Decision Mamba for offline RL;
+Han \emph{et al.}\ \cite{han2024audiomamba} applied Mamba to audio
+signal processing.
+We are the first to use Mamba as an \emph{online} RL temporal encoder for
+adaptive DOA filter tuning, and to formally characterize \emph{when} such
+encoding is beneficial.
 
 
 % =========================================================

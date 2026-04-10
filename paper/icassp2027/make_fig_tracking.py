@@ -52,8 +52,8 @@ g_fix = gospa_series(fixed_est, fix_fa_s)
 g_mlp = gospa_series(mlp_est,   mlp_fa_s)
 g_mmb = gospa_series(mamba_est, mmb_fa_s)
 
-C_TRUE  = '#2C3E50'   # dark slate
-C_INVIS = '#95A5A6'   # medium grey
+C_TRUE  = '#000000'   # black
+C_INVIS = '#E67E22'   # orange (stealth / invisible)
 C_FIX   = '#C0392B'   # medium red
 C_MLP   = '#2980B9'   # medium blue
 C_MAMBA = '#27AE60'   # medium green
@@ -152,7 +152,7 @@ ax.spines[['left','bottom']].set_color('#444444')
 
 legend_items = [
     mpatches.Patch(color=C_TRUE,  label='True DOA'),
-    mpatches.Patch(color=C_INVIS, label='Stealth (invisible)'),
+    mpatches.Patch(color=C_INVIS, label='Stealth (invis.)'),
     mpatches.Patch(color=C_FIX,   label='Fixed threshold'),
     mpatches.Patch(color=C_MLP,   label='MLP-PPO'),
     mpatches.Patch(color=C_MAMBA, label='Mamba-COP-RL'),
@@ -163,6 +163,7 @@ legend_items = [
 legend_items_left = [
     mpatches.Patch(color=C_TRUE,  label='True DOA'),
     mpatches.Patch(color=C_INVIS, label='Stealth'),
+
     mpatches.Patch(color=C_FIX,   label='Fixed'),
     mpatches.Patch(color=C_MLP,   label='MLP-PPO'),
     mpatches.Patch(color=C_MAMBA, label='Mamba'),
