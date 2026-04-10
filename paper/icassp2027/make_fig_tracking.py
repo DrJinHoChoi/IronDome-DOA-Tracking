@@ -152,27 +152,16 @@ ax.spines[['left','bottom']].set_color('#444444')
 
 legend_items = [
     mpatches.Patch(color=C_TRUE,  label='True DOA'),
-    mpatches.Patch(color=C_INVIS, label='Stealth (invis.)'),
+    mpatches.Patch(color=C_INVIS, label='Stealth (invisible)'),
     mpatches.Patch(color=C_FIX,   label='Fixed threshold'),
     mpatches.Patch(color=C_MLP,   label='MLP-PPO'),
     mpatches.Patch(color=C_MAMBA, label='Mamba-COP-RL'),
     plt.Line2D([0],[0], marker='x', color=C_TEXT, lw=0,
                markersize=8, label='False alarm'),
 ]
-# Legend inside right panel — upper right (GOSPA values are low there)
-legend_items_left = [
-    mpatches.Patch(color=C_TRUE,  label='True DOA'),
-    mpatches.Patch(color=C_INVIS, label='Stealth'),
-
-    mpatches.Patch(color=C_FIX,   label='Fixed'),
-    mpatches.Patch(color=C_MLP,   label='MLP-PPO'),
-    mpatches.Patch(color=C_MAMBA, label='Mamba'),
-    plt.Line2D([0],[0], marker='x', color=C_TEXT, lw=0,
-               markersize=7, label='FA'),
-]
-axes[1].legend(handles=legend_items_left, loc='upper right',
-               fontsize=8.5, framealpha=0.95, edgecolor='#BBBBBB',
-               ncol=2)
+fig.legend(handles=legend_items, loc='lower center',
+           fontsize=9, framealpha=0.95, edgecolor='#BBBBBB',
+           ncol=6, bbox_to_anchor=(0.5, -0.04))
 
 for ext in ('pdf', 'png'):
     plt.savefig(f'fig_tracking.{ext}', dpi=200, bbox_inches='tight',
