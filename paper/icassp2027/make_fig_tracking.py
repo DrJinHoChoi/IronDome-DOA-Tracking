@@ -161,7 +161,7 @@ legend_items = [
 ]
 fig.legend(handles=legend_items, loc='lower center',
            fontsize=9, framealpha=0.95, edgecolor='#BBBBBB',
-           ncol=6, bbox_to_anchor=(0.5, 0.01))
+           ncol=6, bbox_to_anchor=(0.5, -0.08))
 
 for ext in ('pdf', 'png'):
     plt.savefig(f'fig_tracking.{ext}', dpi=200, bbox_inches='tight',
