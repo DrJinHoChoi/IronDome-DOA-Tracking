@@ -60,7 +60,7 @@ C_MAMBA = '#27AE60'   # medium green
 C_TEXT  = '#1A1A1A'
 
 fig, axes = plt.subplots(1, 2, figsize=(13, 3.1))
-plt.subplots_adjust(wspace=0.28, bottom=0.10)
+plt.subplots_adjust(wspace=0.28, bottom=0.22)
 
 # ── Left: DOA trajectories ────────────────────────────────
 ax = axes[0]
@@ -161,7 +161,7 @@ legend_items = [
 ]
 fig.legend(handles=legend_items, loc='lower center',
            fontsize=9, framealpha=0.95, edgecolor='#BBBBBB',
-           ncol=6, bbox_to_anchor=(0.5, -0.04))
+           ncol=6, bbox_to_anchor=(0.5, 0.01))
 
 for ext in ('pdf', 'png'):
     plt.savefig(f'fig_tracking.{ext}', dpi=200, bbox_inches='tight',
