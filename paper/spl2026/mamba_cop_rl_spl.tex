@@ -34,33 +34,20 @@ Selective SSM vs.\ MLP in RL-Based Multi-Target DOA Track Management}
 
 % =========================================================
 \begin{abstract}
-Reinforcement learning (RL) has emerged as a promising approach to
-adaptive track management in multi-target direction-of-arrival (DOA)
-tracking, replacing hand-tuned thresholds in Gaussian mixture
-probability hypothesis density (GM-PHD) filters with a learned policy.
-A key open question is whether a recurrent policy with temporal memory
-outperforms a memoryless multilayer perceptron (MLP).
-We provide a principled, empirically validated answer:
-\emph{temporal memory helps when (i) the observation is
-high-dimensional raw signal rather than hand-summarized statistics,
-and (ii) the episode is long enough to create meaningful causal
-dependencies across scans.}
-We formalize this as a proposition based on the data processing
-inequality and the concept of a sufficient statistic, with a
-complete proof.
-We instantiate it as \textbf{Mamba-COP-RL}, coupling a selective
-state space model (SSM) encoder with a PPO actor-critic that receives
-the raw 181-dim COP spatial spectrum over 200-scan episodes.
-We introduce \textbf{CombatTrackEnv}, an open-source benchmark with
-four combat-realistic scenario generators.
-Across all scenarios, Mamba-COP-RL improves GOSPA by up to
-$25.2\%$ over fixed thresholds and $6.7\%$ over MLP-PPO, with gains
-ordered exactly by temporal dependency horizon as predicted by the
-proposition.
-Ablation against GRU-PPO and LSTM-PPO confirms that Mamba's
-input-dependent selectivity is critical.
-The 41.4\,KB INT8 model fits within the 50\,KB SRAM of an
-STM32H7 Cortex-M7, with $3.4$\,ms end-to-end latency per scan.
+We address when temporal memory helps in reinforcement learning
+(RL)-based multi-target DOA track management.
+We prove that a selective SSM encoder outperforms a memoryless MLP
+if and only if the observation is \emph{not} a sufficient statistic
+for the policy-relevant history---a condition satisfied by raw
+high-dimensional COP spectra over long episodes but not by
+hand-crafted low-dimensional features.
+We instantiate this as \textbf{Mamba-COP-RL}: a Mamba SSM encoder
+coupled with PPO, operating on the 181-dim COP spatial spectrum.
+On \textbf{CombatTrackEnv} (four combat scenarios), Mamba-COP-RL
+improves GOSPA by up to $25.2\%$ over fixed GM-PHD thresholds and
+$6.7\%$ over MLP-PPO, with gains ordered by temporal dependency
+horizon as predicted.
+The 41.4\,KB INT8 model runs at $3.4$\,ms/scan on STM32H7 Cortex-M7.
 \end{abstract}
 
 \begin{IEEEkeywords}
