@@ -6,8 +6,6 @@
 \documentclass[journal]{IEEEtran}
 
 \usepackage{amsmath,amssymb,amsfonts,amsthm}
-\usepackage{algorithmic}
-\usepackage{algorithm}
 \usepackage{graphicx}
 \usepackage{textcomp}
 \usepackage{xcolor}
@@ -135,45 +133,23 @@ We verify this with a controlled ablation:
 \section{Related Work}
 \label{sec:related}
 
-\textbf{RL for multi-target tracking.}
-Rosello and Kochenderfer \cite{rosello2018marlmot} modeled track
-initiation and termination as MDP actions in a multi-agent RL
-framework, using hand-crafted low-dimensional state features.
-Stephan \emph{et al.}\ \cite{stephan2022scene} adapted radar tracker
-parameters with DRL using variance-aware rewards; their compact
-feature observation is consistent with our finding that MLP suffices
-in the low-dimensional regime.
-Most relevant to our work, Ewers \emph{et al.}\ \cite{ewers2025multitarget}
-compared sequence-capable architectures (BiGRU, self-attention) against
-flat MLP for radar search-and-track RL.
-Unlike their work, we focus specifically on the \emph{conditions} under
-which temporal memory helps, provide a formal proposition with proof,
-and use a selective SSM (Mamba) rather than GRU.
-
-\textbf{Recurrent and memory-augmented RL.}
-Hausknecht and Stone \cite{hausknecht2015drqn} showed that DRQN
-(DQN+LSTM) improves performance in partially observable environments.
-Kapturowski \emph{et al.}\ \cite{kapturowski2019r2d2} scaled recurrent
-RL with burn-in for stable hidden state initialization.
-Dorka \cite{dorka2022recurrent} systematically analyzed generalization
-limits of recurrent PPO, motivating our ablation study.
-Unlike LSTM/GRU ($O(d_h^2)$ per step), our Mamba encoder
-runs in $O(d_s)$ per scan---critical for edge deployment.
-
-\textbf{Selective SSMs.}
-Gu \emph{et al.}\ introduced S4 \cite{gu2022s4}, S5 \cite{smith2023s5},
-and Mamba \cite{gu2023mamba} with input-dependent selectivity.
-Mamba's input-dependent selectivity---the ability to adaptively gate
-which temporal information to retain---makes it a natural fit for
-partially observable tracking: during a stealth window the encoder can
-suppress uninformative zero-signal scans and preserve the pre-disappearance
-trajectory in $\vec{h}_t$, a capability absent from fixed-rate GRU/LSTM.
-Ota \cite{ota2024decisionmamba} proposed Decision Mamba for offline RL;
-Han \emph{et al.}\ \cite{han2024audiomamba} applied Mamba to audio
-signal processing.
-We are the first to use Mamba as an \emph{online} RL temporal encoder for
-adaptive DOA filter tuning, and to formally characterize \emph{when} such
-encoding is beneficial.
+Prior RL-based GM-PHD tuning uses memoryless MLP policies with low-dimensional
+hand-crafted features \cite{rosello2018marlmot,stephan2022scene}; Ewers
+\emph{et al.}\ \cite{ewers2025multitarget} compared BiGRU and self-attention
+against MLP for radar tracking RL but did not formally characterize when
+recurrence helps.
+Hausknecht and Stone \cite{hausknecht2015drqn} showed DRQN improves
+performance in POMDPs; Dorka \cite{dorka2022recurrent} analyzed
+generalization limits of recurrent PPO.
+Mamba \cite{gu2023mamba} extends S4 \cite{gu2022s4} with input-dependent
+selectivity, enabling adaptive gating of irrelevant scans (e.g., zero-signal
+stealth windows) while retaining trajectory history in $\vec{h}_t$---a
+capability absent from fixed-rate GRU/LSTM.
+Ota \cite{ota2024decisionmamba} applied Mamba to offline RL;
+Han \emph{et al.}\ \cite{han2024audiomamba} to audio signal processing.
+We are the first to deploy Mamba as an \emph{online} RL encoder for
+adaptive DOA filter tuning and to formally characterize when temporal
+memory helps.
 
 
 % =========================================================
@@ -215,18 +191,6 @@ Selectivity allows the model to learn \emph{which} inputs to retain
 in $\vec{h}_t$ and which to discard, enabling long-range compression
 without fixed forgetting rates---a key advantage over GRU and LSTM.
 
-\subsection{PPO}
-
-PPO \cite{schulman2017proximal} maximizes:
-\begin{equation}
-  \mathcal{L}^{\mathrm{CLIP}} = \mathbb{E}_t\!\left[
-    \min\!\left(r_t A_t,\;
-    \mathrm{clip}(r_t, 1{-}\epsilon, 1{+}\epsilon)\, A_t
-    \right)
-  \right]
-\end{equation}
-with $r_t {=} \pi_\theta(a_t|o_t)/\pi_{\theta_{\rm old}}$,
-$\epsilon{=}0.2$, GAE ($\lambda{=}0.95$), 4 update epochs per rollout.
 
 
 % =========================================================
@@ -250,31 +214,18 @@ statistic for the policy-relevant history, i.e.,
 where $\mathcal{I}(\cdot;\cdot)$ denotes mutual information.
 \end{proposition}
 
-\begin{proof}
-(\emph{Necessity}.) If equality holds in~\eqref{eq:prop}, then $f$
-is a sufficient statistic of $\vec{o}_t$ for $\vec{o}_{1:t-1}$
-by the data processing inequality \cite{cover2006elements}.
-Sufficiency means $\vec{o}_{1:t-1} \perp\!\!\!\perp \vec{o}_t \mid
-f(\vec{o}_t)$, so all history-relevant information present in
-$\vec{o}_t$ is already encoded in $f(\vec{o}_t)$.
-Any temporal encoder that reads $\vec{o}_t$ can compute no more
-history-relevant signal than $f(\vec{o}_t)$ provides; hence the
-MLP on $f(\vec{o}_t)$ is already optimal given the observation.
-A temporal encoder cannot improve it.
-
-(\emph{Sufficiency}.) If strict inequality holds, there exists a
-function $g: \mathbb{R}^{d_o} \times \mathbb{R}^{d_s} \to \mathbb{R}$
-of $\vec{o}_t$ and past hidden state $\vec{h}_{t-1}$ such that
-$\mathcal{I}(g(\vec{o}_t, \vec{h}_{t-1});\, \vec{o}_{1:t-1}) >
-\mathcal{I}(f(\vec{o}_t);\, \vec{o}_{1:t-1})$.
-Since $\vec{h}_{t-1}$ is computed from $\vec{o}_{1:t-1}$ and a
-sufficiently expressive SSM can approximate $g$ arbitrarily well
-(by universality of recurrent networks \cite{schafer2006recurrent}),
-an SSM encoder strictly dominates the MLP on $f(\vec{o}_t)$ in terms
-of accessible mutual information with the history.
-By the sufficiency of mutual information for policy value in a POMDP
-\cite{kaelbling1998planning}, this translates to improved policy
-quality.
+\begin{proof}[Proof sketch]
+(\emph{Necessity}.) If equality holds, $f$ is a sufficient statistic
+by the data processing inequality \cite{cover2006elements}, so the MLP
+on $f(\vec{o}_t)$ already accesses all history-relevant information and
+no temporal encoder can improve it.
+(\emph{Sufficiency}.) If strict inequality holds, there exists $g(\vec{o}_t,
+\vec{h}_{t-1})$ with strictly higher mutual information with
+$\vec{o}_{1:t-1}$.
+Since a sufficiently expressive SSM can approximate $g$
+\cite{schafer2006recurrent}, the SSM encoder dominates the MLP in mutual
+information, which translates to improved policy value in a POMDP
+\cite{kaelbling1998planning}.
 \end{proof}
 
 \begin{corollary}
@@ -354,44 +305,11 @@ The \textbf{actor-critic} is a two-layer MLP
 ($183{\to}64{\to}64$, Tanh) with Gaussian actor and linear critic.
 Total: 42,375 params, 41.4\,KB INT8.
 
-\textbf{Critical training detail (BPTT).}
-During each PPO update epoch, the full episode sequence
-$(\vec{o}_1,\ldots,\vec{o}_T)$ is re-processed through the SSM
-encoder (starting from $\vec{h}_0{=}\vec{0}$), so gradients
-backpropagate through the temporal encoder (Algorithm~\ref{alg:train}).
-This differs from naive recurrent PPO that detaches hidden states
-between rollouts, which prevents gradient flow through the SSM.
-
-\begin{algorithm}[t]
-\caption{Mamba-COP-RL Training}
-\label{alg:train}
-\begin{algorithmic}[1]
-\REQUIRE CombatTrackEnv, policy $\pi_\theta$, epochs $E{=}4$,
-         clip $\epsilon{=}0.2$
-\FOR{episode $= 1$ \TO $N_{\rm train}$}
-  \STATE Sample SNR $\sim \mathcal{U}(5,15)$, scenario type
-  \STATE $\vec{o}_1 \!\leftarrow\! \textsc{env.reset}()$;
-         $\;\vec{h}_0 \leftarrow \vec{0}$
-  \FOR{$t = 1$ \TO $T$}
-    \STATE $\tilde{\vec{o}}_t, \vec{h}_t \leftarrow
-           \textsc{SSM.step}(\vec{o}_t, \vec{h}_{t-1})$
-    \STATE $\vec{a}_t, \ell_t, v_t \leftarrow \pi_\theta(\tilde{\vec{o}}_t)$;
-           $\;\vec{h}_{t-1} \leftarrow \vec{h}_t.\texttt{detach}()$
-    \STATE $\vec{o}_{t+1}, r_t \leftarrow \textsc{env.step}(\vec{a}_t)$
-  \ENDFOR
-  \STATE Compute GAE advantages $\hat{A}_t$, returns $\hat{R}_t$
-  \FOR{epoch $= 1$ \TO $E$}
-    \STATE $\tilde{\vec{o}}_{1:T} \leftarrow \textsc{SSM.forward}(\vec{o}_{1:T})$
-           \COMMENT{Re-run full sequence; gradients flow through SSM}
-    \STATE $\vec{\ell}', \vec{v}', \mathcal{H} \leftarrow
-           \pi_\theta(\tilde{\vec{o}}_{1:T})$
-    \STATE $\mathcal{L} \leftarrow \mathcal{L}^{\rm CLIP} +
-           c_v \mathcal{L}^{\rm value} - c_e \mathcal{H}$;
-           $\;\theta \leftarrow \theta - \nabla_\theta \mathcal{L}$
-  \ENDFOR
-\ENDFOR
-\end{algorithmic}
-\end{algorithm}
+\textbf{BPTT.}
+During each PPO \cite{schulman2017proximal} update epoch, the full episode
+$(\vec{o}_1,\ldots,\vec{o}_T)$ is re-processed via \textsc{SSM.forward}
+(starting from $\vec{h}_0{=}\vec{0}$) so gradients flow through the encoder;
+rollout uses \textsc{SSM.step} with detached hidden states.
 
 
 % =========================================================
@@ -423,14 +341,6 @@ optimal current decisions.
   \end{tabular}
 \end{table}
 
-\textbf{Jamming}: Jammer active in $[t_j, t_j{+}\Delta_j]$,
-$\Delta_j \in [30,70]$, reducing effective SNR by 10\,dB.
-\textbf{Stealth}: Each target independently becomes low-observable
-(zero received power) for $\Delta_s \in [15,40]$ scans.
-\textbf{Saturation}: $N_i \in \{2,3\}$ baseline targets;
-$N_a \in [6,12]$ additional targets appear at $t_a \in [40,80]$.
-\textbf{Formation}: $N_f \in \{3,5\}$ targets in tight 2--4$^\circ$
-cluster; break-up at $t_b \in [60,130]$ with independent velocities.
 
 
 % =========================================================
