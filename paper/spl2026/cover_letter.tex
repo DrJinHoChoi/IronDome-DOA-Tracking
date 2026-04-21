@@ -1,0 +1,93 @@
+\documentclass[11pt,a4paper]{letter}
+\usepackage[margin=2.5cm]{geometry}
+\usepackage{times}
+\usepackage{hyperref}
+
+\signature{Jin Ho Choi, Member, IEEE\\
+SmartEAR, Seoul, South Korea\\
+\texttt{jinhochoi@smartear.co.kr}}
+
+\address{Jin Ho Choi\\
+SmartEAR\\
+Seoul, South Korea\\
+\texttt{jinhochoi@smartear.co.kr}}
+
+\begin{document}
+
+\begin{letter}{Editor-in-Chief\\
+IEEE Signal Processing Letters}
+
+\opening{Dear Editor,}
+
+I am submitting the manuscript entitled:
+
+\begin{center}
+\textbf{``When Does Temporal Memory Help? Selective SSM vs.\ MLP\\
+in RL-Based Multi-Target DOA Track Management''}
+\end{center}
+
+for consideration for publication in \textit{IEEE Signal Processing
+Letters} as an original Letter.
+
+\textbf{Summary.}
+This letter addresses a fundamental question in reinforcement
+learning (RL)-based adaptive tracking: when does adding temporal
+memory to an RL policy improve performance over a memoryless
+multilayer perceptron (MLP)?
+We prove, via the data processing inequality and the concept of a
+sufficient statistic, that a selective state space model (SSM) encoder
+outperforms an MLP if and only if the observation is not a sufficient
+statistic for the policy-relevant history.
+We instantiate this result as \textbf{Mamba-COP-RL}, a novel
+architecture coupling a Mamba SSM encoder with a PPO actor-critic
+operating on raw 181-dimensional COP spatial spectra.
+Experiments on \textbf{CombatTrackEnv}, an open-source benchmark
+with four combat-realistic multi-target DOA tracking scenarios,
+demonstrate GOSPA improvements of up to 25.2\% over fixed GM-PHD
+thresholds and 6.7\% over MLP-PPO, with gains ordered by temporal
+dependency horizon as predicted by the theory.
+Ablation against GRU-PPO and LSTM-PPO confirms that Mamba's
+input-dependent selectivity is critical.
+The 41.4\,KB INT8 model achieves 3.4\,ms/scan latency on an
+STM32H7 Cortex-M7, enabling edge deployment.
+
+\textbf{Revisions.}
+The manuscript has been carefully revised to improve clarity and
+conciseness.
+Specifically: (i) the abstract was condensed to highlight the
+core theoretical and empirical contributions;
+(ii) the related work section was restructured to emphasize
+Mamba's intrinsic selective-gating motivation rather than
+downstream application domains;
+(iii) Algorithm~1 was removed and replaced with a concise BPTT
+description to reduce length;
+(iv) all references were verified against IEEE Xplore, arXiv,
+and DBLP, with author lists, titles, venues, and DOIs corrected
+where necessary.
+
+\textbf{Scope.}
+This work is squarely within the scope of IEEE Signal Processing
+Letters: it introduces a signal processing architecture (Mamba SSM
+encoder on COP spatial spectra), provides a formal theoretical
+proposition on sequential signal processing, and demonstrates
+edge deployment on resource-constrained hardware.
+
+\textbf{Related submissions.}
+The corresponding author has a related manuscript currently submitted
+to \textit{IEEE Transactions on Signal Processing}:
+``Underdetermined High-Resolution DOA Estimation and Multi-Target
+Tracking via COP-RFS'' (J.\,H.\ Choi, 2026, cited as Ref.~[3]).
+That work introduces the COP-RFS tracking framework; the present
+Letter focuses exclusively on the RL policy architecture and
+formally characterizes when temporal memory is beneficial.
+The two contributions are complementary and non-overlapping.
+
+\textbf{Declarations.}
+This manuscript has not been published previously and is not under
+review at any other journal or conference.
+No preprint has been posted on any server.
+
+\closing{Sincerely,}
+
+\end{letter}
+\end{document}
