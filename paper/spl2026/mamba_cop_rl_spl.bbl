@@ -22,20 +22,20 @@
 \BIBdecl
 
 \bibitem{choi2015underdetermined}
-J.~H. Choi and C.~D. Yoo, ``Underdetermined high-resolution {DOA} estimation: A
-  $2\rho$th-order source-signal/noise subspace constrained optimization,''
+J.~H. Choi and C.~D. Yoo, ``Underdetermined high-resolution {DOA} estimation:
+  A $2\rho$th-order source-signal/noise subspace constrained optimization,''
   \emph{IEEE Transactions on Signal Processing}, vol.~63, no.~7, pp.
-  1858--1873, 2015.
+  1858--1873, 2015. DOI: 10.1109/TSP.2014.2385036
 
 \bibitem{vo2006gaussian}
 B.-N. Vo and W.-K. Ma, ``The {Gaussian} mixture probability hypothesis density
   filter,'' \emph{IEEE Transactions on Signal Processing}, vol.~54, no.~11, pp.
-  4091--4104, 2006.
+  4091--4104, 2006. DOI: 10.1109/TSP.2006.881190
 
 \bibitem{choi2026irondome}
-J.~H. Choi, ``Underdetermined high-resolution {DOA} estimation and multi-target
-  tracking via {COP-RFS},'' \emph{IEEE Transactions on Signal Processing},
-  2026, submitted.
+J.~H. Choi, ``Underdetermined high-resolution {DOA} estimation and
+  multi-target tracking via {COP-RFS},'' \emph{IEEE Transactions on Signal
+  Processing}, 2026, submitted.
 
 \bibitem{rosello2018marlmot}
 P.~Rosello and M.~J. Kochenderfer, ``Multi-agent reinforcement learning for
@@ -44,14 +44,15 @@ P.~Rosello and M.~J. Kochenderfer, ``Multi-agent reinforcement learning for
   1397--1404.
 
 \bibitem{stephan2022scene}
-M.~Stephan, L.~Servadei, J.~Arjona-Medina, A.~Santra, R.~Wille, and G.~Fischer,
-  ``Scene-adaptive radar tracking with deep reinforcement learning,''
-  \emph{Machine Learning with Applications}, vol.~8, p. 100284, 2022.
+M.~Stephan, L.~Servadei, J.~Arjona-Medina, A.~Santra, R.~Wille, and
+  G.~Fischer, ``Scene-adaptive radar tracking with deep reinforcement
+  learning,'' \emph{Machine Learning with Applications}, vol.~8, p. 100284,
+  2022. DOI: 10.1016/j.mlwa.2022.100284
 
 \bibitem{ewers2025multitarget}
-J.-H. Ewers, D.~Cormack, J.~Gibbs, and D.~Anderson, ``Multi-target radar search
-  and track using sequence-capable deep reinforcement learning,'' \emph{arXiv
-  preprint arXiv:2502.13584}, 2025.
+J.-H. Ewers, D.~Cormack, J.~Gibbs, and D.~Anderson, ``Multi-target radar
+  search and track using sequence-capable deep reinforcement learning,''
+  \emph{arXiv preprint arXiv:2502.13584}, 2025. DOI: 10.48550/arXiv.2502.13584
 
 \bibitem{hausknecht2015drqn}
 M.~Hausknecht and P.~Stone, ``Deep recurrent {Q}-learning for partially
@@ -61,10 +62,12 @@ M.~Hausknecht and P.~Stone, ``Deep recurrent {Q}-learning for partially
 \bibitem{dorka2022recurrent}
 N.~Dorka, ``Generalization, mayhems and limits in recurrent proximal policy
   optimization,'' \emph{arXiv preprint arXiv:2205.11104}, 2022.
+  DOI: 10.48550/arXiv.2205.11104
 
 \bibitem{gu2023mamba}
 A.~Gu and T.~Dao, ``Mamba: Linear-time sequence modeling with selective state
   spaces,'' \emph{arXiv preprint arXiv:2312.00752}, 2023.
+  DOI: 10.48550/arXiv.2312.00752
 
 \bibitem{gu2022s4}
 A.~Gu, K.~Goel, and C.~R{\'{e}}, ``Efficiently modeling long sequences with
@@ -74,29 +77,33 @@ A.~Gu, K.~Goel, and C.~R{\'{e}}, ``Efficiently modeling long sequences with
 \bibitem{ota2024decisionmamba}
 T.~Ota, ``Decision {Mamba}: Reinforcement learning via hybrid selective
   sequence modeling,'' \emph{arXiv preprint arXiv:2406.00079}, 2024.
+  DOI: 10.48550/arXiv.2406.00079
 
 \bibitem{han2024audiomamba}
 M.~H. Erol, A.~Senocak, J.~Feng, and J.~S. Chung, ``Audio {Mamba}: Selective
   state space models for self-supervised audio representation learning,''
   \emph{IEEE Signal Processing Letters}, vol.~31, pp. 2975--2979, 2024.
+  DOI: 10.1109/LSP.2024.3399753
 
 \bibitem{cover2006elements}
 T.~M. Cover and J.~A. Thomas, \emph{Elements of Information Theory},
   2nd~ed.\hskip 1em plus 0.5em minus 0.4em\relax Wiley, 2006.
+  DOI: 10.1002/047174882X
 
 \bibitem{schafer2006recurrent}
 A.~M. Sch{\"{a}}fer and H.~G. Zimmermann, ``Recurrent neural networks are
   universal approximators,'' \emph{International Journal of Neural Systems},
-  vol.~17, no.~4, pp. 253--263, 2006.
+  vol.~17, no.~4, pp. 253--263, 2006. DOI: 10.1142/S0129065706000333
 
 \bibitem{kaelbling1998planning}
 L.~P. Kaelbling, M.~L. Littman, and A.~R. Cassandra, ``Planning and acting in
   partially observable stochastic domains,'' \emph{Artificial Intelligence},
   vol. 101, no. 1--2, pp. 99--134, 1998.
+  DOI: 10.1016/S0004-3702(98)00023-X
 
 \bibitem{schulman2017proximal}
 J.~Schulman, F.~Wolski, P.~Dhariwal, A.~Radford, and O.~Klimov, ``Proximal
   policy optimization algorithms,'' \emph{arXiv preprint arXiv:1707.06347},
-  2017.
+  2017. DOI: 10.48550/arXiv.1707.06347
 
 \end{thebibliography}
