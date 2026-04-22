@@ -39,3 +39,48 @@ iron_dome_sim/
 | Capon/MVDR | Beamforming | No | Limited |
 | L1-SVD | Sparse recovery | Yes | Grid-dependent |
 | LASSO | Sparse recovery | Yes | Grid-dependent |
+
+## License
+
+**Dual-licensed** — academic (non-commercial) use is free; commercial use
+requires a separate license from the author.
+
+- Academic / research / educational use → see [LICENSE](LICENSE).
+- Commercial use (product integration, defense/industrial deployment,
+  commercialization of downstream academic work, FPGA/ASIC/MCU
+  implementations, SaaS, etc.) → see [COMMERCIAL_LICENSE.md](COMMERCIAL_LICENSE.md).
+- Patent notice: NanoMamba / NC-SSM and COP-RFS technologies are
+  subject to pending patents (KR + US). The academic license does
+  **not** grant commercial patent rights.
+
+Commercial licensing inquiries:
+**Dr. Jin Ho Choi** (SmartEAR) — `jinhochoi@smartear.co.kr`
+Subject: `[Mamba-COP-RL Commercial License] <your organization>`
+
+## Citation
+
+If you use this code in academic work, please cite:
+
+```bibtex
+@article{choi2026mambacoprl,
+  author  = {Jin Ho Choi},
+  title   = {When Does Temporal Memory Help? Selective SSM vs. MLP in
+             RL-Based Multi-Target DOA Track Management},
+  journal = {IEEE Signal Processing Letters},
+  year    = {2026},
+  note    = {submitted}
+}
+
+@article{choi2015underdetermined,
+  author  = {Jin Ho Choi and Chang D. Yoo},
+  title   = {Underdetermined High-Resolution DOA Estimation: A
+             2$\rho$th-Order Source-Signal/Noise Subspace Constrained
+             Optimization},
+  journal = {IEEE Transactions on Signal Processing},
+  volume  = {63},
+  number  = {7},
+  pages   = {1858--1873},
+  year    = {2015},
+  doi     = {10.1109/TSP.2015.2391074}
+}
+```
