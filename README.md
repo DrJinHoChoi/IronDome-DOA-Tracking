@@ -40,6 +40,41 @@ iron_dome_sim/
 | L1-SVD | Sparse recovery | Yes | Grid-dependent |
 | LASSO | Sparse recovery | Yes | Grid-dependent |
 
+## Reproducing the Paper (IEEE SPL 2026)
+
+**One command for reviewers:**
+
+```bash
+python reproduce_spl.py
+```
+
+This loads the pre-trained Mamba-COP-RL checkpoint
+(`results/mamba_combat_best.pt`), evaluates it on all four CombatTrackEnv
+scenarios (Jamming / Stealth / Saturation / Formation), compares against
+the Fixed GM-PHD baseline, and prints a table matching **Table II** of
+the paper. Exit code `0` = match within tolerance; `1` = discrepancy.
+
+Options:
+
+| Flag | Purpose |
+|---|---|
+| `--n-eval 50` | Full paper setting (50 seeds/scenario) |
+| `--n-scans 200` | Full paper setting (200 scans/episode) |
+| `--figs` | Also regenerate Fig. 1 (architecture) and Fig. 3 (tracking) |
+| `--full` | Also retrain MLP/GRU/LSTM baselines (slow, needs GPU) |
+| `--tol 0.03` | Absolute GOSPA tolerance vs paper (default 0.03) |
+
+Full training from scratch:
+
+```bash
+python experiments/train_combat_mamba.py       # Mamba-COP-RL (this paper)
+python experiments/train_rl_tracker.py         # MLP/GRU/LSTM baselines
+python experiments/temporal_cop_vs_baseline.py # Ablation for Proposition 1
+```
+
+Expected numbers (Table II, Mamba row): Jamming ~0.191 · Stealth ~0.187
+· Saturation ~0.226 · Formation ~0.248.
+
 ## License
 
 **Dual-licensed** — academic (non-commercial) use is free; commercial use
