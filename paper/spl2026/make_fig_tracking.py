@@ -1,4 +1,4 @@
-"""Tracking figure — wide version for IEEE SPL figure*."""
+"""Tracking figure — stacked (2 rows x 1 col) for single-column IEEE SPL."""
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -52,22 +52,23 @@ g_fix = gospa_series(fixed_est, fix_fa_s)
 g_mlp = gospa_series(mlp_est,   mlp_fa_s)
 g_mmb = gospa_series(mamba_est, mmb_fa_s)
 
-C_TRUE  = '#000000'   # black
-C_INVIS = '#E67E22'   # orange (stealth / invisible)
-C_FIX   = '#C0392B'   # medium red
-C_MLP   = '#2980B9'   # medium blue
-C_MAMBA = '#27AE60'   # medium green
+C_TRUE  = '#000000'
+C_INVIS = '#E67E22'
+C_FIX   = '#C0392B'
+C_MLP   = '#2980B9'
+C_MAMBA = '#27AE60'
 C_TEXT  = '#1A1A1A'
 
-fig, axes = plt.subplots(1, 2, figsize=(13, 3.1))
-plt.subplots_adjust(wspace=0.28, bottom=0.22)
+# Stacked layout: 2 rows, 1 col (single-column width)
+fig, axes = plt.subplots(2, 1, figsize=(6.8, 6.8))
+plt.subplots_adjust(hspace=0.48, bottom=0.16, top=0.97)
 
-# ── Left: DOA trajectories ────────────────────────────────
+# (a) DOA trajectories
 ax = axes[0]
 ax.set_facecolor('#FFFFFF')
-ax.set_title('(a)  DOA Tracking — Stealth Scenario\n'
-             'Target\u00a03 invisible during scans\u00a060\u2013105',
-             fontsize=12.5, fontweight='bold', color=C_TEXT, pad=5)
+ax.set_title('(a)  DOA Tracking — Stealth Scenario '
+             '(Target\u00a03 invisible, scans\u00a060\u2013105)',
+             fontsize=13, fontweight='bold', color=C_TEXT, pad=14)
 
 ax.axvspan(stealth_start, stealth_end, color='#F0EAD0', alpha=0.85, zorder=0,
            label='Stealth window')
@@ -88,64 +89,63 @@ for est, color, lbl in [
         (mamba_est, C_MAMBA, 'Mamba-COP-RL')]:
     for i, e in enumerate(est):
         mask = ~np.isnan(e)
-        ax.scatter(t[mask], e[mask], s=5, color=color,
-                   alpha=0.5, zorder=4,
+        ax.scatter(t[mask], e[mask], s=8, color=color,
+                   alpha=0.55, zorder=4,
                    label=lbl if i == 0 else None)
 
 for fa_s, fa_d, color in [
         (fix_fa_s, fix_fa_d, C_FIX),
         (mlp_fa_s, mlp_fa_d, C_MLP),
         (mmb_fa_s, mmb_fa_d, C_MAMBA)]:
-    ax.scatter(fa_s, fa_d, s=28, color=color,
-               marker='x', lw=1.5, alpha=0.8, zorder=6)
+    ax.scatter(fa_s, fa_d, s=32, color=color,
+               marker='x', lw=1.8, alpha=0.85, zorder=6)
 
-ax.annotate('Mamba re-acquires\n(+3 scans)',
+ax.annotate('Mamba re-acquires (+3 scans)',
             xy=(stealth_end + 3, tgt3[stealth_end + 3]),
-            xytext=(stealth_end + 24, tgt3[stealth_end + 3] + 13),
-            fontsize=11, color=C_TEXT, fontweight='bold',
-            arrowprops=dict(arrowstyle='->', color=C_MAMBA, lw=1.2))
+            xytext=(stealth_end + 22, tgt3[stealth_end + 3] + 16),
+            fontsize=12, color=C_TEXT, fontweight='bold',
+            arrowprops=dict(arrowstyle='->', color=C_MAMBA, lw=1.4))
 ax.annotate('Fixed (+15 scans)',
             xy=(stealth_end + 15, tgt1[stealth_end + 15]),
-            xytext=(stealth_end + 30, tgt1[stealth_end + 15] - 15),
-            fontsize=11, color=C_TEXT,
-            arrowprops=dict(arrowstyle='->', color=C_FIX, lw=1.2))
+            xytext=(stealth_end + 28, tgt1[stealth_end + 15] - 18),
+            fontsize=12, color=C_TEXT,
+            arrowprops=dict(arrowstyle='->', color=C_FIX, lw=1.4))
 
-ax.set_xlabel('Scan index', fontsize=12.5, color=C_TEXT)
-ax.set_ylabel('DOA (degrees)', fontsize=12.5, color=C_TEXT)
+ax.set_xlabel('Scan index', fontsize=13, color=C_TEXT)
+ax.set_ylabel('DOA (degrees)', fontsize=13, color=C_TEXT)
 ax.set_xlim(0, T-1); ax.set_ylim(-75, 75)
-ax.tick_params(labelsize=11.5, colors=C_TEXT)
+ax.tick_params(labelsize=12, colors=C_TEXT)
 ax.grid(alpha=0.2, color='#AAAAAA')
 ax.spines[['top','right']].set_visible(False)
 ax.spines[['left','bottom']].set_color('#444444')
 
-# ── Right: GOSPA over time ────────────────────────────────
+# (b) GOSPA over time
 ax = axes[1]
 ax.set_facecolor('#FFFFFF')
-ax.set_title('(b)  Per-Scan GOSPA\n'
-             'smoothed, window\u00a0$=10$,  Stealth Scenario',
-             fontsize=12.5, fontweight='bold', color=C_TEXT, pad=5)
+ax.set_title('(b)  Per-Scan GOSPA (smoothed, window\u00a0$=10$)',
+             fontsize=13, fontweight='bold', color=C_TEXT, pad=14)
 
 ax.axvspan(stealth_start, stealth_end, color='#F0EAD0', alpha=0.85, zorder=0)
 ax.axvline(stealth_start, color='#A08040', lw=1.0, ls='--')
 ax.axvline(stealth_end,   color='#A08040', lw=1.0, ls='--')
 
-ax.plot(t, g_fix, color=C_FIX,   lw=2.0, label='Fixed',        alpha=0.90)
-ax.plot(t, g_mlp, color=C_MLP,   lw=2.0, label='MLP-PPO',      alpha=0.90)
-ax.plot(t, g_mmb, color=C_MAMBA, lw=2.2, label='Mamba-COP-RL', alpha=0.95)
+ax.plot(t, g_fix, color=C_FIX,   lw=2.2, label='Fixed',        alpha=0.92)
+ax.plot(t, g_mlp, color=C_MLP,   lw=2.2, label='MLP-PPO',      alpha=0.92)
+ax.plot(t, g_mmb, color=C_MAMBA, lw=2.4, label='Mamba-COP-RL', alpha=0.96)
 
-for g, color, y_off in [(g_fix, C_FIX,   0.055),
-                         (g_mlp, C_MLP,   0.030),
-                         (g_mmb, C_MAMBA, -0.055)]:
+for g, color, y_off in [(g_fix, C_FIX,   0.06),
+                         (g_mlp, C_MLP,   0.035),
+                         (g_mmb, C_MAMBA, -0.06)]:
     m = np.mean(g)
-    ax.axhline(m, color=color, lw=0.8, ls=':', alpha=0.6)
+    ax.axhline(m, color=color, lw=0.9, ls=':', alpha=0.7)
     ax.text(T - 4, m + y_off, f'mean={m:.3f}',
-            ha='right', va='center', fontsize=10.5,
+            ha='right', va='center', fontsize=12,
             color=C_TEXT, fontweight='bold')
 
-ax.set_xlabel('Scan index', fontsize=12.5, color=C_TEXT)
-ax.set_ylabel('GOSPA  ($\\downarrow$ better)', fontsize=12.5, color=C_TEXT)
+ax.set_xlabel('Scan index', fontsize=13, color=C_TEXT)
+ax.set_ylabel('GOSPA  ($\\downarrow$ better)', fontsize=13, color=C_TEXT)
 ax.set_xlim(0, T-1)
-ax.tick_params(labelsize=11.5, colors=C_TEXT)
+ax.tick_params(labelsize=12, colors=C_TEXT)
 ax.grid(alpha=0.2, color='#AAAAAA')
 ax.spines[['top','right']].set_visible(False)
 ax.spines[['left','bottom']].set_color('#444444')
@@ -153,15 +153,15 @@ ax.spines[['left','bottom']].set_color('#444444')
 legend_items = [
     mpatches.Patch(color=C_TRUE,  label='True DOA'),
     mpatches.Patch(color=C_INVIS, label='Stealth (invisible)'),
-    mpatches.Patch(color=C_FIX,   label='Fixed threshold'),
+    mpatches.Patch(color=C_FIX,   label='Fixed'),
     mpatches.Patch(color=C_MLP,   label='MLP-PPO'),
     mpatches.Patch(color=C_MAMBA, label='Mamba-COP-RL'),
     plt.Line2D([0],[0], marker='x', color=C_TEXT, lw=0,
                markersize=8, label='False alarm'),
 ]
 fig.legend(handles=legend_items, loc='lower center',
-           fontsize=11, framealpha=0.95, edgecolor='#BBBBBB',
-           ncol=6, bbox_to_anchor=(0.5, -0.08))
+           fontsize=12, framealpha=0.95, edgecolor='#BBBBBB',
+           ncol=3, bbox_to_anchor=(0.5, -0.04))
 
 for ext in ('pdf', 'png'):
     plt.savefig(f'fig_tracking.{ext}', dpi=200, bbox_inches='tight',

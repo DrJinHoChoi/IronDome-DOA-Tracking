@@ -36,17 +36,6 @@ J.~H. Choi, ``{COP-RFS}: Closed-loop underdetermined {DOA} estimation and
   multi-target tracking via higher-order cumulants and {GM-PHD} filtering,''
   \emph{IEEE Transactions on Signal Processing}, 2026, under review.
 
-\bibitem{svensson2014phd_rl}
-L.~Svensson, D.~Svensson, M.~Guerriero, and P.~Willett, ``Set {JPDA} filter for
-  multitarget tracking,'' in \emph{IEEE Transactions on Signal Processing},
-  vol.~59, no.~10, 2011, pp. 4677--4691.
-
-\bibitem{boers2005track_rl}
-Y.~Boers, H.~Driessen, J.~Torstensson, M.~Trieb, R.~Karlsson, and
-  F.~Gustafsson, ``Track-before-detect algorithm for tracking extended
-  targets,'' in \emph{IEE Proceedings -- Radar, Sonar and Navigation}, vol.
-  153, no.~4, 2006, pp. 345--351.
-
 \bibitem{rosello2018marlmot}
 P.~Rosello and M.~J. Kochenderfer, ``Multi-agent reinforcement learning for
   multi-object tracking,'' in \emph{Proceedings of the 17th International

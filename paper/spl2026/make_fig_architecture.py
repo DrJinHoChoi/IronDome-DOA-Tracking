@@ -1,4 +1,4 @@
-"""Architecture figure — Mamba-COP-RL.
+"""Architecture figure — Mamba-COP-RL (SPL 2026, enlarged fonts).
 Single-row pipeline with uniform box sizes and equal spacing.
 """
 import matplotlib
@@ -9,31 +9,29 @@ from matplotlib.patches import FancyBboxPatch
 from matplotlib.patches import FancyArrowPatch
 import numpy as np
 
-# ── Canvas ────────────────────────────────────────────────
-W, H = 14.0, 3.6
+# Canvas (slightly taller to fit larger fonts)
+W, H = 14.0, 4.2
 fig = plt.figure(figsize=(W, H))
 ax  = fig.add_axes([0, 0, 1, 1])
 ax.set_xlim(0, W); ax.set_ylim(0, H)
 ax.axis('off')
 ax.set_facecolor('white')
 
-# ── Medium-tone palette ───────────────────────────────────
-C_ENV  = '#2E86C1'   # medium blue
-C_SSM  = '#1E8449'   # medium green
-C_AC   = '#CA6F1E'   # medium orange-brown
-C_PHD  = '#7D3C98'   # medium purple
+C_ENV  = '#2E86C1'
+C_SSM  = '#1E8449'
+C_AC   = '#CA6F1E'
+C_PHD  = '#7D3C98'
 C_TEXT = '#1A1A1A'
 C_ANN  = '#444444'
 
-# ── Layout: 5 uniform boxes in one row ───────────────────
 N      = 5
-BW     = 1.85     # box width  (all equal)
-BH     = 1.10     # box height (all equal)
-GAP    = 0.55     # gap between boxes
-TOTAL  = N*BW + (N-1)*GAP   # = 11.45
-MARGIN = (W - TOTAL) / 2    # left/right margin = 1.275
+BW     = 2.00
+BH     = 1.35
+GAP    = 0.50
+TOTAL  = N*BW + (N-1)*GAP
+MARGIN = (W - TOTAL) / 2
 
-BY = (H - BH) / 2 - 0.10   # vertical center (slightly below)
+BY = (H - BH) / 2 - 0.15
 
 xs = [MARGIN + i*(BW+GAP) for i in range(N)]
 
@@ -45,24 +43,20 @@ LABELS = [
     ('GM-PHD\nFilter',   r'$(w_b,\tau_p,p_D)$',       C_PHD),
 ]
 
-# ── Draw boxes ────────────────────────────────────────────
 for x, (title, sub, color) in zip(xs, LABELS):
     rect = FancyBboxPatch((x, BY), BW, BH,
                           boxstyle='round,pad=0.10',
                           facecolor=color, edgecolor='white',
                           linewidth=2.0, alpha=0.90, zorder=3)
     ax.add_patch(rect)
-    # Title
     ax.text(x + BW/2, BY + BH*0.62, title,
-            ha='center', va='center', fontsize=12.5,
+            ha='center', va='center', fontsize=17,
             fontweight='bold', color='white', zorder=4,
             linespacing=1.3)
-    # Sublabel
     ax.text(x + BW/2, BY + BH*0.22, sub,
-            ha='center', va='center', fontsize=10.5,
+            ha='center', va='center', fontsize=14,
             color='#E8E8E8', zorder=4)
 
-# ── Horizontal arrows between boxes ──────────────────────
 ARROW_LABELS = [
     r'$\mathbf{X}{\in}\mathbb{C}^{M{\times}L}$',
     r'$\mathbf{o}_t{\in}\mathbb{R}^{183}$',
@@ -76,27 +70,25 @@ for i, lbl in enumerate(ARROW_LABELS):
     x1 = xs[i+1]
     ax.annotate('', xy=(x1, CY), xytext=(x0, CY),
                 arrowprops=dict(arrowstyle='->', color=C_ANN,
-                                lw=1.8, mutation_scale=14))
-    ax.text((x0+x1)/2, CY + 0.22, lbl,
-            ha='center', va='bottom', fontsize=10,
+                                lw=1.8, mutation_scale=16))
+    ax.text((x0+x1)/2, CY + 0.26, lbl,
+            ha='center', va='bottom', fontsize=13,
             color=C_ANN,
             bbox=dict(facecolor='white', edgecolor='none',
                       alpha=0.85, pad=1))
 
-# ── SSM hidden state loop (curved below box 2) ───────────
 sx = xs[2]; sw = BW
 ax.annotate('',
-            xy=(sx, BY + 0.25),
-            xytext=(sx + sw, BY + 0.25),
+            xy=(sx, BY + 0.28),
+            xytext=(sx + sw, BY + 0.28),
             arrowprops=dict(arrowstyle='<->',
                             color=C_SSM, lw=1.6,
                             connectionstyle='arc3,rad=0.55'))
-ax.text(sx + sw/2, BY - 0.28,
+ax.text(sx + sw/2, BY - 0.32,
         r'$\mathbf{h}_t{\in}\mathbb{R}^{d_s}$  hidden state',
-        ha='center', va='center', fontsize=10.5,
+        ha='center', va='center', fontsize=14,
         color=C_SSM, style='italic')
 
-# ── Feedback: GM-PHD → COP (curved under all boxes) ──────
 x_start = xs[4] + BW/2
 x_end   = xs[1] + BW/2
 ax.annotate('',
@@ -105,29 +97,27 @@ ax.annotate('',
             arrowprops=dict(arrowstyle='->',
                             color=C_PHD, lw=1.5,
                             connectionstyle='arc3,rad=-0.32'))
-ax.text((x_start+x_end)/2, BY - 0.62,
+ax.text((x_start+x_end)/2, BY - 0.72,
         'Tracker feedback (predicted DOAs)',
-        ha='center', va='center', fontsize=10.5,
+        ha='center', va='center', fontsize=14,
         color=C_PHD, style='italic')
 
-# ── Mode notes (Inference / Training) ────────────────────
-def note(x, y, txt, fc, ec, fs=8.5):
+def note(x, y, txt, fc, ec, fs=12):
     ax.text(x, y, txt, ha='center', va='center',
             fontsize=fs, color=C_TEXT, zorder=5,
             bbox=dict(facecolor=fc, edgecolor=ec,
                       boxstyle='round,pad=0.32', alpha=0.93))
 
-note(W*0.27, H - 0.28,
+note(W*0.27, H - 0.32,
      r'Inference:  SSM.step$(\mathbf{o}_t,\mathbf{h}_{t-1})$'
      r'  $\rightarrow$  $O(d_s)$/scan  $\rightarrow$  3.4 ms on STM32H7',
-     '#EAF4EA', '#7DCEA0', fs=8.5)
+     '#EAF4EA', '#7DCEA0', fs=12)
 
-note(W*0.74, H - 0.28,
+note(W*0.74, H - 0.32,
      r'Training:  SSM.forward$(\mathbf{o}_{1:T})$'
      r'  $\rightarrow$  BPTT  $\rightarrow$  42 K params / 41.4 KB INT8',
-     '#FEF5E7', '#F0B27A', fs=8.5)
+     '#FEF5E7', '#F0B27A', fs=12)
 
-# ── Legend ────────────────────────────────────────────────
 legend_items = [
     mpatches.Patch(color=C_ENV, label='Signal / COP'),
     mpatches.Patch(color=C_SSM, label='SSM Encoder'),
@@ -135,7 +125,7 @@ legend_items = [
     mpatches.Patch(color=C_PHD, label='GM-PHD Filter'),
 ]
 ax.legend(handles=legend_items, loc='lower right',
-          fontsize=11, framealpha=0.92, edgecolor='#CCCCCC',
+          fontsize=14, framealpha=0.92, edgecolor='#CCCCCC',
           bbox_to_anchor=(0.995, 0.02))
 
 fig.savefig('fig_architecture.pdf', dpi=200,

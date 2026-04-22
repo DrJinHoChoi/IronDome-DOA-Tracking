@@ -11,3 +11,16 @@ build/
 venv/
 *.egg
 .pytest_cache/
+
+# node
+node_modules/
+package-lock.json
+
+# office temp
+~$*
+
+# latex intermediates
+*.aux
+*.blg
+*.brf
+*.synctex.gz

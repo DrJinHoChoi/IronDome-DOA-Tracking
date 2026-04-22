@@ -12,6 +12,8 @@
 \usepackage{booktabs}
 \usepackage{cite}
 \usepackage{siunitx}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
 
 \def\mat#1{\mathbf{#1}}
 \def\vec#1{\mathbf{#1}}
@@ -298,6 +300,39 @@ $(\vec{o}_1,\ldots,\vec{o}_T)$ is re-processed via \textsc{SSM.forward}
 (starting from $\vec{h}_0{=}\vec{0}$) so gradients flow through the encoder;
 rollout uses \textsc{SSM.step} with detached hidden states.
 
+\begin{algorithm}[t]
+\caption{Mamba-COP-RL: rollout + PPO update}
+\label{alg:mamba_cop_rl}
+\small
+\begin{algorithmic}[1]
+\Require policy $\pi_\phi$, value $V_\phi$, SSM encoder $f_\theta$,
+         episode length $T$, PPO epochs $E$
+\State initialize $\phi,\theta$; replay buffer $\mathcal{B}\gets\emptyset$
+\For{each episode}
+  \State $\vec{h}_0 \gets \vec{0}$
+  \For{$t=1,\ldots,T$} \Comment{rollout (O$(d_s)$/scan)}
+    \State $\mat{X}_t \gets$ array snapshot; compute COP spectrum
+    \State $\vec{o}_t \gets [\tilde{P}_{\rm COP}(\theta_{1:181}),\,t/T,\,\rho_{\rm SNR}]^\top$
+    \State $\tilde{\vec{o}}_t,\vec{h}_t \gets \textsc{SSM.step}(f_\theta; \vec{o}_t, \vec{h}_{t-1})$ \Comment{Eq.~\ref{eq:encoder}}
+    \State $\vec{a}_t \sim \pi_\phi(\cdot \mid \tilde{\vec{o}}_t)$;
+           map to $(w_b,\tau_p,p_D)$
+    \State run GM-PHD predict/update with new params
+    \State $r_t \gets -\mathrm{GOSPA}
+           -0.01|\hat K_t-K_t^*|
+           -0.001\max(0,J_t-50)$
+    \State store $(\tilde{\vec{o}}_t,\vec{a}_t,r_t,V_\phi(\tilde{\vec{o}}_t))$ in $\mathcal{B}$
+  \EndFor
+  \State compute GAE advantages $\hat A_{1:T}$; returns $\hat R_{1:T}$
+  \For{$e=1,\ldots,E$} \Comment{PPO + BPTT}
+    \State $\tilde{\vec{o}}_{1:T} \gets \textsc{SSM.forward}(f_\theta; \vec{o}_{1:T}, \vec{h}_0{=}\vec{0})$
+    \State update $\phi,\theta$ on clipped surrogate
+           $+\;\beta_V(\hat R-V_\phi)^2 - \beta_H\mathcal{H}[\pi_\phi]$
+  \EndFor
+\EndFor
+\State \Return $\pi_\phi, V_\phi, f_\theta$
+\end{algorithmic}
+\end{algorithm}
+
 
 % =========================================================
 \section{CombatTrackEnv}
@@ -479,27 +514,20 @@ jamming history across 40+ scans.
 
 \subsection{Tracking Visualization}
 
-\begin{figure*}[t]
+\begin{figure}[!t]
   \centering
-  \includegraphics[width=\textwidth]{fig_tracking.pdf}
-  \caption{Stealth scenario tracking ($K{=}3$, $T{=}200$, $M{=}8$).
-  \emph{Left}: DOA trajectories over 200 scans.
-  Target~3 is invisible during scans 60--105 (yellow band).
-  Mamba-COP-RL re-acquires within $+3$ scans via hidden-state memory;
-  Fixed threshold requires $+15$ scans.
-  \emph{Right}: Per-scan GOSPA (smoothed, window$=10$).
-  Mamba maintains the lowest error and recovers fastest on reappearance.
-  Mean GOSPA: Fixed $=0.250$, MLP-PPO $=0.201$,
-  Mamba-COP-RL $=\mathbf{0.187}$.}
+  \includegraphics[width=\columnwidth]{fig_tracking.pdf}
+  \caption{Stealth scenario ($K{=}3$, $T{=}200$, $M{=}8$).
+  \emph{Left}: DOA trajectories (Target~3 invisible during scans
+  60--105, yellow band; Mamba re-acquires in $+3$ vs.\ $+15$ for
+  fixed threshold). \emph{Right}: Per-scan GOSPA (window$=10$).
+  Mean GOSPA: Fixed $0.250$, MLP $0.201$, Mamba $\mathbf{0.187}$.}
   \label{fig:tracking}
-\end{figure*}
+\end{figure}
 
-Fig.~\ref{fig:tracking} visualizes the Stealth scenario.
-The hidden state $\vec{h}_t$ retains the target trajectory during
-the visibility gap (scans 60--105), enabling Mamba to re-associate
-the reappearing target after only 3 scans---5$\times$ faster than
-the fixed threshold (15 scans) and 2.7$\times$ faster than MLP-PPO
-(8 scans).
+Fig.~\ref{fig:tracking} shows $\vec{h}_t$ retaining the trajectory
+through the 45-scan visibility gap: Mamba re-associates in $+3$ scans
+vs.\ $+15$ (fixed) and $+8$ (MLP-PPO).
 
 \subsection{Edge Deployment Analysis}
 

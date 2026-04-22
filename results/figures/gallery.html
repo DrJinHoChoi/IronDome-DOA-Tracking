@@ -1,0 +1,43 @@
+<!DOCTYPE html><html><head><meta charset="utf-8">
+<title>COP DOA Results</title>
+<style>
+body{background:#1a1a2e;color:#eee;font-family:Arial;margin:0;padding:20px}
+h1{text-align:center;color:#0ff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(600px,1fr));gap:15px;padding:10px}
+.card{background:#16213e;border-radius:8px;padding:10px;cursor:pointer}
+.card img{width:100%;border-radius:4px}
+.card p{text-align:center;font-size:13px;color:#aaa;margin:5px 0}
+.modal{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.9);z-index:10;justify-content:center;align-items:center}
+.modal.active{display:flex}
+.modal img{max-width:95%;max-height:95%;object-fit:contain}
+</style></head><body>
+<h1>COP-RFS DOA Estimation & Tracking Results (23 Figures)</h1>
+<div class="grid">
+<div class="card" onclick="showModal(this)"><img src="fig0_spatial_spectrum.png"><p>Fig 0 spatial spectrum</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig0b_cop_family_spectrum.png"><p>Fig 0b cop family spectrum</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig0c_capacity_limit.png"><p>Fig 0c capacity limit</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig10_algorithm_overview.png"><p>Fig 10 algorithm overview</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig11_extended_k.png"><p>Fig 11 extended k</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig12_sdcop_stages.png"><p>Fig 12 sdcop stages</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig1_k_scaling_pd.png"><p>Fig 1 k scaling pd</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig2_k_scaling_rmse.png"><p>Fig 2 k scaling rmse</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig3_snr_pd.png"><p>Fig 3 snr pd</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig4_snr_rmse.png"><p>Fig 4 snr rmse</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig5_resolution.png"><p>Fig 5 resolution</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig6_snapshots.png"><p>Fig 6 snapshots</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig7_birth_death.png"><p>Fig 7 birth death</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig8_tcop_phd_feedback.png"><p>Fig 8 tcop phd feedback</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig9_moving_targets.png"><p>Fig 9 moving targets</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig_birth_weight_theory.png"><p>Fig  birth weight theory</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig_convergence_theory.png"><p>Fig  convergence theory</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig_end2end_comparison.png"><p>Fig  end2end comparison</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig_rho_scaling.png"><p>Fig  rho scaling</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig_signal_types.png"><p>Fig  signal types</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig_summary_combined.png"><p>Fig  summary combined</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig_tipp_theory.png"><p>Fig  tipp theory</p></div>
+<div class="card" onclick="showModal(this)"><img src="fig_tracking_ablation.png"><p>Fig  tracking ablation</p></div>
+</div>
+<div class="modal" id="modal" onclick="this.classList.remove('active')"><img id="modalImg"></div>
+<script>
+function showModal(el){var img=el.querySelector('img');document.getElementById('modalImg').src=img.src;document.getElementById('modal').classList.add('active')}
+</script></body></html>
