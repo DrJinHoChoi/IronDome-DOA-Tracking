@@ -36,12 +36,12 @@ from iron_dome_sim.eval.metrics import rmse_doa, detection_rate, gospa
 plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
-    'font.size': 16,
-    'axes.labelsize': 18,
-    'axes.titlesize': 18,
-    'legend.fontsize': 12,
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
+    'font.size': 22,
+    'axes.labelsize': 25,
+    'axes.titlesize': 25,
+    'legend.fontsize': 17,
+    'xtick.labelsize': 20,
+    'ytick.labelsize': 20,
     'lines.linewidth': 2.5,
     'lines.markersize': 9,
     'figure.dpi': 150,
@@ -345,13 +345,13 @@ def main():
         Line2D([0], [0], marker='^', color='w', markerfacecolor='#d62728',
                markeredgecolor='black', markersize=9, label='Estimated DOA'),
     ]
-    ax_a.legend(handles=leg, loc='upper right', fontsize=11)
+    ax_a.legend(handles=leg, loc='upper right', fontsize=15)
 
     # (b) COP + Standard (ablation)
     ax_b = fig.add_subplot(gs[0, 1])
     plot_tracking(ax_b, res_B['true'], res_B['labels'], l2s_B, K,
                   f'(b) COP + Standard GM-PHD (No identification)')
-    ax_b.legend(handles=leg, loc='upper right', fontsize=11)
+    ax_b.legend(handles=leg, loc='upper right', fontsize=15)
 
     # Mark crossing regions
     for ax in [ax_a, ax_b]:
@@ -368,13 +368,13 @@ def main():
         Line2D([0], [0], marker='^', color='w', markerfacecolor='#d62728',
                markeredgecolor='black', markersize=9, label='Estimated DOA'),
     ]
-    ax_c.legend(handles=leg_cd, loc='upper right', fontsize=11)
+    ax_c.legend(handles=leg_cd, loc='upper right', fontsize=15)
 
     # (d) MUSIC + Standard (conventional baseline)
     ax_d = fig.add_subplot(gs[1, 1])
     plot_tracking(ax_d, res_D['true'], res_D['labels'], l2s_D, K,
                   f'(d) MUSIC + Standard GM-PHD (Conventional)')
-    ax_d.legend(handles=leg_cd, loc='upper right', fontsize=11)
+    ax_d.legend(handles=leg_cd, loc='upper right', fontsize=15)
 
     for ax in [ax_c, ax_d]:
         ax.axvspan(7, 11, alpha=0.1, color='red')
@@ -396,7 +396,7 @@ def main():
     ax_gospa.set_xlabel('Scan')
     ax_gospa.set_ylabel('GOSPA (degrees)')
     ax_gospa.set_title('(e) GOSPA Metric (lower = better)', fontweight='bold')
-    ax_gospa.legend(loc='upper right', fontsize=10)
+    ax_gospa.legend(loc='upper right', fontsize=14)
 
     # (f) Detection Rate comparison
     ax_pd = fig.add_subplot(gs[2, 1])
@@ -414,12 +414,12 @@ def main():
     ax_pd.set_ylabel('Detection Rate (%)')
     ax_pd.set_title('(f) Detection Rate', fontweight='bold')
     ax_pd.set_ylim([0, 110])
-    ax_pd.legend(loc='lower right', fontsize=10)
+    ax_pd.legend(loc='lower right', fontsize=14)
 
     fig.suptitle(
         'Tracking Ablation: Physics-based vs Standard GM-PHD\n'
         f'M={M}, K={K} crossing targets, SNR={SNR_DB} dB, T={T}',
-        fontsize=20, fontweight='bold', y=0.995,
+        fontsize=28, fontweight='bold', y=0.995,
     )
 
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig_tracking_ablation.png'))

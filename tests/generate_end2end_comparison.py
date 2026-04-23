@@ -31,12 +31,12 @@ from iron_dome_sim.eval.metrics import rmse_doa, detection_rate, gospa
 plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
-    'font.size': 16,
-    'axes.labelsize': 18,
-    'axes.titlesize': 18,
-    'legend.fontsize': 12,
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
+    'font.size': 22,
+    'axes.labelsize': 25,
+    'axes.titlesize': 25,
+    'legend.fontsize': 17,
+    'xtick.labelsize': 20,
+    'ytick.labelsize': 20,
     'lines.linewidth': 2.5,
     'lines.markersize': 9,
     'figure.dpi': 150,
@@ -255,7 +255,7 @@ def main():
         Line2D([0], [0], marker='^', color='w', markerfacecolor='#DD0000',
                markeredgecolor='black', markersize=9, label='Estimated DOA'),
     ]
-    ax_cop.legend(handles=leg_cop, loc='upper right', fontsize=11)
+    ax_cop.legend(handles=leg_cop, loc='upper right', fontsize=15)
 
     # (b) MUSIC-PHD tracking
     ax_mus = fig.add_subplot(gs[0, 1])
@@ -268,11 +268,11 @@ def main():
         Line2D([0], [0], marker='^', color='w', markerfacecolor='#DD0000',
                markeredgecolor='black', markersize=9, label='Estimated DOA'),
     ]
-    ax_mus.legend(handles=leg_mus, loc='upper right', fontsize=11)
+    ax_mus.legend(handles=leg_mus, loc='upper right', fontsize=15)
 
     # Annotation: MUSIC limitation
     ax_mus.text(0.5, 0.92, f'MUSIC: max {M-1} of {K} sources resolvable',
-                transform=ax_mus.transAxes, fontsize=13, ha='center',
+                transform=ax_mus.transAxes, fontsize=18, ha='center',
                 color='#CC0000', fontweight='bold',
                 bbox=dict(boxstyle='round', facecolor='#FFEEEE', alpha=0.7))
 
@@ -294,7 +294,7 @@ def main():
     ax_pd.set_title(f'(c) Detection Rate: COP-RFS={avg_pd_cop*100:.0f}% vs '
                     f'MUSIC-PHD={avg_pd_mus*100:.0f}%', fontweight='bold')
     ax_pd.set_ylim([0, 110])
-    ax_pd.legend(loc='lower right', fontsize=11)
+    ax_pd.legend(loc='lower right', fontsize=15)
 
     # (d) GOSPA
     ax_gospa = fig.add_subplot(gs[1, 1])
@@ -307,21 +307,21 @@ def main():
     ax_gospa.axhline(y=avg_gospa_mus, color='#CC0000', linestyle='--', alpha=0.5)
 
     ax_gospa.text(N_SCANS + 0.5, avg_gospa_cop, f'{avg_gospa_cop:.1f}',
-                  color='#0055CC', fontsize=11, va='center')
+                  color='#0055CC', fontsize=15, va='center')
     ax_gospa.text(N_SCANS + 0.5, avg_gospa_mus, f'{avg_gospa_mus:.1f}',
-                  color='#CC0000', fontsize=11, va='center')
+                  color='#CC0000', fontsize=15, va='center')
 
     ax_gospa.set_xlabel('Scan')
     ax_gospa.set_ylabel('GOSPA (degrees)')
     ax_gospa.set_title(f'(d) GOSPA: COP-RFS={avg_gospa_cop:.1f}° '
                        f'vs MUSIC-PHD={avg_gospa_mus:.1f}°', fontweight='bold')
-    ax_gospa.legend(loc='upper right', fontsize=11)
+    ax_gospa.legend(loc='upper right', fontsize=15)
 
     fig.suptitle(
         'End-to-End Pipeline: COP-RFS vs MUSIC-PHD\n'
         f'M={M}, K={K} (underdetermined: K > M$-$1={M-1}), '
         f'SNR={SNR_DB} dB, T={T}',
-        fontsize=20, fontweight='bold', y=0.995,
+        fontsize=28, fontweight='bold', y=0.995,
     )
 
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig_end2end_comparison.png'))

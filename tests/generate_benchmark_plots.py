@@ -36,12 +36,12 @@ from iron_dome_sim.eval.crlb import crlb_rmse, crlb_stochastic, crlb_cop
 plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
-    'font.size': 16,
-    'axes.labelsize': 18,
-    'axes.titlesize': 20,
-    'legend.fontsize': 14,
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
+    'font.size': 22,
+    'axes.labelsize': 25,
+    'axes.titlesize': 28,
+    'legend.fontsize': 20,
+    'xtick.labelsize': 20,
+    'ytick.labelsize': 20,
     'lines.linewidth': 2.5,
     'lines.markersize': 9,
     'figure.dpi': 150,
@@ -415,21 +415,21 @@ def plot_k_scaling(K_values, results):
 
         ax.text((min(K_values) + max_conv) / 2, y_label,
                 'Determined\n(K < M)',
-                fontsize=14, ha='center', va='top',
+                fontsize=20, ha='center', va='top',
                 color='green', fontstyle='italic',
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
                           alpha=0.8, edgecolor='green'))
 
         ax.text((max_conv + max_cop) / 2 + 0.5, y_label,
                 'Underdetermined\n(M-1 < K \u2264 COP limit)',
-                fontsize=14, ha='center', va='top',
+                fontsize=20, ha='center', va='top',
                 color='blue', fontstyle='italic',
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
                           alpha=0.8, edgecolor='blue'))
 
         ax.text((max_cop + max(K_values)) / 2, y_label,
                 'Super-Underdetermined\n(K > COP limit)\nSD-COP only',
-                fontsize=14, ha='center', va='top',
+                fontsize=20, ha='center', va='top',
                 color='red', fontstyle='italic',
                 bbox=dict(boxstyle='round,pad=0.3', facecolor='white',
                           alpha=0.8, edgecolor='red'))
@@ -437,10 +437,10 @@ def plot_k_scaling(K_values, results):
         # Boundary annotations
         if metric == 'pd':
             ax.annotate(f'K=M-1={max_conv}\nConventional limit',
-                       xy=(max_conv, 0.15), fontsize=13, color='green',
+                       xy=(max_conv, 0.15), fontsize=18, color='green',
                        ha='center', va='bottom')
             ax.annotate(f'K={max_cop}\nCOP limit\n(\u03c1(M-1))',
-                       xy=(max_cop, 0.15), fontsize=13, color='blue',
+                       xy=(max_cop, 0.15), fontsize=18, color='blue',
                        ha='center', va='bottom')
 
         # Plot data
@@ -540,7 +540,7 @@ def plot_resolution(spacing_values, results):
     ax2.legend(loc='upper left', framealpha=0.9)
 
     fig.suptitle('Close-Spacing Resolution (M=8, K=3, SNR=15dB, T=512)',
-                 fontsize=22, fontweight='bold', y=1.01)
+                 fontsize=31, fontweight='bold', y=1.01)
     fig.tight_layout(rect=[0, 0, 1, 0.97])
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig5_resolution.png'))
     plt.close(fig)
@@ -591,7 +591,7 @@ def plot_snapshots(T_values, results):
     ax2.legend(loc='upper right', framealpha=0.9)
 
     fig.suptitle('Snapshot Efficiency (M=8, K=6, SNR=10dB)',
-                 fontsize=22, fontweight='bold', y=1.01)
+                 fontsize=31, fontweight='bold', y=1.01)
     fig.tight_layout(rect=[0, 0, 1, 0.97])
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig6_snapshots.png'))
     plt.close(fig)
@@ -619,9 +619,9 @@ def plot_extended_k(K_values, results):
         # Region labels
         if metric == 'pd':
             ax.text(12, 0.08, 'COP\nCapacity',
-                    fontsize=15, ha='center', color='blue', fontstyle='italic')
+                    fontsize=21, ha='center', color='blue', fontstyle='italic')
             ax.text(19, 0.08, 'Beyond COP Limit\n(SD-COP deflation)',
-                    fontsize=15, ha='center', color='red', fontstyle='italic')
+                    fontsize=21, ha='center', color='red', fontstyle='italic')
 
         for name, data in results.items():
             s = ALG_STYLES[name]
@@ -638,7 +638,7 @@ def plot_extended_k(K_values, results):
 
     fig.suptitle('Extended K Scaling: SD-COP Beyond COP Capacity Limit\n'
                  'M=8 sensors, SNR=15dB, T=512 | COP limit = \u03c1(M-1) = 14',
-                 fontsize=22, fontweight='bold')
+                 fontsize=31, fontweight='bold')
     fig.tight_layout(rect=[0, 0, 1, 0.94])
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig11_extended_k.png'))
     plt.close(fig)
@@ -666,7 +666,7 @@ def plot_sdcop_stages(stage_data):
     ax.set_ylabel('Number of Deflation Stages')
     ax.set_title('(a) Deflation Stages Required')
     ax.set_xticks(K_values)
-    ax.legend(fontsize=8)
+    ax.legend(fontsize=11)
 
     # (0,1) DOAs detected per stage (stacked bar)
     ax = axes[0, 1]
@@ -693,7 +693,7 @@ def plot_sdcop_stages(stage_data):
     ax.set_ylabel('DOAs Detected')
     ax.set_title('(b) DOAs Detected per Stage')
     ax.set_xticks(K_values)
-    ax.legend(fontsize=7, loc='upper left')
+    ax.legend(fontsize=10, loc='upper left')
 
     # (1,0) Pd vs K
     ax = axes[1, 0]
@@ -707,7 +707,7 @@ def plot_sdcop_stages(stage_data):
     ax.set_title('(c) SD-COP Detection Rate')
     ax.set_ylim([-0.05, 1.05])
     ax.set_xticks(K_values)
-    ax.legend(fontsize=9)
+    ax.legend(fontsize=13)
 
     # (1,1) RMSE vs K
     ax = axes[1, 1]
@@ -719,11 +719,11 @@ def plot_sdcop_stages(stage_data):
     ax.set_ylabel('RMSE (degrees)')
     ax.set_title('(d) SD-COP RMSE')
     ax.set_xticks(K_values)
-    ax.legend(fontsize=9)
+    ax.legend(fontsize=13)
 
     fig.suptitle('SD-COP Deflation Stage Analysis\n'
                  'M=8 sensors, SNR=15dB, T=512 | Sequential deflation in HOC domain',
-                 fontsize=14, fontweight='bold')
+                 fontsize=20, fontweight='bold')
     fig.tight_layout(rect=[0, 0, 1, 0.92])
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig12_sdcop_stages.png'))
     plt.close(fig)
@@ -753,10 +753,10 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
     ax.set_ylabel('Pd')
     ax.set_title('(a) K Scaling: Detection Rate')
     ax.set_ylim([-0.05, 1.05])
-    ax.text(5, 0.08, 'K<M-1', fontsize=7, color='green')
-    ax.text(10.5, 0.08, 'Underdetermined', fontsize=7, color='blue')
-    ax.text(17, 0.08, 'SD-COP', fontsize=7, color='red')
-    ax.legend(fontsize=5.5, loc='lower left')
+    ax.text(5, 0.08, 'K<M-1', fontsize=10, color='green')
+    ax.text(10.5, 0.08, 'Underdetermined', fontsize=10, color='blue')
+    ax.text(17, 0.08, 'SD-COP', fontsize=10, color='red')
+    ax.legend(fontsize=7.7, loc='lower left')
 
     # (0,1) SNR Pd
     ax = axes[0, 1]
@@ -768,7 +768,7 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
     ax.set_ylabel('Pd')
     ax.set_title('(b) SNR Robustness: Detection Rate')
     ax.set_ylim([-0.05, 1.05])
-    ax.legend(fontsize=6, loc='lower right')
+    ax.legend(fontsize=8, loc='lower right')
 
     # (0,2) Resolution Pd
     ax = axes[0, 2]
@@ -781,7 +781,7 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
     ax.set_title('(c) Resolution: Detection Rate')
     ax.set_ylim([-0.05, 1.05])
     ax.invert_xaxis()
-    ax.legend(fontsize=7, loc='lower left')
+    ax.legend(fontsize=10, loc='lower left')
 
     # (1,0) K scaling RMSE
     ax = axes[1, 0]
@@ -796,7 +796,7 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
     ax.set_xlabel('K (sources)')
     ax.set_ylabel('RMSE (deg)')
     ax.set_title('(d) K Scaling: RMSE')
-    ax.legend(fontsize=5.5, loc='upper left')
+    ax.legend(fontsize=7.7, loc='upper left')
 
     # (1,1) SNR RMSE with CRLB
     ax = axes[1, 1]
@@ -817,7 +817,7 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
     ax.set_ylabel('RMSE (deg)')
     ax.set_title('(e) SNR Robustness: RMSE')
     ax.set_yscale('log')
-    ax.legend(fontsize=5.5, loc='upper right')
+    ax.legend(fontsize=7.7, loc='upper right')
 
     # (1,2) Snapshots RMSE with CRLB
     ax = axes[1, 2]
@@ -845,11 +845,11 @@ def plot_combined_summary(k_data, snr_data, res_data, snap_data):
     ax.set_title('(f) Snapshot Efficiency: RMSE')
     ax.set_xticks(T_values)
     ax.set_xticklabels([str(t) for t in T_values])
-    ax.legend(fontsize=5.5, loc='upper right')
+    ax.legend(fontsize=7.7, loc='upper right')
 
     fig.suptitle('COP Family Algorithm Performance Summary\n'
                  'Base: 2rho-th Order Subspace COP (Choi & Yoo, IEEE TSP 2015)',
-                 fontsize=15, fontweight='bold')
+                 fontsize=21, fontweight='bold')
     fig.tight_layout(rect=[0, 0, 1, 0.93])
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig_summary_combined.png'))
     plt.close(fig)

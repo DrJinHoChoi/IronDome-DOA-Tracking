@@ -20,12 +20,12 @@ from iron_dome_sim.doa import SubspaceCOP, MUSIC
 plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
-    'font.size': 16,
-    'axes.labelsize': 18,
-    'axes.titlesize': 18,
-    'legend.fontsize': 14,
-    'xtick.labelsize': 13,
-    'ytick.labelsize': 14,
+    'font.size': 22,
+    'axes.labelsize': 25,
+    'axes.titlesize': 25,
+    'legend.fontsize': 20,
+    'xtick.labelsize': 18,
+    'ytick.labelsize': 20,
     'lines.linewidth': 2.5,
     'figure.dpi': 150,
     'savefig.dpi': 600,
@@ -97,11 +97,11 @@ def main():
     # Annotate bars with values
     for bar, val in zip(bars_cop, cop_results):
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
-                f'{val:.0f}%', ha='center', va='bottom', fontsize=11,
+                f'{val:.0f}%', ha='center', va='bottom', fontsize=15,
                 fontweight='bold', color='#0055CC')
     for bar, val in zip(bars_music, music_results):
         ax.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
-                f'{val:.0f}%', ha='center', va='bottom', fontsize=10,
+                f'{val:.0f}%', ha='center', va='bottom', fontsize=14,
                 color='#666666')
 
     ax.set_xlabel('Signal Type')
@@ -112,7 +112,7 @@ def main():
     ax.set_xticks(x)
     ax.set_xticklabels(display_names)
     ax.set_ylim([0, 115])
-    ax.legend(loc='upper right', fontsize=14)
+    ax.legend(loc='upper right', fontsize=20)
 
     # Highlight non-Gaussian advantage
     ax.axhline(y=100 * (M-1)/K, color='red', linestyle='--', alpha=0.5,
@@ -120,7 +120,7 @@ def main():
 
     # Annotate key findings
     ax.annotate('Non-Gaussian signals:\nCOP resolves K > M-1',
-                xy=(3, 95), fontsize=12, ha='center',
+                xy=(3, 95), fontsize=17, ha='center',
                 bbox=dict(boxstyle='round', facecolor='lightyellow', alpha=0.8))
 
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig_signal_types.png'))

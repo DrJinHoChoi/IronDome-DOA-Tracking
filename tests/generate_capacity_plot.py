@@ -25,12 +25,12 @@ from iron_dome_sim.doa import SubspaceCOP
 plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
-    'font.size': 16,
-    'axes.labelsize': 18,
-    'axes.titlesize': 18,
-    'legend.fontsize': 13,
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
+    'font.size': 22,
+    'axes.labelsize': 25,
+    'axes.titlesize': 25,
+    'legend.fontsize': 18,
+    'xtick.labelsize': 20,
+    'ytick.labelsize': 20,
     'lines.linewidth': 2.5,
     'figure.dpi': 150,
     'savefig.dpi': 600,
@@ -135,17 +135,17 @@ def main():
     # Annotate true DOA values
     for i, td in enumerate(true_deg):
         offset = 1.5 if i % 2 == 0 else 3.5
-        ax1.annotate(f'{td:.0f}', xy=(td, -38.0 + offset), fontsize=7,
+        ax1.annotate(f'{td:.0f}', xy=(td, -38.0 + offset), fontsize=10,
                      ha='center', va='bottom', color='#00AA00', fontweight='bold')
 
     ax1.set_xlabel('DOA (degrees)')
     ax1.set_ylabel('Normalized Spectrum (dB)')
     ax1.set_title(f'(a) COP-4th Spectrum at Capacity Limit  '
                   f'[M={M}, K={K}={chr(961)}(M-1), SNR={snr_db} dB]',
-                  fontsize=16, fontweight='bold')
+                  fontsize=22, fontweight='bold')
     ax1.set_ylim([-42, 5])
     ax1.set_xlim([-85, 85])
-    ax1.legend(loc='upper left', framealpha=0.95, fontsize=13)
+    ax1.legend(loc='upper left', framealpha=0.95, fontsize=18)
 
     # ---- Panel (b): Spectrum with BOTH True and Estimated DOAs ----
     ax2.plot(scan_deg, P_db, color='#0055CC', linewidth=2.5,
@@ -189,12 +189,12 @@ def main():
                markeredgecolor='black', markersize=12,
                label=f'Estimated DOAs ({n_correct}/{K} correct)'),
     ]
-    ax2.legend(handles=legend_elements, loc='upper left', framealpha=0.95, fontsize=13)
+    ax2.legend(handles=legend_elements, loc='upper left', framealpha=0.95, fontsize=18)
 
     # Row labels on the left
-    ax2.annotate('True →', xy=(-84, -44.0), fontsize=10, fontweight='bold',
+    ax2.annotate('True →', xy=(-84, -44.0), fontsize=14, fontweight='bold',
                  color='#00AA00', va='center', ha='right')
-    ax2.annotate('Est →', xy=(-84, -48.0), fontsize=10, fontweight='bold',
+    ax2.annotate('Est →', xy=(-84, -48.0), fontsize=14, fontweight='bold',
                  color='#DD0000', va='center', ha='right')
 
     # Horizontal separator line between True and Est rows
@@ -205,7 +205,7 @@ def main():
     ax2.set_title(f'(b) Peak Detection at Capacity  '
                   f'[M$_v$={M_v}, Detected: {n_correct}/{K}, '
                   f'Mean err: {np.mean(errors):.2f}' + chr(176) + ']',
-                  fontsize=16, fontweight='bold')
+                  fontsize=22, fontweight='bold')
     ax2.set_ylim([-54, 5])
     ax2.set_xlim([-85, 85])
 
@@ -279,10 +279,10 @@ def generate_improved_fig0a():
     ax1.set_xlabel('DOA (degrees)')
     ax1.set_ylabel('Normalized Spectrum (dB)')
     ax1.set_title(f'(a) COP vs Classical  [M={M}, K={K}, SNR={snr_db} dB]',
-                  fontsize=16, fontweight='bold')
+                  fontsize=22, fontweight='bold')
     ax1.set_ylim([-42, 5])
     ax1.set_xlim([-90, 90])
-    ax1.legend(loc='upper left', framealpha=0.95, fontsize=13)
+    ax1.legend(loc='upper left', framealpha=0.95, fontsize=18)
 
     # == Panel (b): COP Peak Detection ==
     ax2.plot(scan_deg, cop_db, color='#0055CC', linewidth=2.5, zorder=3)
@@ -303,7 +303,7 @@ def generate_improved_fig0a():
     # Annotate true DOA values
     for i, td in enumerate(true_deg):
         offset = 1.5 if i % 2 == 0 else 3.5
-        ax2.annotate(f'{td:.0f}', xy=(td, -38.0 + offset), fontsize=7,
+        ax2.annotate(f'{td:.0f}', xy=(td, -38.0 + offset), fontsize=10,
                      ha='center', va='bottom', color='#00AA00', fontweight='bold')
 
     # Custom legend
@@ -316,13 +316,13 @@ def generate_improved_fig0a():
                markeredgecolor='black', markersize=12,
                label=f'Estimated DOAs ({len(cop_doas)}/{K})'),
     ]
-    ax2.legend(handles=legend_elements, loc='upper left', framealpha=0.95, fontsize=13)
+    ax2.legend(handles=legend_elements, loc='upper left', framealpha=0.95, fontsize=18)
 
     ax2.set_xlabel('DOA (degrees)')
     ax2.set_ylabel('Normalized Spectrum (dB)')
     ax2.set_title(f'(b) COP Peak Detection  '
                   f'[M$_v$={2*(M-1)+1}, Detected: {len(cop_doas)}/{K}]',
-                  fontsize=16, fontweight='bold')
+                  fontsize=22, fontweight='bold')
     ax2.set_ylim([-42, 5])
     ax2.set_xlim([-90, 90])
 
@@ -409,11 +409,11 @@ def generate_improved_fig0b():
                markeredgecolor='black', markersize=11,
                label=f'Estimated ({cop_ok}/{K} correct)'),
     ]
-    ax1.legend(handles=legend1, loc='upper left', framealpha=0.95, fontsize=12)
+    ax1.legend(handles=legend1, loc='upper left', framealpha=0.95, fontsize=17)
     ax1.set_xlabel('DOA (degrees)')
     ax1.set_ylabel('Normalized Spectrum (dB)')
     ax1.set_title(f'(a) COP-4th  [M={M}, K={K}, SNR={snr_db} dB]',
-                  fontsize=15, fontweight='bold')
+                  fontsize=21, fontweight='bold')
     ax1.set_ylim([-42, 5])
     ax1.set_xlim([-85, 85])
 
@@ -429,11 +429,11 @@ def generate_improved_fig0b():
                markeredgecolor='black', markersize=11,
                label=f'Estimated ({tcop_ok}/{K} correct)'),
     ]
-    ax2.legend(handles=legend2, loc='upper left', framealpha=0.95, fontsize=12)
+    ax2.legend(handles=legend2, loc='upper left', framealpha=0.95, fontsize=17)
     ax2.set_xlabel('DOA (degrees)')
     ax2.set_ylabel('Normalized Spectrum (dB)')
     ax2.set_title(f'(b) T-COP  [{chr(945)}=0.85, 10 scans, {tcop_ok}/{K} correct]',
-                  fontsize=15, fontweight='bold')
+                  fontsize=21, fontweight='bold')
     ax2.set_ylim([-42, 5])
     ax2.set_xlim([-85, 85])
 
@@ -458,11 +458,11 @@ def generate_improved_fig0b():
                markeredgecolor='black', markersize=11,
                label=f'Estimated ({sdcop_ok}/{K} correct)'),
     ]
-    ax3.legend(handles=legend3, loc='upper left', framealpha=0.95, fontsize=12)
+    ax3.legend(handles=legend3, loc='upper left', framealpha=0.95, fontsize=17)
     ax3.set_xlabel('DOA (degrees)')
     ax3.set_ylabel('Normalized Spectrum (dB)')
     ax3.set_title(f'(c) SD-COP  [Signal-domain deflation, {sdcop_ok}/{K} correct]',
-                  fontsize=15, fontweight='bold')
+                  fontsize=21, fontweight='bold')
     ax3.set_ylim([-42, 5])
     ax3.set_xlim([-85, 85])
 

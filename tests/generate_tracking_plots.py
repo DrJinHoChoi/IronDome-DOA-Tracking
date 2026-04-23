@@ -26,12 +26,12 @@ from iron_dome_sim.eval.metrics import rmse_doa, detection_rate
 plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
-    'font.size': 16,
-    'axes.labelsize': 18,
-    'axes.titlesize': 20,
-    'legend.fontsize': 14,
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
+    'font.size': 22,
+    'axes.labelsize': 25,
+    'axes.titlesize': 28,
+    'legend.fontsize': 20,
+    'xtick.labelsize': 20,
+    'ytick.labelsize': 20,
     'lines.linewidth': 2.5,
     'lines.markersize': 9,
     'figure.dpi': 150,
@@ -138,10 +138,10 @@ def plot_birth_death():
     ax1.axvspan(5.5, 15.5, alpha=0.08, color='blue')
     ax1.axvspan(15.5, 20.5, alpha=0.08, color='orange')
     ax1.axvspan(20.5, 25.5, alpha=0.08, color='red')
-    ax1.text(3, -55, 'K=3', fontsize=15, ha='center', color='green', fontweight='bold')
-    ax1.text(10.5, -55, 'K=6 (birth)', fontsize=15, ha='center', color='blue', fontweight='bold')
-    ax1.text(18, -55, 'K=4 (death)', fontsize=15, ha='center', color='orange', fontweight='bold')
-    ax1.text(23, -55, 'K=2', fontsize=15, ha='center', color='red', fontweight='bold')
+    ax1.text(3, -55, 'K=3', fontsize=21, ha='center', color='green', fontweight='bold')
+    ax1.text(10.5, -55, 'K=6 (birth)', fontsize=21, ha='center', color='blue', fontweight='bold')
+    ax1.text(18, -55, 'K=4 (death)', fontsize=21, ha='center', color='orange', fontweight='bold')
+    ax1.text(23, -55, 'K=2', fontsize=21, ha='center', color='red', fontweight='bold')
 
     # Target count
     ax2.step(scans, k_true_history, 'b-', linewidth=2.5, where='mid', label='True K')
@@ -227,7 +227,7 @@ def plot_tcop_phd_feedback():
     ax2.legend(loc='upper right')
 
     fig.suptitle('T-COP + PHD Feedback Loop (M=8, K=6, SNR=5dB)',
-                 fontsize=22, fontweight='bold', y=1.02)
+                 fontsize=31, fontweight='bold', y=1.02)
     fig.tight_layout()
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig8_tcop_phd_feedback.png'))
     plt.close(fig)
@@ -244,10 +244,10 @@ def plot_algorithm_overview():
     ax.axis('off')
     ax.set_title('Proposed Algorithm System: COP-RFS\n'
                  'Underdetermined DOA Estimation + Multi-Target Tracking',
-                 fontsize=16, fontweight='bold', pad=20)
+                 fontsize=22, fontweight='bold', pad=20)
 
     # Helper functions
-    def draw_box(x, y, w, h, text, color='lightblue', fontsize=9, bold=False):
+    def draw_box(x, y, w, h, text, color='lightblue', fontsize=13, bold=False):
         rect = plt.Rectangle((x, y), w, h, linewidth=2, edgecolor='black',
                               facecolor=color, alpha=0.8)
         ax.add_patch(rect)
@@ -261,7 +261,7 @@ def plot_algorithm_overview():
         if text:
             mx, my = (x1+x2)/2, (y1+y2)/2
             ax.text(mx, my + 0.15, text, ha='center', va='bottom',
-                   fontsize=8, color=color)
+                   fontsize=11, color=color)
 
     # Title boxes for sections
     draw_box(0.2, 7.0, 13.5, 0.7, 'PROPOSED: COP-RFS System', 'gold', 12, True)
@@ -500,7 +500,7 @@ def plot_moving_targets():
                markeredgecolor='black', markersize=11, markeredgewidth=0.8,
                label='Estimated DOA'),
     ]
-    ax1.legend(handles=legend_elements, loc='upper right', fontsize=12)
+    ax1.legend(handles=legend_elements, loc='upper right', fontsize=17)
     ax1.set_ylabel('DOA (degrees)')
     ax1.set_title('COP-RFS Moving Target Tracking: Physics-Based Identification\n'
                   f'M={M}, K={K} targets, SNR={snr_db}dB, {n_scans} scans '
@@ -509,9 +509,9 @@ def plot_moving_targets():
     ax1.set_xlabel('Scan')
 
     # Annotate crossings
-    ax1.annotate('T1-T2\ncross', xy=(9, -33), fontsize=13, ha='center',
+    ax1.annotate('T1-T2\ncross', xy=(9, -33), fontsize=18, ha='center',
                 color='gray', alpha=0.7, fontweight='bold')
-    ax1.annotate('T1-T4\ncross', xy=(20, -10), fontsize=13, ha='center',
+    ax1.annotate('T1-T4\ncross', xy=(20, -10), fontsize=18, ha='center',
                 color='gray', alpha=0.7, fontweight='bold')
 
     # RMSE subplot

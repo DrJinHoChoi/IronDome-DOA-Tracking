@@ -17,7 +17,7 @@ from scipy.stats import norm
 import os
 
 # Global settings
-plt.rcParams.update({'font.size': 9, 'figure.dpi': 150})
+plt.rcParams.update({'font.size': 13, 'figure.dpi': 150})
 RESULTS_DIR = os.path.join(os.path.dirname(__file__), '..', 'results', 'figures')
 os.makedirs(RESULTS_DIR, exist_ok=True)
 
@@ -132,7 +132,7 @@ def experiment_tipp():
     ax1.set_xlabel('Velocity Difference |Δv| (°/scan)')
     ax1.set_ylabel('P(correct assignment)')
     ax1.set_title('(a) Track Identity Preservation Probability')
-    ax1.legend(fontsize=8)
+    ax1.legend(fontsize=11)
     ax1.set_ylim([0.45, 1.02])
     ax1.grid(True, alpha=0.3)
 
@@ -148,7 +148,7 @@ def experiment_tipp():
     ax2.set_xlabel('Velocity Difference |Δv| (°/scan)')
     ax2.set_ylabel('P(correct assignment)')
     ax2.set_title('(b) TIPP vs. Measurement Noise')
-    ax2.legend(fontsize=8)
+    ax2.legend(fontsize=11)
     ax2.set_ylim([0.45, 1.02])
     ax2.grid(True, alpha=0.3)
 
@@ -309,7 +309,7 @@ def experiment_birth_weight():
     ax2.set_xlabel('Scans to Confirmation')
     ax2.set_ylabel('Density')
     ax2.set_title('(b) Birth-to-Confirmation Latency')
-    ax2.legend(fontsize=8)
+    ax2.legend(fontsize=11)
 
     # Panel (c): ROC-like curve: false birth rate vs detection latency
     w0_values = np.logspace(-2, 0, 20)
@@ -371,7 +371,7 @@ def experiment_birth_weight():
     ax3.set_xlabel('False Birth Rate (P_FA)')
     ax3.set_ylabel('True Detection Rate (P_D)')
     ax3.set_title('(c) Birth ROC: Spectrum vs Uniform')
-    ax3.legend(fontsize=8)
+    ax3.legend(fontsize=11)
     ax3.set_xlim([-0.05, 1.05])
     ax3.set_ylim([-0.05, 1.05])
     ax3.grid(True, alpha=0.3)
@@ -490,7 +490,7 @@ def experiment_feedback_convergence():
     ax.set_xlabel('Scan Number')
     ax.set_ylabel('RMSE (°)')
     ax.set_title(f'(a) Convergence vs. Prior Weight w_p (α={alpha_fixed})')
-    ax.legend(fontsize=7)
+    ax.legend(fontsize=10)
     ax.grid(True, alpha=0.3)
     ax.set_ylim([0, 15])
 
@@ -509,7 +509,7 @@ def experiment_feedback_convergence():
     ax.set_xlabel('Scan Number')
     ax.set_ylabel('RMSE (°)')
     ax.set_title(f'(b) Convergence vs. Forgetting Factor α (w_p={wp_fixed})')
-    ax.legend(fontsize=7)
+    ax.legend(fontsize=10)
     ax.grid(True, alpha=0.3)
     ax.set_ylim([0, 15])
 
@@ -541,8 +541,8 @@ def experiment_feedback_convergence():
     ax.set_xlabel('Forgetting factor α')
     ax.set_ylabel('Prior weight w_p')
     ax.set_title('(c) Convergence Rate β(α, w_p)')
-    ax.text(0.35, 0.55, 'Fast\n(β<0.5)', fontsize=8, color='green', fontweight='bold')
-    ax.text(0.85, 0.05, 'Slow\n(β>0.9)', fontsize=8, color='red', fontweight='bold')
+    ax.text(0.35, 0.55, 'Fast\n(β<0.5)', fontsize=11, color='green', fontweight='bold')
+    ax.text(0.85, 0.05, 'Slow\n(β>0.9)', fontsize=11, color='red', fontweight='bold')
 
     # Panel (d): Theoretical vs empirical convergence rate
     ax = axes[1, 1]
@@ -583,7 +583,7 @@ def experiment_feedback_convergence():
     ax.set_xlabel('Theoretical β = α(1 - w_p · p_D)')
     ax.set_ylabel('Empirical β (fitted)')
     ax.set_title('(d) Theoretical vs. Empirical Rate')
-    ax.legend(fontsize=8)
+    ax.legend(fontsize=11)
     ax.set_xlim([0, 1])
     ax.set_ylim([0, 1.5])
     ax.grid(True, alpha=0.3)

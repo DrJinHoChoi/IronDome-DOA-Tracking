@@ -23,12 +23,12 @@ from iron_dome_sim.doa import SubspaceCOP
 plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
-    'font.size': 16,
-    'axes.labelsize': 18,
-    'axes.titlesize': 18,
-    'legend.fontsize': 14,
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
+    'font.size': 22,
+    'axes.labelsize': 25,
+    'axes.titlesize': 25,
+    'legend.fontsize': 20,
+    'xtick.labelsize': 20,
+    'ytick.labelsize': 20,
     'lines.linewidth': 2.5,
     'figure.dpi': 150,
     'savefig.dpi': 600,
@@ -109,7 +109,7 @@ def main():
         ax.axvline(x=cap, color=colors[str(rho)], linestyle='--',
                    alpha=0.4, linewidth=1.5)
         ax.text(cap + 0.3, 105, f'$K_{{max}}^{{\\rho={rho}}}={cap}$',
-                fontsize=11, color=colors[str(rho)], va='bottom')
+                fontsize=15, color=colors[str(rho)], va='bottom')
 
     ax.set_xlabel('Number of Sources (K)')
     ax.set_ylabel('Detection Rate (%)')
@@ -118,17 +118,17 @@ def main():
                  fontweight='bold')
     ax.set_ylim([-5, 115])
     ax.set_xlim([2, 21])
-    ax.legend(loc='upper right', fontsize=14)
+    ax.legend(loc='upper right', fontsize=20)
 
     # Annotate regions
     ax.axvspan(2, 7, alpha=0.05, color='blue')
     ax.axvspan(7, 14, alpha=0.05, color='red')
     ax.axvspan(14, 21, alpha=0.05, color='green')
-    ax.text(4.5, -12, r'$\rho=1$ best', fontsize=12, ha='center',
+    ax.text(4.5, -12, r'$\rho=1$ best', fontsize=17, ha='center',
             color='#1f77b4', fontweight='bold')
-    ax.text(10.5, -12, r'$\rho=2$ best', fontsize=12, ha='center',
+    ax.text(10.5, -12, r'$\rho=2$ best', fontsize=17, ha='center',
             color='#d62728', fontweight='bold')
-    ax.text(17.5, -12, r'$\rho=3$ best', fontsize=12, ha='center',
+    ax.text(17.5, -12, r'$\rho=3$ best', fontsize=17, ha='center',
             color='#2ca02c', fontweight='bold')
 
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig_rho_scaling.png'))

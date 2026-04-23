@@ -21,12 +21,12 @@ from iron_dome_sim.doa import SubspaceCOP, TemporalCOP, SequentialDeflationCOP, 
 plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'DejaVu Serif'],
-    'font.size': 16,
-    'axes.labelsize': 18,
-    'axes.titlesize': 18,
-    'legend.fontsize': 14,
-    'xtick.labelsize': 14,
-    'ytick.labelsize': 14,
+    'font.size': 22,
+    'axes.labelsize': 25,
+    'axes.titlesize': 25,
+    'legend.fontsize': 20,
+    'xtick.labelsize': 20,
+    'ytick.labelsize': 20,
     'lines.linewidth': 2.5,
     'figure.dpi': 150,
     'savefig.dpi': 600,
@@ -59,7 +59,7 @@ def plot_true_doa_markers(ax, true_deg, y_bottom=-38):
             label=None, zorder=5, clip_on=False)
     # Annotate degree values
     for td in true_deg:
-        ax.annotate(f'{td:.0f}°', xy=(td, y_bottom + 1.5), fontsize=7,
+        ax.annotate(f'{td:.0f}°', xy=(td, y_bottom + 1.5), fontsize=10,
                     ha='center', va='bottom', color='red', fontweight='bold')
 
 
@@ -124,10 +124,10 @@ def plot_spatial_spectrum():
     ax1.set_xlabel('DOA (degrees)')
     ax1.set_ylabel('Normalized Spectrum (dB)')
     ax1.set_title(f'(a) COP Family vs Classical  [M={M}, K={K}, SNR={snr_db} dB]',
-                  fontsize=16, fontweight='bold')
+                  fontsize=22, fontweight='bold')
     ax1.set_ylim([-42, 5])
     ax1.set_xlim([-90, 90])
-    ax1.legend(loc='upper left', framealpha=0.95, fontsize=13)
+    ax1.legend(loc='upper left', framealpha=0.95, fontsize=18)
 
     # == (b) COP Peak Detection ==
     ax2.plot(scan_deg, cop_db, color='#0055CC', linewidth=2.5,
@@ -145,10 +145,10 @@ def plot_spatial_spectrum():
     ax2.set_ylabel('Normalized Spectrum (dB)')
     ax2.set_title(f'(b) COP Peak Detection  '
                   f'[M$_v$={2*(M-1)+1}, Detected: {len(cop_doas)}/{K}]',
-                  fontsize=16, fontweight='bold')
+                  fontsize=22, fontweight='bold')
     ax2.set_ylim([-42, 5])
     ax2.set_xlim([-90, 90])
-    ax2.legend(loc='upper left', framealpha=0.95, fontsize=13)
+    ax2.legend(loc='upper left', framealpha=0.95, fontsize=18)
 
     # Print detection accuracy
     print(f"  True DOAs (deg): {true_deg}")
@@ -220,10 +220,10 @@ def plot_cop_family_spectrum():
     ax1.set_xlabel('DOA (degrees)')
     ax1.set_ylabel('Normalized Spectrum (dB)')
     ax1.set_title(f'(a) COP Family  [M={M}, K={K}, SNR={snr_db} dB, K > ρ(M−1)={2*(M-1)}]',
-                  fontsize=15, fontweight='bold')
+                  fontsize=21, fontweight='bold')
     ax1.set_ylim([-42, 5])
     ax1.set_xlim([-85, 85])
-    ax1.legend(loc='upper left', framealpha=0.95, fontsize=12)
+    ax1.legend(loc='upper left', framealpha=0.95, fontsize=17)
 
     # == (b) T-COP peaks ==
     ax2.plot(scan_deg, tcop_db, color='#DD0000', linewidth=2.5,
@@ -239,10 +239,10 @@ def plot_cop_family_spectrum():
     ax2.set_ylabel('Normalized Spectrum (dB)')
     ax2.set_title(f'(b) T-COP Peak Detection  '
                   f'[α=0.85, 10 scans, Detected: {len(tcop_doas)}/{K}]',
-                  fontsize=15, fontweight='bold')
+                  fontsize=21, fontweight='bold')
     ax2.set_ylim([-42, 5])
     ax2.set_xlim([-85, 85])
-    ax2.legend(loc='upper left', framealpha=0.95, fontsize=12)
+    ax2.legend(loc='upper left', framealpha=0.95, fontsize=17)
 
     # == (c) SD-COP peaks ==
     ax3.plot(scan_deg, sdcop_db, color='#00AA00', linewidth=2.5,
@@ -258,10 +258,10 @@ def plot_cop_family_spectrum():
     ax3.set_ylabel('Normalized Spectrum (dB)')
     ax3.set_title(f'(c) SD-COP Peak Detection  '
                   f'[Deflation, Detected: {len(sdcop_doas)}/{K}]',
-                  fontsize=15, fontweight='bold')
+                  fontsize=21, fontweight='bold')
     ax3.set_ylim([-42, 5])
     ax3.set_xlim([-85, 85])
-    ax3.legend(loc='upper left', framealpha=0.95, fontsize=12)
+    ax3.legend(loc='upper left', framealpha=0.95, fontsize=17)
 
     fig.savefig(os.path.join(OUTPUT_DIR, 'fig0b_cop_family_spectrum.png'))
     plt.close(fig)
