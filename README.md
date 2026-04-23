@@ -40,7 +40,24 @@ iron_dome_sim/
 | L1-SVD | Sparse recovery | Yes | Grid-dependent |
 | LASSO | Sparse recovery | Yes | Grid-dependent |
 
-## Reproducing the Paper (IEEE SPL 2026)
+## Reproducing the Papers
+
+This repository hosts **two companion papers** (Option A: shared repo):
+
+### IEEE TSP 2026 (journal) -- COP-RFS
+
+```bash
+python reproduce_tsp.py                  # quick: capacity + tracking ablation
+python reproduce_tsp.py --full           # add K-scaling + rho-scaling
+python reproduce_tsp.py --capacity-only  # K=14 resolution test only
+python reproduce_tsp.py --tracking-only  # physics vs standard GM-PHD
+```
+
+Validates: (1) COP-4th resolving K=14 sources at capacity limit,
+(2) physics-based GM-PHD vs standard (86% fewer track switches per
+paper Table). Paper: `paper/cop_rfs_tsp2026.tex`.
+
+### IEEE SPL 2026 (letter) -- Mamba-COP-RL
 
 **One command for reviewers:**
 
