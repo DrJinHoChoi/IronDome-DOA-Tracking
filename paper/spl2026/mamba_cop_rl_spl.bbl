@@ -58,9 +58,10 @@ M.~Hausknecht and P.~Stone, ``Deep recurrent {Q}-learning for partially
   observable {MDP}s,'' in \emph{AAAI Fall Symposium on Sequential Decision
   Making for Intelligent Agents (AAAI-SDMIA15)}, 2015.
 
-\bibitem{dorka2022recurrent}
-N.~Dorka, ``Generalization, mayhems and limits in recurrent proximal policy
-  optimization,'' \emph{arXiv preprint arXiv:2205.11104}, 2022.
+\bibitem{pleines2022recurrent}
+M.~Pleines, M.~Pallasch, F.~Zimmer, and M.~Preuss, ``Generalization, mayhems
+  and limits in recurrent proximal policy optimization,'' \emph{arXiv preprint
+  arXiv:2205.11104}, 2022.
 
 \bibitem{gu2023mamba}
 A.~Gu and T.~Dao, ``Mamba: Linear-time sequence modeling with selective state
@@ -72,12 +73,12 @@ A.~Gu, K.~Goel, and C.~R{\'{e}}, ``Efficiently modeling long sequences with
   Representations (ICLR)}, 2022.
 
 \bibitem{ota2024decisionmamba}
-T.~Ota, ``Decision {Mamba}: Reinforcement learning via hybrid selective
-  sequence modeling,'' \emph{arXiv preprint arXiv:2406.00079}, 2024.
+T.~Ota, ``Decision {Mamba}: Reinforcement learning via sequence modeling with
+  selective state spaces,'' \emph{arXiv preprint arXiv:2403.19925}, 2024.
 
 \bibitem{han2024audiomamba}
-M.~H. Erol, A.~Senocak, J.~Feng, and J.~S. Chung, ``Audio {Mamba}: Selective
-  state space models for self-supervised audio representation learning,''
+M.~H. Erol, A.~Senocak, J.~Feng, and J.~S. Chung, ``Audio {Mamba}:
+  Bidirectional state space model for audio representation learning,''
   \emph{IEEE Signal Processing Letters}, vol.~31, pp. 2975--2979, 2024.
 
 \bibitem{cover2006elements}
