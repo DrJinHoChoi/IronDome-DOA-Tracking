@@ -545,7 +545,7 @@ def fig_timeline(history, labelled, scenario, scan_idx, color,
                  show_gt, show_occl):
     n = scenario["n_scans"]
     angles = history["scan_angles_deg"]
-    fig, ax = plt.subplots(figsize=(13, 2.6))
+    fig, ax = plt.subplots(figsize=(18, 5.0))
     fig.patch.set_facecolor("#050810")
     ax.set_facecolor("#0B1426")
     palette = plt.cm.tab10(np.linspace(0, 1, 10))
@@ -1032,18 +1032,24 @@ def main():
                 f"CLASS <b>{kw_label}</b></div>",
                 unsafe_allow_html=True)
 
-    # ---- Polar + Timeline ----
-    st.markdown("<div class='sec-title'>:bar_chart:  SPATIAL + TEMPORAL</div>",
+    # ---- Polar (top, smaller) ----
+    st.markdown("<div class='sec-title'>:bar_chart:  SPATIAL SPECTRUM</div>",
                 unsafe_allow_html=True)
-    p_col, t_col = st.columns([1.0, 1.7])
-    with p_col:
+    pol_l, pol_c, pol_r = st.columns([1, 2, 1])
+    with pol_c:
         st.pyplot(fig_polar(sel_hist, sel_lab, scan_idx,
                              selected["color"]),
                   clear_figure=True)
-    with t_col:
-        st.pyplot(fig_timeline(sel_hist, sel_lab, sel_sc, scan_idx,
-                                selected["color"], show_gt, show_occl),
-                  clear_figure=True)
+
+    # ---- Tracking timeline (full width, bottom hero) ----
+    st.markdown(
+        "<div class='sec-title'>:dart:  TRACKING TIMELINE  "
+        "<span style='color:#5B7FA3;font-weight:400;font-size:0.7em'>"
+        "  ―  표적 추적 + 음성 인식 시간선 (전체 임무)</span></div>",
+        unsafe_allow_html=True)
+    st.pyplot(fig_timeline(sel_hist, sel_lab, sel_sc, scan_idx,
+                            selected["color"], show_gt, show_occl),
+              clear_figure=True)
 
     # ---- Threat history sparkline ----
     if len(st.session_state.threat_history) > 2:
