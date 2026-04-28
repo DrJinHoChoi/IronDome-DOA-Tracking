@@ -19,6 +19,14 @@ import numpy as np
 import matplotlib.pyplot as plt
 import streamlit as st
 
+try:
+    from streamlit_autorefresh import st_autorefresh
+    HAS_AUTOREFRESH = True
+except ImportError:
+    HAS_AUTOREFRESH = False
+    def st_autorefresh(interval=1000, key=None, limit=None):
+        return 0
+
 REPO = Path(__file__).resolve().parent
 sys.path.insert(0, str(REPO))
 
@@ -392,6 +400,23 @@ def main():
     mic_device = st.sidebar.number_input("마이크 장치 인덱스", 0, 32, 1)
 
     st.sidebar.markdown("---")
+    st.sidebar.markdown("**:arrows_counterclockwise: 실시간 운용**")
+    auto_play = st.sidebar.toggle("자동 재생 (스캔 자동 진행)",
+                                   value=False,
+                                   help="활성화하면 스캔이 자동 진행됩니다")
+    play_speed = st.sidebar.select_slider(
+        "재생 속도", options=[0.5, 1.0, 1.5, 2.0, 3.0],
+        value=1.0, format_func=lambda v: f"{v}x",
+        disabled=not auto_play)
+    auto_capture_cam = st.sidebar.toggle("자동 영상 캡처 (3초마다)",
+                                          value=False)
+    auto_capture_mic = st.sidebar.toggle("자동 음성 캡처 (3초마다)",
+                                          value=False)
+    auto_select = st.sidebar.toggle("드론 자동 순회 (10초마다)",
+                                     value=False,
+                                     help="함대 드론을 순서대로 자동 선택")
+
+    st.sidebar.markdown("---")
     if st.sidebar.button("🔄 임무 재실행", type="primary",
                           use_container_width=True):
         st.session_state.rerun_nonce += 1
@@ -406,6 +431,37 @@ def main():
             d["scenario"], snr_db, n_scans,
             "real" if use_real else "stub", kws_model, kws_backbone,
             d["id"], st.session_state.rerun_nonce)
+
+    # ---- 실시간 자동 재생 ----
+    if auto_play or auto_capture_cam or auto_capture_mic or auto_select:
+        # autorefresh: 1초 단위 트리거
+        interval_ms = int(1000 / play_speed) if auto_play else 1000
+        tick = st_autorefresh(interval=interval_ms, key="ops_tick")
+    else:
+        tick = 0
+
+    # 자동 스캔 진행
+    if auto_play:
+        cur_scan = st.session_state.get("scan_idx", 0)
+        next_scan = (cur_scan + 1) % n_scans
+        st.session_state.scan_idx = next_scan
+        if next_scan == 0:
+            st.session_state.log.append(
+                f"[{time.strftime('%H:%M:%S')}] 임무 사이클 완료 -- 재시작")
+
+    # 자동 드론 순회 (10초마다)
+    if auto_select and tick > 0:
+        if "auto_select_last" not in st.session_state:
+            st.session_state.auto_select_last = time.time()
+        if time.time() - st.session_state.auto_select_last > 10:
+            ids = [d["id"] for d in fleet]
+            cur_i = ids.index(st.session_state.selected)
+            next_i = (cur_i + 1) % len(ids)
+            st.session_state.selected = ids[next_i]
+            st.session_state.auto_select_last = time.time()
+            st.session_state.log.append(
+                f"[{time.strftime('%H:%M:%S')}] 자동 순회 -> "
+                f"{ids[next_i]}")
 
     # ---- 헤더: 임무 상태 ----
     elapsed = int(time.time() - st.session_state.mission_start)
@@ -497,10 +553,21 @@ def main():
     map_col, live_col = st.columns([1.4, 1.0])
 
     with map_col:
-        st.markdown("### :compass: 전술 상황도")
-        scan_idx = st.slider("임무 스캔 시점", 0, max(n_scans - 1, 0),
-                              value=min(n_scans // 2, n_scans - 1),
-                              key="scan_idx")
+        title_html = ("### :compass: 전술 상황도 "
+                      ":record_button: 자동 재생 중"
+                      if auto_play else "### :compass: 전술 상황도")
+        st.markdown(title_html)
+        if auto_play:
+            # 슬라이더는 표시만; 진행은 session_state로 통제
+            scan_idx = st.session_state.get("scan_idx", 0)
+            scan_idx = min(scan_idx, n_scans - 1)
+            st.progress((scan_idx + 1) / n_scans,
+                        text=f"임무 스캔 {scan_idx + 1} / {n_scans}")
+        else:
+            scan_idx = st.slider("임무 스캔 시점", 0,
+                                  max(n_scans - 1, 0),
+                                  value=min(n_scans // 2, n_scans - 1),
+                                  key="scan_idx")
         st.pyplot(fig_tactical_map(fleet, selected["id"], fleet_data,
                                     scan_idx),
                   clear_figure=True)
@@ -512,9 +579,20 @@ def main():
                    f"방향: {selected['heading']}°")
 
         if selected["live_cam"]:
-            st.markdown("**:eye: 카메라 (라이브)**")
-            if st.button(":camera_with_flash: 영상 캡처 + 분류",
-                         key="eye_btn", use_container_width=True):
+            cam_label = ("**:eye: 카메라 (라이브 :red_circle:)**"
+                          if auto_capture_cam else "**:eye: 카메라 (라이브)**")
+            st.markdown(cam_label)
+            # 자동 캡처 트리거
+            cam_trigger = False
+            if auto_capture_cam:
+                if "auto_cam_last" not in st.session_state:
+                    st.session_state.auto_cam_last = 0
+                if time.time() - st.session_state.auto_cam_last > 3:
+                    cam_trigger = True
+                    st.session_state.auto_cam_last = time.time()
+            if (cam_trigger or
+                st.button(":camera_with_flash: 영상 캡처 + 분류",
+                          key="eye_btn", use_container_width=True)):
                 try:
                     from drone_demo_vision import (load_ncconv_classifier,
                                                    classify, estimate_sigma)
@@ -545,9 +623,19 @@ def main():
                     "실배치 시: 드론 탑재 카메라로 NC-Conv 247KB 추론")
 
         if selected["live_mic"]:
-            st.markdown("**:ear: 마이크 (라이브)**")
-            if st.button(":microphone: 1.5초 음성 캡처 + 인식",
-                         key="ear_btn", use_container_width=True):
+            mic_label = ("**:ear: 마이크 (라이브 :red_circle:)**"
+                          if auto_capture_mic else "**:ear: 마이크 (라이브)**")
+            st.markdown(mic_label)
+            mic_trigger = False
+            if auto_capture_mic:
+                if "auto_mic_last" not in st.session_state:
+                    st.session_state.auto_mic_last = 0
+                if time.time() - st.session_state.auto_mic_last > 3:
+                    mic_trigger = True
+                    st.session_state.auto_mic_last = time.time()
+            if (mic_trigger or
+                st.button(":microphone: 1.5초 음성 캡처 + 인식",
+                          key="ear_btn", use_container_width=True)):
                 try:
                     from drone_demo_kws import RealKWSClassifier
                     if ("kws_obj" not in st.session_state or
