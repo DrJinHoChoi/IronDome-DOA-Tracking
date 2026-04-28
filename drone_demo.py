@@ -196,10 +196,36 @@ def run_pipeline(scenario, use_kws=True):
     return history
 
 
-def attach_kws_labels(history, scenario):
-    """For each track-scan, attach the nearest ground-truth keyword.
-    In a real demo this is replaced by NC-SSM / NC-TCN inference on the
-    beamformed audio at each track's DOA."""
+def _try_real_kws(model="nc-ssm", backbone="Tiny"):
+    """Lazily build a RealKWSClassifier. Returns None if it fails."""
+    try:
+        from drone_demo_kws import RealKWSClassifier, DEMO_TO_GSC
+    except ImportError:
+        return None, None
+    kws = RealKWSClassifier(model=model, backbone=backbone)
+    return (kws, DEMO_TO_GSC) if kws.ok else (None, None)
+
+
+def attach_kws_labels(history, scenario, real_kws=False,
+                      model="nc-ssm", backbone="Tiny"):
+    """For each track-scan, attach a keyword.
+
+    If `real_kws=True` and the sibling NC-SSM/NC-TCN repo + checkpoint
+    are available, run inference on a 1-s synthetic waveform proxy at
+    the track's DOA and report the top-1 GSC class. The proxy waveform
+    is a noisy sine modulation conditioned on the ground-truth keyword
+    (since the COP simulator works in narrowband baseband, not real
+    speech). This demonstrates the inference path without requiring
+    speech audio synthesis. For a true speech-driven demo, see
+    `drone_demo_mic.py` (laptop mic) or replace this proxy with WAV
+    samples from GSC v0.02.
+    """
+    kws_obj = None
+    demo_to_gsc = None
+    if real_kws:
+        kws_obj, demo_to_gsc = _try_real_kws(model=model, backbone=backbone)
+        if kws_obj is None:
+            print("[KWS] real-KWS unavailable, falling back to GT stub.")
     gt = history["gt"]
     kw = history["kw"]
     labelled = []
@@ -215,6 +241,21 @@ def attach_kws_labels(history, scenario):
                 if d < best_d:
                     best_d = d
                     best_kw = kw[k]
+            # If real KWS is wired, run an inference proxy and keep the
+            # GSC class label (still tagged with the demo keyword for
+            # colour mapping, but real-class shown for transparency).
+            if kws_obj is not None and best_kw is not None:
+                gsc = demo_to_gsc.get(best_kw, "unknown")
+                # Proxy waveform: 1 s of band-limited sine + noise whose
+                # frequency encodes the keyword index. Real deployment
+                # would beamform actual mic audio at this DOA.
+                t = np.arange(16000) / 16000.0
+                f0 = 200 + 80 * (hash(best_kw) % 10)
+                wav = (0.2 * np.sin(2 * np.pi * f0 * t)
+                       + 0.05 * np.random.randn(16000)).astype("float32")
+                pred, conf = kws_obj.classify(wav)
+                # Show prediction in parentheses for the demo plot.
+                best_kw = f"{best_kw}~{pred}"
             per_scan.append((tid, deg, best_kw))
         labelled.append(per_scan)
     return labelled
@@ -339,6 +380,13 @@ def main() -> int:
     ap.add_argument("--scenario", choices=list(SCENARIOS), default="sar")
     ap.add_argument("--out", type=Path, default=REPO / "drone_demo.png")
     ap.add_argument("--no-kws", action="store_true")
+    ap.add_argument("--real-kws", action="store_true",
+                    help="Run real NC-SSM/NC-TCN inference (requires "
+                         "sibling repo + checkpoint).")
+    ap.add_argument("--kws-model", choices=["nc-ssm", "nc-tcn"],
+                    default="nc-ssm")
+    ap.add_argument("--kws-backbone", choices=["Tiny", "Small"],
+                    default="Tiny")
     args = ap.parse_args()
 
     scenario = SCENARIOS[args.scenario]
@@ -346,9 +394,14 @@ def main() -> int:
           f"{len(scenario['sources'])} sources) ===")
     t0 = time.time()
     history = run_pipeline(scenario, use_kws=not args.no_kws)
-    labelled = attach_kws_labels(history, scenario) if not args.no_kws \
-               else [[(t, d, None) for t, d in tk]
-                     for tk in history["tracks"]]
+    if args.no_kws:
+        labelled = [[(t, d, None) for t, d in tk]
+                    for tk in history["tracks"]]
+    else:
+        labelled = attach_kws_labels(history, scenario,
+                                     real_kws=args.real_kws,
+                                     model=args.kws_model,
+                                     backbone=args.kws_backbone)
     render(history, labelled, scenario, args.out)
     print(f"elapsed: {time.time()-t0:.1f} s")
     return 0
