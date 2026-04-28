@@ -47,6 +47,10 @@ WIN = 16000          # 1 s window
 HOP = 4000           # 0.25 s hop -> 4 detections / second
 RMS_THRESHOLD = 0.005  # below this, we report silence and skip inference
 
+# Many Windows laptops ship a 4-channel Intel Smart Sound array; capturing
+# all channels gives a (rough) hint at DOA via inter-channel level ratios.
+DEFAULT_CHANNELS = 1
+
 
 def list_devices() -> None:
     import sounddevice as sd
@@ -66,6 +70,43 @@ def color_for(label: str) -> str:
     return palette.get(label, "\x1b[37m")
 
 
+def run_test_capture(args, sd) -> int:
+    """Non-interactive capture test: grab N seconds, run KWS once,
+    report per-channel RMS + prediction. Useful for CI / smoke tests."""
+    sec = args.test
+    n = int(sec * SR)
+    print(f"[test] capturing {sec:.1f} s on device={args.device} "
+          f"channels={args.channels} ...")
+    try:
+        rec = sd.rec(n, samplerate=SR, channels=args.channels,
+                     device=args.device, dtype="float32", blocking=True)
+    except Exception as e:
+        print(f"[ERROR] capture failed: {e}")
+        return 4
+    if rec.ndim == 1:
+        rec = rec[:, None]
+    rms_per = np.sqrt(np.mean(rec ** 2, axis=0) + 1e-12)
+    print(f"[test] captured shape={rec.shape}  "
+          f"per-channel RMS={['%.4f' % r for r in rms_per]}")
+    if args.channels > 1:
+        # Crude L/R cue from level imbalance (2-mic) or front/back
+        # variance (4-mic). Real DOA needs ULA geometry knowledge.
+        ratio = rms_per / (rms_per.max() + 1e-9)
+        print(f"[test] level ratio (max=1) {['%.2f' % r for r in ratio]}")
+    mono = rec.mean(axis=1)
+    if mono.shape[0] >= WIN:
+        wav = mono[-WIN:]
+    else:
+        wav = np.pad(mono, (0, WIN - mono.shape[0]))
+    kws = RealKWSClassifier(model=args.model, backbone=args.backbone)
+    print(kws.status())
+    if not kws.ok:
+        return 3
+    label, conf = kws.classify(wav)
+    print(f"[test] KWS -> {label}  conf={conf:.2f}")
+    return 0
+
+
 def run(args) -> int:
     try:
         import sounddevice as sd
@@ -77,6 +118,9 @@ def run(args) -> int:
     if args.list_devices:
         list_devices()
         return 0
+
+    if args.test is not None:
+        return run_test_capture(args, sd)
 
     kws = RealKWSClassifier(model=args.model, backbone=args.backbone)
     print(kws.status())
@@ -142,6 +186,11 @@ def main() -> int:
                     help="Input device index. Default: system default.")
     ap.add_argument("--list-devices", action="store_true",
                     help="List available audio devices and exit.")
+    ap.add_argument("--channels", type=int, default=DEFAULT_CHANNELS,
+                    help="Number of input channels to capture.")
+    ap.add_argument("--test", type=float, default=None,
+                    help="Test capture: grab N seconds, run KWS once, "
+                         "exit (no live loop). Useful for CI.")
     args = ap.parse_args()
     return run(args)
 
