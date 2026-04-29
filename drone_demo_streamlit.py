@@ -742,21 +742,19 @@ def main():
             "real" if use_real else "stub", kws_model, kws_backbone,
             d["id"], st.session_state.rerun_nonce)
 
-    # ---- Auto refresh ----
-    # 자동 재생만 켜면 빠른 tick (1s/play_speed); 캡처가 켜진 경우엔
-    # blocking I/O 동안 UI 멈춤을 줄이려고 인터벌을 늘림.
-    if auto_play or auto_capture_cam or auto_capture_mic or auto_select:
-        if auto_capture_mic:
-            interval_ms = 1500       # 마이크 0.5s + 처리 여유
-        elif auto_capture_cam:
-            interval_ms = 1000       # 카메라 grab은 빠름
-        elif auto_play:
-            interval_ms = max(500, int(1000 / play_speed))
-        else:
-            interval_ms = 1000
-        tick = st_autorefresh(interval=interval_ms, key="ops_tick")
+    # ---- Live-update interval (used by @st.fragment) ----
+    # st_autorefresh 제거: 페이지 전체 reload 대신 fragment 단위로만 재실행.
+    if auto_capture_mic:
+        live_interval = 1.5
+    elif auto_capture_cam:
+        live_interval = 1.0
+    elif auto_play:
+        live_interval = max(0.5, 1.0 / play_speed)
+    elif auto_select:
+        live_interval = 1.0
     else:
-        tick = 0
+        live_interval = None  # 정적 모드 — fragment 자동 갱신 안 함
+    tick = 0
 
     if auto_play:
         cur_scan = st.session_state.get("scan_idx", 0)
@@ -1037,18 +1035,28 @@ def main():
                 unsafe_allow_html=True)
     map_col, live_col = st.columns([1.4, 1.0])
 
-    with map_col:
+    # Tactical map은 fragment로 분리 -> 자동 재생 시 이 패널만 부드럽게 갱신
+    @st.fragment(run_every=live_interval)
+    def tactical_panel():
+        cur = st.session_state.get("scan_idx", 0)
         if auto_play:
-            st.progress((scan_idx + 1) / n_scans,
-                        text=f"AUTO-ADVANCE  //  T+{scan_idx + 1:03d} / {n_scans:03d}")
+            st.session_state.scan_idx = (cur + 1) % n_scans
+        si = min(st.session_state.get("scan_idx", n_scans // 2),
+                 n_scans - 1)
+        if auto_play:
+            st.progress((si + 1) / n_scans,
+                        text=f"AUTO-ADVANCE  //  T+{si + 1:03d} / "
+                             f"{n_scans:03d}")
         else:
             st.session_state.scan_idx = st.slider(
                 "MISSION SCAN", 0, max(n_scans - 1, 0),
-                value=scan_idx, key="scan_slider")
-            scan_idx = st.session_state.scan_idx
+                value=si, key="scan_slider")
         st.pyplot(fig_tactical(fleet, selected["id"], fleet_data,
-                                scan_idx),
+                                st.session_state.scan_idx),
                   clear_figure=True)
+
+    with map_col:
+        tactical_panel()
 
     with live_col:
         st.markdown(
@@ -1219,11 +1227,17 @@ def main():
     # ---- Polar (top, smaller) ----
     st.markdown("<div class='sec-title'>:bar_chart:  SPATIAL SPECTRUM</div>",
                 unsafe_allow_html=True)
-    pol_l, pol_c, pol_r = st.columns([1, 2, 1])
-    with pol_c:
-        st.pyplot(fig_polar(sel_hist, sel_lab, scan_idx,
-                             selected["color"]),
-                  clear_figure=True)
+
+    @st.fragment(run_every=live_interval)
+    def polar_panel():
+        si = min(st.session_state.get("scan_idx", n_scans // 2),
+                 n_scans - 1)
+        pol_l, pol_c, pol_r = st.columns([1, 2, 1])
+        with pol_c:
+            st.pyplot(fig_polar(sel_hist, sel_lab, si,
+                                 selected["color"]),
+                      clear_figure=True)
+    polar_panel()
 
     # ---- Tracking timeline (full width, bottom hero) ----
     st.markdown(
@@ -1231,9 +1245,15 @@ def main():
         "<span style='color:#5B7FA3;font-weight:400;font-size:0.7em'>"
         "  ―  표적 추적 + 음성 인식 시간선 (전체 임무)</span></div>",
         unsafe_allow_html=True)
-    st.pyplot(fig_timeline(sel_hist, sel_lab, sel_sc, scan_idx,
-                            selected["color"], show_gt, show_occl),
-              clear_figure=True)
+
+    @st.fragment(run_every=live_interval)
+    def timeline_panel():
+        si = min(st.session_state.get("scan_idx", n_scans // 2),
+                 n_scans - 1)
+        st.pyplot(fig_timeline(sel_hist, sel_lab, sel_sc, si,
+                                selected["color"], show_gt, show_occl),
+                  clear_figure=True)
+    timeline_panel()
 
     # ---- Threat history sparkline ----
     if len(st.session_state.threat_history) > 2:
