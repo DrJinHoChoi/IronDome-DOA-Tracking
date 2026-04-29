@@ -543,48 +543,124 @@ def fig_polar(history, labelled, scan_idx, drone_color):
 
 def fig_timeline(history, labelled, scenario, scan_idx, color,
                  show_gt, show_occl):
+    """Enhanced tracking timeline with thicker lines, end-track labels,
+    KWS chip overlays, occlusion legend."""
     n = scenario["n_scans"]
     angles = history["scan_angles_deg"]
-    fig, ax = plt.subplots(figsize=(18, 5.0))
+    fig, ax = plt.subplots(figsize=(18, 5.6))
     fig.patch.set_facecolor("#0A0F08")
-    ax.set_facecolor("#14201A")
-    palette = plt.cm.tab10(np.linspace(0, 1, 10))
+    ax.set_facecolor("#0F1F12")
+
+    # 군용 톤 트랙 팔레트 (밝고 분리되는 5색)
+    track_palette = ["#C9A961", "#7BA05B", "#A3B8A0",
+                     "#DAA520", "#A93226", "#8B6F47",
+                     "#5DADE2", "#FF7F50", "#BB8FCE"]
+
+    # collect tracks
     by_id = {}
     for s, per in enumerate(labelled):
         for tid, deg, kw in per:
             by_id.setdefault(tid, []).append((s, deg, kw))
-    for tid, pts in by_id.items():
-        ss = [p[0] for p in pts]; ds = [p[1] for p in pts]
-        ax.plot(ss, ds, "-", color=palette[tid % 10], lw=2.29,
-                marker="o", ms=3)
-        prev = None
-        for s, d, kw in pts:
-            if kw and kw != prev:
-                col = KW_COLOURS.get(kw, "#888")
-                ax.text(s, d + 6, kw_kr(kw), fontsize=9.8, color=col,
-                        fontweight="bold", ha="center",
-                        family="monospace")
-                prev = kw
+
+    # 1) Occlusion shading (먼저 그려야 트랙이 위에 옴)
+    if show_occl:
+        for i, (sidx, a, b) in enumerate(scenario["occlusions"]):
+            ax.axvspan(a, b, alpha=0.22, color="#DAA520",
+                       lw=0, zorder=1)
+            ax.axvline(a, color="#DAA520", lw=1.0, ls=":",
+                       alpha=0.6, zorder=2)
+            ax.axvline(b, color="#DAA520", lw=1.0, ls=":",
+                       alpha=0.6, zorder=2)
+            ax.text((a + b) / 2, angles[-1] - 6,
+                    "OCCLUSION", fontsize=9, color="#DAA520",
+                    fontweight="bold", ha="center", family="monospace",
+                    alpha=0.85, zorder=3)
+
+    # 2) Ground truth (faint dashed)
     if show_gt:
         gt = history["gt"]
         for k in range(gt.shape[1]):
             ax.plot(np.arange(n), gt[:, k], color="#8FA88B",
-                    lw=0.68, linestyle="--", alpha=0.4)
-    if show_occl:
-        for sidx, a, b in scenario["occlusions"]:
-            ax.axvspan(a, b, alpha=0.18, color="#C09030")
-    ax.axvline(scan_idx, color=color, lw=2.7, alpha=0.9)
-    ax.set_xlim(-0.5, n - 0.5)
-    ax.set_ylim(angles[0], angles[-1])
-    ax.set_xlabel("MISSION SCAN", color="#8FA88B", family="monospace")
-    ax.set_ylabel("BEARING (DEG)", color="#8FA88B", family="monospace")
-    ax.tick_params(colors="#8FA88B")
+                    lw=0.9, linestyle="--", alpha=0.35, zorder=2)
+
+    # 3) Tracks (thick, colored, with halo glow)
+    for tid, pts in by_id.items():
+        ss = [p[0] for p in pts]; ds = [p[1] for p in pts]
+        col = track_palette[tid % len(track_palette)]
+        # Halo
+        ax.plot(ss, ds, "-", color=col, lw=6, alpha=0.20,
+                solid_capstyle="round", zorder=4)
+        # Main line
+        ax.plot(ss, ds, "-", color=col, lw=3.0,
+                marker="o", ms=5,
+                markeredgecolor="#0F1F12", markeredgewidth=1.0,
+                zorder=5)
+        # End-track ID label
+        if pts:
+            sx, sy, _ = pts[-1]
+            ax.text(sx + 0.5, sy, f"TRK#{tid:02d}",
+                    fontsize=10, color=col, fontweight="bold",
+                    family="monospace", va="center",
+                    bbox=dict(facecolor="#0A0F08", edgecolor=col,
+                              boxstyle="round,pad=0.25",
+                              linewidth=1.0, alpha=0.85),
+                    zorder=6)
+
+    # 4) KWS labels with background chip
+    for tid, pts in by_id.items():
+        prev = None
+        for s, d, kw in pts:
+            if kw and kw != prev:
+                kc = KW_COLOURS.get(kw, "#888")
+                ax.text(s, d + 7, kw_kr(kw), fontsize=11,
+                        color="white", fontweight="bold", ha="center",
+                        family="monospace",
+                        bbox=dict(facecolor=kc, edgecolor="white",
+                                  boxstyle="round,pad=0.25",
+                                  linewidth=1.0, alpha=0.92),
+                        zorder=7)
+                prev = kw
+
+    # 5) Current-scan cursor (highlighted)
+    ax.axvline(scan_idx, color="#A93226", lw=3.5, alpha=0.85,
+               zorder=8)
+    ax.scatter([scan_idx], [angles[-1] - 2], marker="v",
+               s=160, color="#A93226", edgecolor="white", lw=1.2,
+               zorder=9)
+    ax.text(scan_idx, angles[-1] + 1, f"NOW T+{scan_idx:03d}",
+            fontsize=10, color="#A93226", fontweight="bold",
+            ha="center", family="monospace", zorder=10)
+
+    # 6) Axes
+    ax.set_xlim(-0.8, n + 1.5)
+    ax.set_ylim(angles[0] - 4, angles[-1] + 8)
+    ax.set_xlabel("MISSION SCAN  (T+)", color="#A3B8A0",
+                  family="monospace", fontsize=12, fontweight="bold")
+    ax.set_ylabel("TARGET BEARING  (DEG)", color="#A3B8A0",
+                  family="monospace", fontsize=12, fontweight="bold")
+    ax.tick_params(colors="#A3B8A0", labelsize=11)
+
+    # Bearing reference lines
+    for ref in (-60, -30, 0, 30, 60):
+        ax.axhline(ref, color="#2D4A2D", lw=0.6, alpha=0.4,
+                   linestyle="-", zorder=1)
+
     for spine in ax.spines.values():
         spine.set_color("#2D4A2D")
-    ax.grid(alpha=0.18, color="#2D4A2D")
-    ax.set_title("TRACK + KWS TIMELINE",
-                 color="#C9A961", fontsize=14, fontweight="bold",
-                 family="monospace", loc="left")
+    ax.grid(alpha=0.10, color="#2D4A2D", linestyle=":")
+
+    # Title (left) + meta (right)
+    ax.set_title("TRACK  +  KWS  TIMELINE",
+                 color="#C9A961", fontsize=15, fontweight="bold",
+                 family="monospace", loc="left", pad=12)
+    n_tracks = len(by_id)
+    n_dets = sum(len(p) for p in by_id.values())
+    fig.text(0.985, 0.965,
+             f"TRACKS  {n_tracks}  //  DETECTIONS  {n_dets}  //  "
+             f"SCANS  {n}",
+             ha="right", va="top", fontsize=10, color="#8FA88B",
+             family="monospace")
+
     fig.tight_layout()
     return fig
 
