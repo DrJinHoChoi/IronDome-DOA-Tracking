@@ -607,21 +607,46 @@ def fig_sparkline(values, color="#00D9FF"):
 # --------------------------------------------------------------------- #
 # 라이브 캡처                                                            #
 # --------------------------------------------------------------------- #
-def capture_camera(idx):
+_CAM_HANDLES = {}   # cache cv2.VideoCapture across captures (avoid open/close)
+
+
+def _get_cam(idx):
     import cv2
-    cam = cv2.VideoCapture(int(idx))
+    idx = int(idx)
+    if idx not in _CAM_HANDLES or not _CAM_HANDLES[idx].isOpened():
+        # Use DSHOW backend on Windows -- much faster init than default
+        cap = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
+        if not cap.isOpened():
+            cap = cv2.VideoCapture(idx)
+        cap.set(cv2.CAP_PROP_BUFFERSIZE, 1)  # latest frame only
+        _CAM_HANDLES[idx] = cap
+    return _CAM_HANDLES[idx]
+
+
+def capture_camera(idx):
+    """Grab one frame from a cached camera handle (no open/close each time)."""
+    import cv2
+    cam = _get_cam(idx)
+    if not cam.isOpened():
+        return None
+    # Drain any stale buffered frame to keep latency low
+    for _ in range(2):
+        cam.grab()
     ok, frame = cam.read()
-    cam.release()
     if not ok or frame is None:
         return None
     return cv2.cvtColor(frame, cv2.COLOR_BGR2RGB), frame
 
 
 def capture_mic(seconds, channels, device):
+    """Non-blocking-ish: record then return. Default 0.5 s for auto mode
+    to avoid UI freeze (was 1.5 s)."""
     import sounddevice as sd
     n = int(seconds * 16000)
-    return sd.rec(n, samplerate=16000, channels=channels,
-                  device=device, dtype="float32", blocking=True)
+    rec = sd.rec(n, samplerate=16000, channels=channels,
+                 device=device, dtype="float32", blocking=False)
+    sd.wait()
+    return rec
 
 
 # --------------------------------------------------------------------- #
@@ -701,8 +726,17 @@ def main():
             d["id"], st.session_state.rerun_nonce)
 
     # ---- Auto refresh ----
+    # 자동 재생만 켜면 빠른 tick (1s/play_speed); 캡처가 켜진 경우엔
+    # blocking I/O 동안 UI 멈춤을 줄이려고 인터벌을 늘림.
     if auto_play or auto_capture_cam or auto_capture_mic or auto_select:
-        interval_ms = int(1000 / play_speed) if auto_play else 1000
+        if auto_capture_mic:
+            interval_ms = 1500       # 마이크 0.5s + 처리 여유
+        elif auto_capture_cam:
+            interval_ms = 1000       # 카메라 grab은 빠름
+        elif auto_play:
+            interval_ms = max(500, int(1000 / play_speed))
+        else:
+            interval_ms = 1000
         tick = st_autorefresh(interval=interval_ms, key="ops_tick")
     else:
         tick = 0
@@ -971,7 +1005,8 @@ def main():
                     if "vision_net" not in st.session_state:
                         net, status = load_ncconv_classifier()
                         st.session_state.vision_net = net
-                    pair = capture_camera(cam_idx)
+                    with st.spinner("프레임 캡처 + NC-Conv 분류 ..."):
+                        pair = capture_camera(cam_idx)
                     if pair is None:
                         st.error(f"CAM {cam_idx} OFFLINE")
                     else:
@@ -1010,9 +1045,11 @@ def main():
                 f"font-size:0.82rem;margin-top:12px'>:microphone:  EAR  //  "
                 f"NC-{kws_model.upper()}  &nbsp;<span style='color:#5B7FA3'>{mic_status}</span></div>",
                 unsafe_allow_html=True)
-            if (mic_trigger or
-                st.button("CAPTURE 1.5s AUDIO", key="ear_btn",
-                          use_container_width=True)):
+            manual_btn = st.button("CAPTURE 1.0s AUDIO", key="ear_btn",
+                                    use_container_width=True)
+            if mic_trigger or manual_btn:
+                # Auto mode = 0.5 s (UI 멈춤 최소화), 수동 = 1.0 s
+                cap_sec = 0.5 if mic_trigger else 1.0
                 try:
                     from drone_demo_kws import RealKWSClassifier
                     if ("kws_obj" not in st.session_state or
@@ -1022,8 +1059,9 @@ def main():
                             model=kws_model, backbone=kws_backbone)
                         st.session_state.kws_tag = (kws_model,
                                                      kws_backbone)
-                    rec = capture_mic(1.5, int(mic_channels),
-                                       int(mic_device))
+                    with st.spinner(f"녹음 {cap_sec}s ..."):
+                        rec = capture_mic(cap_sec, int(mic_channels),
+                                           int(mic_device))
                     rms = np.sqrt((rec ** 2).mean(axis=0) + 1e-12)
                     mono = rec.mean(axis=1)
                     wav = np.pad(mono,
