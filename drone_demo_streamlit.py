@@ -666,17 +666,32 @@ def fig_timeline(history, labelled, scenario, scan_idx, color,
 
 
 def fig_sparkline(values, color="#C9A961"):
-    fig, ax = plt.subplots(figsize=(2.5, 0.6))
-    fig.patch.set_facecolor("#14201A")
-    ax.set_facecolor("#14201A")
+    fig, ax = plt.subplots(figsize=(12, 2.0))
+    fig.patch.set_facecolor("#0F1F12")
+    ax.set_facecolor("#0F1F12")
     if len(values) > 1:
-        ax.plot(values, color=color, lw=2.03)
-        ax.fill_between(range(len(values)), values, color=color, alpha=0.18)
+        x = list(range(len(values)))
+        ax.plot(x, values, color=color, lw=3.0,
+                marker="o", ms=5, markeredgecolor="#0A0F08",
+                markeredgewidth=0.5)
+        ax.fill_between(x, values, color=color, alpha=0.22)
+        # Threshold lines
+        ax.axhline(8, color="#DAA520", lw=0.8, ls=":", alpha=0.6)
+        ax.axhline(15, color="#A93226", lw=0.8, ls=":", alpha=0.6)
+        ax.text(0, 8.2, "ELEVATED 8", fontsize=8, color="#DAA520",
+                fontweight="bold", family="monospace")
+        ax.text(0, 15.2, "CRITICAL 15", fontsize=8, color="#A93226",
+                fontweight="bold", family="monospace")
+        # Highlight latest point
+        ax.scatter([x[-1]], [values[-1]], s=160, color=color,
+                   edgecolor="white", linewidth=1.5, zorder=5)
     ax.set_xticks([]); ax.set_yticks([])
     for s in ax.spines.values():
         s.set_visible(False)
-    ax.set_xlim(0, max(len(values) - 1, 1))
-    fig.subplots_adjust(left=0, right=1, top=1, bottom=0)
+    ax.set_xlim(-0.5, max(len(values) - 1, 1) + 0.5)
+    ymax = max(max(values, default=0), 18)
+    ax.set_ylim(0, ymax * 1.15)
+    fig.subplots_adjust(left=0.02, right=0.99, top=0.95, bottom=0.05)
     return fig
 
 
@@ -1074,10 +1089,8 @@ def main():
     total_threats = sum(
         sum(threat_level(kw) for _, _, kw in lab[min(scan_idx, len(lab) - 1)])
         for sc, hist, lab in fleet_data.values())
-    st.session_state.threat_history.append(total_threats)
-    if len(st.session_state.threat_history) > 60:
-        st.session_state.threat_history = (
-            st.session_state.threat_history[-60:])
+    # threat_history는 fragment(threat_trend_panel)에서 매 갱신마다 append.
+    # 메인 스크립트에서는 header banner 색상 결정만.
     threat_class = ("alert" if total_threats >= 15
                     else "warn" if total_threats >= 8 else "ok")
 
@@ -1276,9 +1289,24 @@ def main():
                         label, conf = classify(
                             st.session_state.vision_net, frame)
                         sigma = estimate_sigma(frame)
-                        st.image(rgb, use_container_width=True,
-                                 caption=f"NC-Conv: {label} "
-                                         f"({conf*100:.0f}%) | σ {sigma:.2f}")
+                        st.image(rgb, use_container_width=True)
+                        st.markdown(
+                            f"<div style='padding:14px;border-radius:8px;"
+                            f"background:linear-gradient(135deg,"
+                            f"#C9A96155,#C9A96111);"
+                            f"border:2px solid #C9A961;"
+                            f"color:#FFFFFF;text-align:center;"
+                            f"font-family:Orbitron,monospace;"
+                            f"font-size:1.6em;font-weight:900;"
+                            f"letter-spacing:0.05em;margin-top:6px'>"
+                            f"NC-Conv :  {label.upper()}  "
+                            f"<span style='color:#7BA05B'>"
+                            f"({conf*100:.0f}%)</span>"
+                            f"<div style='font-size:0.55em;color:#A3B8A0;"
+                            f"font-weight:600;letter-spacing:0.12em;"
+                            f"margin-top:4px'>"
+                            f"σ-GATE  {sigma:.2f}</div></div>",
+                            unsafe_allow_html=True)
                         st.session_state.log.append(
                             f"[{time.strftime('%H:%M:%S')}] "
                             f"{selected['id']} EYE: {label}")
@@ -1328,16 +1356,20 @@ def main():
                         else ("?", 0.0))
                     col = KW_COLOURS.get(label, "#7F8C8D")
                     st.markdown(
-                        f"<div style='padding:14px;border-radius:6px;"
-                        f"background:linear-gradient(135deg,{col}33,"
-                        f"{col}11);border:1px solid {col};"
+                        f"<div style='padding:22px 18px;"
+                        f"border-radius:10px;"
+                        f"background:linear-gradient(135deg,{col}55,"
+                        f"{col}11);border:2px solid {col};"
                         f"color:#FFFFFF;text-align:center;"
                         f"font-family:Orbitron,monospace;"
-                        f"font-size:1.4em;font-weight:700;"
-                        f"letter-spacing:0.06em'>"
+                        f"font-size:2.2em;font-weight:900;"
+                        f"letter-spacing:0.08em;"
+                        f"box-shadow:0 0 18px {col}44'>"
                         f"{kw_kr(label).upper()} "
-                        f"<small style='font-size:0.6em;color:#8FA88B'>"
-                        f"CONF {conf:.2f}</small></div>",
+                        f"<div style='font-size:0.42em;color:#A3B8A0;"
+                        f"font-weight:600;letter-spacing:0.15em;"
+                        f"margin-top:6px'>"
+                        f"CONF {conf:.2f}</div></div>",
                         unsafe_allow_html=True)
                     st.session_state.log.append(
                         f"[{time.strftime('%H:%M:%S')}] "
@@ -1370,29 +1402,46 @@ def main():
                     " ".join(chips) + "</div>",
                     unsafe_allow_html=True)
 
-    # ---- Threat trend (sparkline) — moved to MIDDLE for prominence ----
-    if len(st.session_state.threat_history) > 2:
-        st.markdown(
-            "<div class='sec-title'>:chart_with_upwards_trend:  "
-            "THREAT TREND  "
-            "<span style='color:#8FA88B;font-weight:400;font-size:0.7em'>"
-            "  ―  최근 60초 함대 위협 점수 추세</span></div>",
-            unsafe_allow_html=True)
+    # ---- Threat trend (sparkline) — fragment for live animation ----
+    st.markdown(
+        "<div class='sec-title'>:chart_with_upwards_trend:  "
+        "THREAT TREND  "
+        "<span style='color:#8FA88B;font-weight:400;font-size:0.7em'>"
+        "  ―  최근 60초 함대 위협 점수 추세 (실시간 갱신)</span></div>",
+        unsafe_allow_html=True)
+
+    @st.fragment(run_every=live_interval)
+    def threat_trend_panel():
+        # 매 fragment rerun마다 최신 점수 새로 계산 후 history 갱신
+        si = min(st.session_state.get("scan_idx", n_scans // 2),
+                 n_scans - 1)
+        cur = sum(
+            sum(threat_level(kw)
+                for _, _, kw in lab[min(si, len(lab) - 1)])
+            for sc, hist, lab in fleet_data.values())
+        st.session_state.threat_history.append(cur)
+        if len(st.session_state.threat_history) > 60:
+            st.session_state.threat_history = (
+                st.session_state.threat_history[-60:])
+
+        if len(st.session_state.threat_history) < 2:
+            return
+
+        trend_color = ("#A93226" if cur >= 15
+                       else "#DAA520" if cur >= 8 else "#7BA05B")
+        label = ("CRITICAL" if cur >= 15
+                 else "ELEVATED" if cur >= 8 else "NORMAL")
+
         sp_col1, sp_col2, sp_col3 = st.columns([1.2, 4.0, 1.2])
         with sp_col1:
-            cur = total_threats
-            trend_color = ("#A93226" if cur >= 15
-                           else "#DAA520" if cur >= 8 else "#7BA05B")
-            label = ("CRITICAL" if cur >= 15
-                     else "ELEVATED" if cur >= 8 else "NORMAL")
             st.markdown(
                 f"<div style='font-family:Orbitron,monospace;"
                 f"text-align:center;padding:6px'>"
                 f"<div style='color:#8FA88B;font-size:0.7rem;"
                 f"letter-spacing:0.15em'>SCORE</div>"
-                f"<div style='color:{trend_color};font-size:2.0rem;"
+                f"<div style='color:{trend_color};font-size:2.4rem;"
                 f"font-weight:900;margin:2px 0'>{cur:02d}</div>"
-                f"<div style='color:{trend_color};font-size:0.7rem;"
+                f"<div style='color:{trend_color};font-size:0.75rem;"
                 f"letter-spacing:0.15em;font-weight:700'>{label}</div>"
                 f"</div>",
                 unsafe_allow_html=True)
@@ -1407,13 +1456,14 @@ def main():
             peak = max(st.session_state.threat_history)
             st.markdown(
                 f"<div style='font-family:JetBrains Mono,monospace;"
-                f"font-size:0.78rem;line-height:1.7;color:#A3B8A0;"
+                f"font-size:0.85rem;line-height:1.7;color:#A3B8A0;"
                 f"padding:8px'>"
                 f"AVG 60s &nbsp;<b style='color:#C9A961'>{avg_60s:.1f}</b><br>"
                 f"PEAK &nbsp;<b style='color:#A93226'>{peak}</b><br>"
                 f"SAMPLES &nbsp;<b>{len(st.session_state.threat_history)}</b>"
                 f"</div>",
                 unsafe_allow_html=True)
+    threat_trend_panel()
 
     # ---- Threat board ----
     st.markdown("<div class='sec-title'>:warning:  THREAT BOARD  // "
@@ -1470,6 +1520,126 @@ def main():
                                 selected["color"], show_gt, show_occl),
                   clear_figure=True)
     timeline_panel()
+
+    # ---- SITUATIONAL GRAPHS (fleet snapshot) ----
+    st.markdown(
+        "<div class='sec-title'>:bar_chart:  SITUATIONAL GRAPHS  "
+        "<span style='color:#8FA88B;font-weight:400;font-size:0.7em'>"
+        "  ―  함대 상황 다중 그래프 (실시간)</span></div>",
+        unsafe_allow_html=True)
+
+    @st.fragment(run_every=live_interval)
+    def situation_panel():
+        si = min(st.session_state.get("scan_idx", n_scans // 2),
+                 n_scans - 1)
+        c1, c2, c3 = st.columns(3)
+
+        # ── (a) 드론별 현재 탐지 수 (bar) ───────────────────
+        with c1:
+            fig, ax = plt.subplots(figsize=(5, 3.4))
+            fig.patch.set_facecolor("#0F1F12")
+            ax.set_facecolor("#0F1F12")
+            names = [d["code"] for d in fleet]
+            counts = [len(fleet_data[d["id"]][2][min(si,
+                len(fleet_data[d["id"]][2]) - 1)]) for d in fleet]
+            colors = [d["color"] for d in fleet]
+            bars = ax.bar(names, counts, color=colors, alpha=0.85,
+                          edgecolor="white", linewidth=1.2)
+            for bar, val in zip(bars, counts):
+                ax.text(bar.get_x() + bar.get_width()/2,
+                        bar.get_height() + 0.08, str(val),
+                        ha="center", color="white",
+                        fontweight="bold", fontsize=12,
+                        family="monospace")
+            ax.set_title("CONTACTS  PER  DRONE",
+                         color="#C9A961", fontsize=12,
+                         fontweight="bold", family="monospace",
+                         loc="left", pad=10)
+            ax.tick_params(colors="#A3B8A0", labelsize=10)
+            for s in ax.spines.values():
+                s.set_color("#2D4A2D")
+            ax.set_ylim(0, max(counts + [1]) * 1.3)
+            ax.grid(axis="y", alpha=0.15, color="#2D4A2D")
+            fig.tight_layout()
+            st.pyplot(fig, clear_figure=True)
+
+        # ── (b) 함대 배터리 수준 (horizontal bar) ───────────
+        with c2:
+            fig, ax = plt.subplots(figsize=(5, 3.4))
+            fig.patch.set_facecolor("#0F1F12")
+            ax.set_facecolor("#0F1F12")
+            names = [d["id"] for d in fleet]
+            bats = [d["battery"] for d in fleet]
+            bcols = ["#7BA05B" if b > 60 else "#DAA520"
+                     if b > 30 else "#A93226" for b in bats]
+            bars = ax.barh(names, bats, color=bcols, alpha=0.88,
+                           edgecolor="white", linewidth=1.0)
+            for bar, val in zip(bars, bats):
+                ax.text(val + 1.5, bar.get_y() + bar.get_height()/2,
+                        f"{val}%", va="center", color="white",
+                        fontweight="bold", fontsize=11,
+                        family="monospace")
+            ax.set_xlim(0, 110)
+            ax.axvline(30, color="#A93226", lw=1, ls=":", alpha=0.6)
+            ax.axvline(60, color="#DAA520", lw=1, ls=":", alpha=0.6)
+            ax.set_title("FLEET  BATTERY  (%)",
+                         color="#C9A961", fontsize=12,
+                         fontweight="bold", family="monospace",
+                         loc="left", pad=10)
+            ax.tick_params(colors="#A3B8A0", labelsize=10)
+            for s in ax.spines.values():
+                s.set_color("#2D4A2D")
+            ax.grid(axis="x", alpha=0.15, color="#2D4A2D")
+            ax.invert_yaxis()
+            fig.tight_layout()
+            st.pyplot(fig, clear_figure=True)
+
+        # ── (c) KWS 클래스 분포 (전 함대 누적, donut) ───────
+        with c3:
+            from collections import Counter
+            counter = Counter()
+            for d in fleet:
+                _, _, lab = fleet_data[d["id"]]
+                for s in range(min(si + 1, len(lab))):
+                    for _, _, kw in lab[s]:
+                        if kw:
+                            counter[kw] += 1
+            if not counter:
+                counter["IDLE"] = 1
+            kws = list(counter.keys())
+            vals = list(counter.values())
+            cols = [KW_COLOURS.get(k, "#8B6F47") for k in kws]
+            fig, ax = plt.subplots(figsize=(5, 3.4))
+            fig.patch.set_facecolor("#0F1F12")
+            ax.set_facecolor("#0F1F12")
+            wedges, _ = ax.pie(vals, colors=cols,
+                                wedgeprops=dict(width=0.32,
+                                    edgecolor="#0A0F08", linewidth=2),
+                                startangle=90, counterclock=False)
+            ax.text(0, 0.05, str(sum(vals)),
+                    ha="center", va="center",
+                    color="#C9A961", fontsize=22, fontweight="bold",
+                    family="monospace")
+            ax.text(0, -0.18, "DETECTIONS", ha="center", va="center",
+                    color="#A3B8A0", fontsize=8.5,
+                    fontweight="bold", family="monospace")
+            ax.set_title("KWS  CLASS  MIX",
+                         color="#C9A961", fontsize=12,
+                         fontweight="bold", family="monospace",
+                         loc="left", pad=10)
+            # legend (right side)
+            handles = [plt.Rectangle((0, 0), 1, 1, color=c)
+                       for c in cols]
+            ax.legend([f"{kw_kr(k)} ({v})"
+                       for k, v in zip(kws, vals)],
+                       handles=handles, loc="center left",
+                       bbox_to_anchor=(1.0, 0.5),
+                       frameon=False, fontsize=9,
+                       labelcolor="#A3B8A0",
+                       prop={"family": "monospace"})
+            fig.tight_layout()
+            st.pyplot(fig, clear_figure=True)
+    situation_panel()
 
     # ---- Comm log ----
     st.markdown("<div class='sec-title'>:scroll:  COMM // EVENT LOG</div>",
