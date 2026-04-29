@@ -1370,6 +1370,51 @@ def main():
                     " ".join(chips) + "</div>",
                     unsafe_allow_html=True)
 
+    # ---- Threat trend (sparkline) — moved to MIDDLE for prominence ----
+    if len(st.session_state.threat_history) > 2:
+        st.markdown(
+            "<div class='sec-title'>:chart_with_upwards_trend:  "
+            "THREAT TREND  "
+            "<span style='color:#8FA88B;font-weight:400;font-size:0.7em'>"
+            "  ―  최근 60초 함대 위협 점수 추세</span></div>",
+            unsafe_allow_html=True)
+        sp_col1, sp_col2, sp_col3 = st.columns([1.2, 4.0, 1.2])
+        with sp_col1:
+            cur = total_threats
+            trend_color = ("#A93226" if cur >= 15
+                           else "#DAA520" if cur >= 8 else "#7BA05B")
+            label = ("CRITICAL" if cur >= 15
+                     else "ELEVATED" if cur >= 8 else "NORMAL")
+            st.markdown(
+                f"<div style='font-family:Orbitron,monospace;"
+                f"text-align:center;padding:6px'>"
+                f"<div style='color:#8FA88B;font-size:0.7rem;"
+                f"letter-spacing:0.15em'>SCORE</div>"
+                f"<div style='color:{trend_color};font-size:2.0rem;"
+                f"font-weight:900;margin:2px 0'>{cur:02d}</div>"
+                f"<div style='color:{trend_color};font-size:0.7rem;"
+                f"letter-spacing:0.15em;font-weight:700'>{label}</div>"
+                f"</div>",
+                unsafe_allow_html=True)
+        with sp_col2:
+            st.pyplot(fig_sparkline(
+                st.session_state.threat_history,
+                color=trend_color),
+                clear_figure=True)
+        with sp_col3:
+            avg_60s = (sum(st.session_state.threat_history) /
+                       max(len(st.session_state.threat_history), 1))
+            peak = max(st.session_state.threat_history)
+            st.markdown(
+                f"<div style='font-family:JetBrains Mono,monospace;"
+                f"font-size:0.78rem;line-height:1.7;color:#A3B8A0;"
+                f"padding:8px'>"
+                f"AVG 60s &nbsp;<b style='color:#C9A961'>{avg_60s:.1f}</b><br>"
+                f"PEAK &nbsp;<b style='color:#A93226'>{peak}</b><br>"
+                f"SAMPLES &nbsp;<b>{len(st.session_state.threat_history)}</b>"
+                f"</div>",
+                unsafe_allow_html=True)
+
     # ---- Threat board ----
     st.markdown("<div class='sec-title'>:warning:  THREAT BOARD  // "
                 f"{selected['id']}</div>",
@@ -1425,20 +1470,6 @@ def main():
                                 selected["color"], show_gt, show_occl),
                   clear_figure=True)
     timeline_panel()
-
-    # ---- Threat history sparkline ----
-    if len(st.session_state.threat_history) > 2:
-        sp_col1, sp_col2 = st.columns([1.0, 3.0])
-        with sp_col1:
-            st.markdown(
-                "<div class='unit-line'><span class='k'>THREAT TREND (60s)</span></div>",
-                unsafe_allow_html=True)
-        with sp_col2:
-            st.pyplot(fig_sparkline(
-                st.session_state.threat_history,
-                color="#A93226" if total_threats >= 15
-                else "#C09030" if total_threats >= 8 else "#7BA05B"),
-                clear_figure=True)
 
     # ---- Comm log ----
     st.markdown("<div class='sec-title'>:scroll:  COMM // EVENT LOG</div>",
