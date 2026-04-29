@@ -1070,32 +1070,41 @@ def main():
             f"HDG={selected['heading']:03d}°</span>",
             unsafe_allow_html=True)
 
-        # Camera
-        if selected["live_cam"]:
-            cam_trigger = False
-            if auto_capture_cam:
-                if "auto_cam_last" not in st.session_state:
-                    st.session_state.auto_cam_last = 0
-                if time.time() - st.session_state.auto_cam_last > 3:
-                    cam_trigger = True
-                    st.session_state.auto_cam_last = time.time()
+        # Camera fragment — auto_capture_cam ON 시 ~3초마다 캡처 + 분류
+        cam_every = 3.0 if auto_capture_cam else None
 
-            cam_status = ":red_circle: REC" if auto_capture_cam else ":eye: IDLE"
+        @st.fragment(run_every=cam_every)
+        def camera_panel():
+            if not selected["live_cam"]:
+                st.markdown(
+                    "<div style='font-family:JetBrains Mono,monospace;"
+                    "color:#5B7FA3;font-size:0.78rem;margin-top:8px'>"
+                    ":movie_camera:  EYE  //  "
+                    "<span style='color:#FFB400'>SIMULATED</span></div>",
+                    unsafe_allow_html=True)
+                return
+
+            cam_status = (":red_circle: REC" if auto_capture_cam
+                          else ":eye: IDLE")
             st.markdown(
-                f"<div style='font-family:JetBrains Mono,monospace;color:#00D9FF;"
-                f"font-size:0.82rem;margin-top:8px'>:movie_camera:  EYE  //  "
-                f"NC-Conv-SSM  &nbsp;<span style='color:#5B7FA3'>{cam_status}</span></div>",
+                f"<div style='font-family:JetBrains Mono,monospace;"
+                f"color:#00D9FF;font-size:0.82rem;margin-top:8px'>"
+                f":movie_camera:  EYE  //  NC-Conv-SSM  "
+                f"&nbsp;<span style='color:#5B7FA3'>{cam_status}</span>"
+                f"</div>",
                 unsafe_allow_html=True)
-            if (cam_trigger or
-                st.button("CAPTURE FRAME", key="eye_btn",
-                          use_container_width=True)):
+            manual_btn = st.button("CAPTURE FRAME", key="eye_btn",
+                                    use_container_width=True)
+            # 자동 모드면 fragment 재실행마다 캡처. 수동이면 버튼 눌림 때만.
+            if manual_btn or auto_capture_cam:
                 try:
                     from drone_demo_vision import (load_ncconv_classifier,
-                                                   classify, estimate_sigma)
+                                                   classify,
+                                                   estimate_sigma)
                     if "vision_net" not in st.session_state:
                         net, status = load_ncconv_classifier()
                         st.session_state.vision_net = net
-                    with st.spinner("프레임 캡처 + NC-Conv 분류 ..."):
+                    with st.spinner("CAPTURE + NC-Conv ..."):
                         pair = capture_camera(cam_idx)
                     if pair is None:
                         st.error(f"CAM {cam_idx} OFFLINE")
@@ -1112,34 +1121,28 @@ def main():
                             f"{selected['id']} EYE: {label}")
                 except Exception as e:
                     st.error(f"VISION FAULT: {e}")
-        else:
-            st.markdown(
-                "<div style='font-family:JetBrains Mono,monospace;color:#5B7FA3;"
-                "font-size:0.78rem;margin-top:8px'>:movie_camera:  EYE  //  "
-                "<span style='color:#FFB400'>SIMULATED</span></div>",
-                unsafe_allow_html=True)
+        camera_panel()
 
-        # Mic
-        if selected["live_mic"]:
-            mic_trigger = False
-            if auto_capture_mic:
-                if "auto_mic_last" not in st.session_state:
-                    st.session_state.auto_mic_last = 0
-                if time.time() - st.session_state.auto_mic_last > 3:
-                    mic_trigger = True
-                    st.session_state.auto_mic_last = time.time()
+        # Mic fragment — auto_capture_mic ON 시 ~3초마다 녹음 + 분류
+        mic_every = 3.0 if auto_capture_mic else None
 
-            mic_status = ":red_circle: LIVE" if auto_capture_mic else ":ear: IDLE"
+        @st.fragment(run_every=mic_every)
+        def mic_panel():
+            if not selected["live_mic"]:
+                return  # 시뮬 표시는 아래 else 블록에서
+            mic_status = (":red_circle: LIVE" if auto_capture_mic
+                           else ":ear: IDLE")
             st.markdown(
-                f"<div style='font-family:JetBrains Mono,monospace;color:#00D9FF;"
-                f"font-size:0.82rem;margin-top:12px'>:microphone:  EAR  //  "
-                f"NC-{kws_model.upper()}  &nbsp;<span style='color:#5B7FA3'>{mic_status}</span></div>",
+                f"<div style='font-family:JetBrains Mono,monospace;"
+                f"color:#00D9FF;font-size:0.82rem;margin-top:12px'>"
+                f":microphone:  EAR  //  NC-{kws_model.upper()}  "
+                f"&nbsp;<span style='color:#5B7FA3'>{mic_status}</span>"
+                f"</div>",
                 unsafe_allow_html=True)
             manual_btn = st.button("CAPTURE 1.0s AUDIO", key="ear_btn",
                                     use_container_width=True)
-            if mic_trigger or manual_btn:
-                # Auto mode = 0.5 s (UI 멈춤 최소화), 수동 = 1.0 s
-                cap_sec = 0.5 if mic_trigger else 1.0
+            if manual_btn or auto_capture_mic:
+                cap_sec = 0.5 if auto_capture_mic else 1.0
                 try:
                     from drone_demo_kws import RealKWSClassifier
                     if ("kws_obj" not in st.session_state or
@@ -1149,7 +1152,7 @@ def main():
                             model=kws_model, backbone=kws_backbone)
                         st.session_state.kws_tag = (kws_model,
                                                      kws_backbone)
-                    with st.spinner(f"녹음 {cap_sec}s ..."):
+                    with st.spinner(f"REC {cap_sec}s ..."):
                         rec = capture_mic(cap_sec, int(mic_channels),
                                            int(mic_device))
                     rms = np.sqrt((rec ** 2).mean(axis=0) + 1e-12)
@@ -1163,11 +1166,14 @@ def main():
                     col = KW_COLOURS.get(label, "#7F8C8D")
                     st.markdown(
                         f"<div style='padding:14px;border-radius:6px;"
-                        f"background:linear-gradient(135deg,{col}33,{col}11);"
-                        f"border:1px solid {col};color:#FFFFFF;text-align:center;"
+                        f"background:linear-gradient(135deg,{col}33,"
+                        f"{col}11);border:1px solid {col};"
+                        f"color:#FFFFFF;text-align:center;"
                         f"font-family:Orbitron,monospace;"
-                        f"font-size:1.4em;font-weight:700;letter-spacing:0.06em'>"
-                        f"{kw_kr(label).upper()} <small style='font-size:0.6em;color:#5B7FA3'>"
+                        f"font-size:1.4em;font-weight:700;"
+                        f"letter-spacing:0.06em'>"
+                        f"{kw_kr(label).upper()} "
+                        f"<small style='font-size:0.6em;color:#5B7FA3'>"
                         f"CONF {conf:.2f}</small></div>",
                         unsafe_allow_html=True)
                     st.session_state.log.append(
@@ -1175,7 +1181,9 @@ def main():
                         f"{selected['id']} EAR: {kw_kr(label)}")
                 except Exception as e:
                     st.error(f"AUDIO FAULT: {e}")
-        else:
+        mic_panel()
+
+        if not selected["live_mic"]:
             st.markdown(
                 "<div style='font-family:JetBrains Mono,monospace;color:#5B7FA3;"
                 "font-size:0.78rem;margin-top:12px'>:microphone:  EAR  //  "
