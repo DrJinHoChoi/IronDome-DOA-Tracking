@@ -44,12 +44,12 @@ CSS = """
 html, body, [class*="css"], .main {
     font-family: 'Rajdhani', 'Segoe UI', sans-serif !important;
 }
-.main { background: radial-gradient(ellipse at top, #0B1426 0%, #050810 70%) !important; }
+.main { background: radial-gradient(ellipse at top, #14201A 0%, #0A0F08 70%) !important; }
 .stApp { background: transparent !important; }
 
 /* Sidebar */
 section[data-testid="stSidebar"] {
-    background: linear-gradient(180deg, #081222 0%, #050810 100%) !important;
+    background: linear-gradient(180deg, #0F1F12 0%, #0A0F08 100%) !important;
     border-right: 1px solid rgba(0, 217, 255, 0.18);
 }
 section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !important; }
@@ -60,7 +60,7 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
     font-weight: 900;
     font-size: 1.9rem;
     letter-spacing: 0.06em;
-    background: linear-gradient(90deg, #00D9FF 0%, #7C5CFF 50%, #FF00B7 100%);
+    background: linear-gradient(90deg, #C9A961 0%, #7BA05B 50%, #A93226 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     text-shadow: 0 0 40px rgba(0, 217, 255, 0.18);
@@ -70,7 +70,7 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
 .hero-sub {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.78rem;
-    color: #5B7FA3;
+    color: #8FA88B;
     letter-spacing: 0.18em;
     text-transform: uppercase;
 }
@@ -96,7 +96,7 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
 .subsys-label {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.66rem;
-    color: #5B7FA3;
+    color: #8FA88B;
     letter-spacing: 0.14em;
     text-transform: uppercase;
 }
@@ -104,11 +104,11 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
     font-family: 'Orbitron', monospace;
     font-size: 1.05rem;
     font-weight: 700;
-    color: #00D9FF;
+    color: #C9A961;
 }
-.subsys-value.warn { color: #FFB400; }
-.subsys-value.alert { color: #FF3B5C; text-shadow: 0 0 8px rgba(255,59,92,0.6); }
-.subsys-value.ok { color: #2EE6A6; }
+.subsys-value.warn { color: #C09030; }
+.subsys-value.alert { color: #A93226; text-shadow: 0 0 8px rgba(255,59,92,0.6); }
+.subsys-value.ok { color: #7BA05B; }
 
 .led {
     display: inline-block;
@@ -122,9 +122,9 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
     0%, 100% { opacity: 1; transform: scale(1); }
     50% { opacity: 0.55; transform: scale(0.85); }
 }
-.led.green  { background: #2EE6A6; color: #2EE6A6; }
-.led.amber  { background: #FFB400; color: #FFB400; }
-.led.red    { background: #FF3B5C; color: #FF3B5C; }
+.led.green  { background: #7BA05B; color: #7BA05B; }
+.led.amber  { background: #C09030; color: #C09030; }
+.led.red    { background: #A93226; color: #A93226; }
 
 /* Fleet card */
 .unit-card {
@@ -138,7 +138,7 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
     position: relative;
 }
 .unit-card.selected {
-    border: 1px solid #00D9FF;
+    border: 1px solid #C9A961;
     box-shadow: 0 0 24px rgba(0, 217, 255, 0.32),
                 inset 0 0 12px rgba(0, 217, 255, 0.08);
 }
@@ -146,8 +146,8 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
     content: "ACTIVE";
     position: absolute;
     top: -10px; left: 14px;
-    background: #00D9FF;
-    color: #0B1426;
+    background: #C9A961;
+    color: #14201A;
     padding: 2px 8px;
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.62rem;
@@ -164,7 +164,7 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
 .unit-role {
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.7rem;
-    color: #5B7FA3;
+    color: #8FA88B;
     letter-spacing: 0.16em;
     text-transform: uppercase;
     margin-bottom: 8px;
@@ -175,11 +175,11 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
     color: #B7CDE6;
     line-height: 1.55;
 }
-.unit-line .k { color: #5B7FA3; }
+.unit-line .k { color: #8FA88B; }
 .unit-line .v { color: #E5F1FF; font-weight: 600; }
-.unit-line .v.warn { color: #FFB400; }
-.unit-line .v.alert { color: #FF3B5C; }
-.unit-line .v.ok { color: #2EE6A6; }
+.unit-line .v.warn { color: #C09030; }
+.unit-line .v.alert { color: #A93226; }
+.unit-line .v.ok { color: #7BA05B; }
 .unit-bar {
     height: 4px;
     background: rgba(0, 217, 255, 0.1);
@@ -189,14 +189,14 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
 }
 .unit-bar-fill {
     height: 100%;
-    background: linear-gradient(90deg, #2EE6A6, #00D9FF);
+    background: linear-gradient(90deg, #7BA05B, #C9A961);
     box-shadow: 0 0 6px rgba(0, 217, 255, 0.6);
 }
 
 /* Threat row */
 .threat-row {
     background: linear-gradient(90deg, rgba(255, 59, 92, 0.10) 0%, rgba(8, 18, 34, 0.6) 60%);
-    border-left: 3px solid #FF3B5C;
+    border-left: 3px solid #A93226;
     padding: 8px 12px;
     margin: 4px 0;
     color: #E5F1FF;
@@ -204,9 +204,9 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.85rem;
 }
-.threat-row.lvl3 { border-left-color: #FFB400; background: linear-gradient(90deg, rgba(255, 180, 0, 0.10) 0%, rgba(8, 18, 34, 0.6) 60%); }
-.threat-row.lvl2 { border-left-color: #00D9FF; background: linear-gradient(90deg, rgba(0, 217, 255, 0.08) 0%, rgba(8, 18, 34, 0.6) 60%); }
-.threat-row.lvl1 { border-left-color: #5B7FA3; background: rgba(8, 18, 34, 0.6); }
+.threat-row.lvl3 { border-left-color: #C09030; background: linear-gradient(90deg, rgba(255, 180, 0, 0.10) 0%, rgba(8, 18, 34, 0.6) 60%); }
+.threat-row.lvl2 { border-left-color: #C9A961; background: linear-gradient(90deg, rgba(0, 217, 255, 0.08) 0%, rgba(8, 18, 34, 0.6) 60%); }
+.threat-row.lvl1 { border-left-color: #8FA88B; background: rgba(8, 18, 34, 0.6); }
 
 .threat-lvl {
     display: inline-block;
@@ -215,11 +215,11 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
     font-weight: 700;
     margin-right: 8px;
 }
-.threat-lvl.l5 { background: #FF3B5C; color: white; }
+.threat-lvl.l5 { background: #A93226; color: white; }
 .threat-lvl.l4 { background: #FF7A1A; color: white; }
-.threat-lvl.l3 { background: #FFB400; color: #0B1426; }
-.threat-lvl.l2 { background: #00D9FF; color: #0B1426; }
-.threat-lvl.l1 { background: #5B7FA3; color: white; }
+.threat-lvl.l3 { background: #C09030; color: #14201A; }
+.threat-lvl.l2 { background: #C9A961; color: #14201A; }
+.threat-lvl.l1 { background: #8FA88B; color: white; }
 
 /* Section titles */
 .sec-title {
@@ -228,7 +228,7 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
     font-weight: 700 !important;
     letter-spacing: 0.18em !important;
     text-transform: uppercase !important;
-    color: #00D9FF !important;
+    color: #C9A961 !important;
     border-bottom: 1px solid rgba(0, 217, 255, 0.18);
     padding-bottom: 4px;
     margin: 18px 0 10px 0 !important;
@@ -238,7 +238,7 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
 .alert-band {
     background: linear-gradient(90deg, rgba(255, 59, 92, 0.30) 0%, rgba(255, 59, 92, 0.05) 80%);
     border: 1px solid rgba(255, 59, 92, 0.5);
-    color: #FF3B5C;
+    color: #A93226;
     padding: 8px 14px;
     border-radius: 4px;
     font-family: 'Orbitron', monospace;
@@ -250,7 +250,7 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
 .alert-band.warn {
     background: linear-gradient(90deg, rgba(255, 180, 0, 0.25) 0%, rgba(255, 180, 0, 0.05) 80%);
     border-color: rgba(255, 180, 0, 0.5);
-    color: #FFB400;
+    color: #C09030;
     animation: none;
 }
 @keyframes bandpulse {
@@ -262,7 +262,7 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
 .stButton > button {
     background: linear-gradient(135deg, #0F2440 0%, #081A30 100%);
     border: 1px solid rgba(0, 217, 255, 0.32);
-    color: #00D9FF;
+    color: #C9A961;
     font-family: 'JetBrains Mono', monospace;
     font-size: 0.82rem;
     letter-spacing: 0.1em;
@@ -270,15 +270,15 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
     transition: all 0.18s;
 }
 .stButton > button:hover {
-    border-color: #00D9FF;
+    border-color: #C9A961;
     color: #ffffff;
     box-shadow: 0 0 16px rgba(0, 217, 255, 0.32);
     background: linear-gradient(135deg, #0F2440 0%, #1A3560 100%);
 }
 .stButton > button:focus { box-shadow: 0 0 16px rgba(0, 217, 255, 0.32); }
 .stButton > button[kind="primary"] {
-    background: linear-gradient(135deg, #00D9FF 0%, #7C5CFF 100%);
-    color: #0B1426;
+    background: linear-gradient(135deg, #C9A961 0%, #7BA05B 100%);
+    color: #14201A;
     border: none;
     font-weight: 700;
 }
@@ -289,7 +289,7 @@ section[data-testid="stSidebar"] * { font-family: 'Rajdhani', sans-serif !import
 /* Code block */
 code, .stCodeBlock {
     background: rgba(8, 18, 34, 0.85) !important;
-    color: #00D9FF !important;
+    color: #C9A961 !important;
     font-family: 'JetBrains Mono', monospace !important;
     border: 1px solid rgba(0, 217, 255, 0.18) !important;
     border-radius: 4px !important;
@@ -314,14 +314,14 @@ p, label, span, div { color: #E5F1FF; }
 .stMarkdown { color: #E5F1FF; }
 [data-testid="stMetricLabel"] {
     font-family: 'JetBrains Mono', monospace !important;
-    color: #5B7FA3 !important;
+    color: #8FA88B !important;
     font-size: 0.7rem !important;
     letter-spacing: 0.12em;
     text-transform: uppercase;
 }
 [data-testid="stMetricValue"] {
     font-family: 'Orbitron', monospace !important;
-    color: #00D9FF !important;
+    color: #C9A961 !important;
 }
 </style>
 """
@@ -335,19 +335,19 @@ def default_fleet():
     return [
         {"id": "ALPHA-01", "code": "A1", "pos": (-30, 20), "heading": 30,
          "scenario": "sar", "live_cam": True, "live_mic": True,
-         "color": "#00D9FF", "battery": 87, "alt": 120, "speed": 12,
+         "color": "#C9A961", "battery": 87, "alt": 120, "speed": 12,
          "role": "OPERATOR / SAR LEAD"},
         {"id": "ALPHA-02", "code": "A2", "pos": (15, 35),  "heading": 270,
          "scenario": "sar", "live_cam": False, "live_mic": False,
-         "color": "#2EE6A6", "battery": 73, "alt": 95, "speed": 14,
+         "color": "#7BA05B", "battery": 73, "alt": 95, "speed": 14,
          "role": "SAR RECON"},
         {"id": "BRAVO-01", "code": "B1", "pos": (40, -10), "heading": 200,
          "scenario": "combat", "live_cam": False, "live_mic": False,
-         "color": "#FFB400", "battery": 64, "alt": 200, "speed": 18,
+         "color": "#C09030", "battery": 64, "alt": 200, "speed": 18,
          "role": "TACTICAL RECON"},
         {"id": "BRAVO-02", "code": "B2", "pos": (-15, -25), "heading": 110,
          "scenario": "combat", "live_cam": False, "live_mic": False,
-         "color": "#FF3B5C", "battery": 41, "alt": 180, "speed": 20,
+         "color": "#A93226", "battery": 41, "alt": 180, "speed": 20,
          "role": "TACTICAL RECON"},
     ]
 
@@ -407,7 +407,7 @@ def cached_run(key, snr_db, n_scans, kws_mode, kws_model,
 # --------------------------------------------------------------------- #
 def fig_tactical(fleet, selected_id, fleet_data, scan_idx):
     fig, ax = plt.subplots(figsize=(8.5, 7))
-    bg = "#050810"
+    bg = "#0A0F08"
     ax.set_facecolor(bg)
     fig.patch.set_facecolor(bg)
     ax.set_xlim(-65, 65); ax.set_ylim(-55, 55)
@@ -415,24 +415,24 @@ def fig_tactical(fleet, selected_id, fleet_data, scan_idx):
 
     # 격자
     for r in (10, 20, 30, 40, 50):
-        circ = plt.Circle((0, 0), r, fill=False, color="#1A3A5F",
+        circ = plt.Circle((0, 0), r, fill=False, color="#2D4A2D",
                           lw=0.6, alpha=0.55, linestyle="--")
         ax.add_patch(circ)
-        ax.text(r * 0.71, -r * 0.71, f"{r:02d} KM", color="#1A3A5F",
+        ax.text(r * 0.71, -r * 0.71, f"{r:02d} KM", color="#2D4A2D",
                 fontsize=7, ha="center",
                 family="monospace")
-    ax.axhline(0, color="#1A3A5F", lw=0.4, alpha=0.45)
-    ax.axvline(0, color="#1A3A5F", lw=0.4, alpha=0.45)
+    ax.axhline(0, color="#2D4A2D", lw=0.4, alpha=0.45)
+    ax.axvline(0, color="#2D4A2D", lw=0.4, alpha=0.45)
     # Compass
     for ang, lab in [(0, "N"), (90, "E"), (180, "S"), (270, "W")]:
         x = 56 * np.sin(np.deg2rad(ang))
         y = 56 * np.cos(np.deg2rad(ang))
-        ax.text(x, y, lab, color="#00D9FF", fontsize=14,
+        ax.text(x, y, lab, color="#C9A961", fontsize=14,
                 fontweight="bold", ha="center", va="center",
                 family="monospace")
 
     # Crosshair center
-    ax.plot([0], [0], "+", color="#00D9FF", ms=20, mew=1.2, alpha=0.8)
+    ax.plot([0], [0], "+", color="#C9A961", ms=20, mew=1.2, alpha=0.8)
 
     # 표적
     target_xy = []
@@ -461,7 +461,7 @@ def fig_tactical(fleet, selected_id, fleet_data, scan_idx):
         if lvl >= 4:
             for r_ring, alpha in [(3, 0.7), (4.5, 0.4)]:
                 ring = plt.Circle((x, y), r_ring, fill=False,
-                                   color="#FF3B5C", lw=1.5, alpha=alpha)
+                                   color="#A93226", lw=1.5, alpha=alpha)
                 ax.add_patch(ring)
 
     # Drones
@@ -493,21 +493,21 @@ def fig_tactical(fleet, selected_id, fleet_data, scan_idx):
         if is_sel:
             for r in (6, 8.5):
                 ring = plt.Circle((x, y), r, fill=False,
-                                   color="#00D9FF", lw=1.0,
+                                   color="#C9A961", lw=1.0,
                                    alpha=0.7 - r * 0.05,
                                    linestyle="-")
                 ax.add_patch(ring)
 
     ax.set_xticks([]); ax.set_yticks([])
     ax.text(-62, 51, f"TACTICAL  //  T+{scan_idx:03d}",
-            color="#00D9FF", fontsize=11, fontweight="bold",
+            color="#C9A961", fontsize=11, fontweight="bold",
             family="monospace")
     ax.text(-62, 47, f"FLEET={len(fleet):02d}  CONTACTS={len(target_xy):02d}",
-            color="#5B7FA3", fontsize=9, family="monospace")
-    ax.text(45, 51, f"GRID 10KM", color="#5B7FA3",
+            color="#8FA88B", fontsize=9, family="monospace")
+    ax.text(45, 51, f"GRID 10KM", color="#8FA88B",
             fontsize=8, family="monospace")
     for spine in ax.spines.values():
-        spine.set_color("#1A3A5F")
+        spine.set_color("#2D4A2D")
     fig.tight_layout()
     return fig
 
@@ -517,9 +517,9 @@ def fig_polar(history, labelled, scan_idx, drone_color):
     P = history["spectra"][scan_idx]
     P = P / (P.max() + 1e-9)
     fig = plt.figure(figsize=(5.4, 4.6))
-    fig.patch.set_facecolor("#050810")
+    fig.patch.set_facecolor("#0A0F08")
     ax = fig.add_subplot(111, projection="polar")
-    ax.set_facecolor("#0B1426")
+    ax.set_facecolor("#14201A")
     ax.plot(np.deg2rad(angles), P, color=drone_color, lw=1.6)
     ax.fill(np.deg2rad(angles), P, color=drone_color, alpha=0.15)
     for tid, deg, kw in labelled[scan_idx]:
@@ -533,9 +533,9 @@ def fig_polar(history, labelled, scan_idx, drone_color):
     ax.set_theta_direction(-1)
     ax.set_thetamin(-90); ax.set_thetamax(90)
     ax.set_yticklabels([])
-    ax.tick_params(colors="#5B7FA3")
+    ax.tick_params(colors="#8FA88B")
     ax.set_title("DOA SPECTRUM // 8-CH ULA",
-                 color="#00D9FF", fontsize=10, fontweight="bold",
+                 color="#C9A961", fontsize=10, fontweight="bold",
                  family="monospace", pad=10)
     fig.tight_layout()
     return fig
@@ -546,8 +546,8 @@ def fig_timeline(history, labelled, scenario, scan_idx, color,
     n = scenario["n_scans"]
     angles = history["scan_angles_deg"]
     fig, ax = plt.subplots(figsize=(18, 5.0))
-    fig.patch.set_facecolor("#050810")
-    ax.set_facecolor("#0B1426")
+    fig.patch.set_facecolor("#0A0F08")
+    ax.set_facecolor("#14201A")
     palette = plt.cm.tab10(np.linspace(0, 1, 10))
     by_id = {}
     for s, per in enumerate(labelled):
@@ -568,31 +568,31 @@ def fig_timeline(history, labelled, scenario, scan_idx, color,
     if show_gt:
         gt = history["gt"]
         for k in range(gt.shape[1]):
-            ax.plot(np.arange(n), gt[:, k], color="#5B7FA3",
+            ax.plot(np.arange(n), gt[:, k], color="#8FA88B",
                     lw=0.5, linestyle="--", alpha=0.4)
     if show_occl:
         for sidx, a, b in scenario["occlusions"]:
-            ax.axvspan(a, b, alpha=0.18, color="#FFB400")
+            ax.axvspan(a, b, alpha=0.18, color="#C09030")
     ax.axvline(scan_idx, color=color, lw=2, alpha=0.9)
     ax.set_xlim(-0.5, n - 0.5)
     ax.set_ylim(angles[0], angles[-1])
-    ax.set_xlabel("MISSION SCAN", color="#5B7FA3", family="monospace")
-    ax.set_ylabel("BEARING (DEG)", color="#5B7FA3", family="monospace")
-    ax.tick_params(colors="#5B7FA3")
+    ax.set_xlabel("MISSION SCAN", color="#8FA88B", family="monospace")
+    ax.set_ylabel("BEARING (DEG)", color="#8FA88B", family="monospace")
+    ax.tick_params(colors="#8FA88B")
     for spine in ax.spines.values():
-        spine.set_color("#1A3A5F")
-    ax.grid(alpha=0.18, color="#1A3A5F")
+        spine.set_color("#2D4A2D")
+    ax.grid(alpha=0.18, color="#2D4A2D")
     ax.set_title("TRACK + KWS TIMELINE",
-                 color="#00D9FF", fontsize=10, fontweight="bold",
+                 color="#C9A961", fontsize=10, fontweight="bold",
                  family="monospace", loc="left")
     fig.tight_layout()
     return fig
 
 
-def fig_sparkline(values, color="#00D9FF"):
+def fig_sparkline(values, color="#C9A961"):
     fig, ax = plt.subplots(figsize=(2.5, 0.6))
-    fig.patch.set_facecolor("#0B1426")
-    ax.set_facecolor("#0B1426")
+    fig.patch.set_facecolor("#14201A")
+    ax.set_facecolor("#14201A")
     if len(values) > 1:
         ax.plot(values, color=color, lw=1.5)
         ax.fill_between(range(len(values)), values, color=color, alpha=0.18)
@@ -673,7 +673,7 @@ def main():
     # ---- Sidebar ----
     st.sidebar.markdown(
         "<div style='font-family:Orbitron,monospace;font-size:1.1rem;"
-        "font-weight:700;color:#00D9FF;letter-spacing:0.1em'>"
+        "font-weight:700;color:#C9A961;letter-spacing:0.1em'>"
         "OPS CONTROL</div><hr style='border-color:rgba(0,217,255,0.2)'>",
         unsafe_allow_html=True)
 
@@ -781,11 +781,11 @@ def main():
     if not st.session_state.onboard_dismissed:
         with st.container():
             st.markdown(
-                "<div style='background:linear-gradient(135deg,#0F2545,"
-                "#1A3A5F);border:2px solid #00D9FF;border-radius:8px;"
-                "padding:18px 22px;margin-bottom:14px;color:#E5F0FF;"
+                "<div style='background:linear-gradient(135deg,#1F3320,"
+                "#2D4A2D);border:2px solid #C9A961;border-radius:8px;"
+                "padding:18px 22px;margin-bottom:14px;color:#E8E2D5;"
                 "font-family:Consolas,monospace'>"
-                "<div style='color:#00D9FF;font-size:1.3em;"
+                "<div style='color:#C9A961;font-size:1.3em;"
                 "font-weight:700;margin-bottom:10px'>"
                 ":eyes:  처음 방문하셨나요? 30초 안에 데모 이해하기"
                 "</div>"
@@ -794,12 +794,12 @@ def main():
 
                 # Left column
                 "<div>"
-                "<b style='color:#FFD60A'>:helicopter: 무엇을 보여주는가</b><br>"
+                "<b style='color:#DAA520'>:helicopter: 무엇을 보여주는가</b><br>"
                 "4기 드론 함대를 가상 시나리오로 운용하는 콘솔. "
                 "논문이 제안한 4종 AI 모델 (NC-Conv-SSM 영상, "
                 "NC-SSM/NC-TCN 음성, Mamba-COP-RFS 공간) 이 "
                 "<b>실시간 처리한 결과</b>를 시각화.<br><br>"
-                "<b style='color:#2EE6A6'>:white_check_mark: 진짜 vs 시뮬</b><br>"
+                "<b style='color:#7BA05B'>:white_check_mark: 진짜 vs 시뮬</b><br>"
                 "&bull; 알파-1 (운용자기 :star:): 노트북 진짜 카메라/마이크<br>"
                 "&bull; 알파-2 / 브라보-1,2: 시뮬레이션<br>"
                 "&bull; 8-mic 어레이 신호: 시뮬 (실배치 시 ReSpeaker)<br>"
@@ -808,7 +808,7 @@ def main():
 
                 # Right column
                 "<div>"
-                "<b style='color:#FFD60A'>:bar_chart: 패널별 데이터</b><br>"
+                "<b style='color:#DAA520'>:bar_chart: 패널별 데이터</b><br>"
                 "<b>① 헤더</b>: 임무 시간, 위협 점수, 모델 풋프린트<br>"
                 "<b>② 함대 카드</b>: 4기 상태 (배터리/임무/탐지수)<br>"
                 "<b>③ 전술 상황도</b>: 드론 위치 + 표적 X 마크<br>"
@@ -816,7 +816,7 @@ def main():
                 "<b>⑤ 위협 보드</b>: 우선순위 정렬 (위협도 1-5)<br>"
                 "<b>⑥ 폴라 스펙트럼</b>: 음원 방향 분포 (현재 스캔)<br>"
                 "<b>⑦ 추적 시간선</b>: 표적 30스캔 궤적 + KWS 라벨<br><br>"
-                "<b style='color:#FF3B5C'>:rocket: 자동 데모</b><br>"
+                "<b style='color:#A93226'>:rocket: 자동 데모</b><br>"
                 "사이드바 <i>실시간 운용</i>의 토글 4개를 켜면 손 떼고 진행 가능."
                 "</div>"
                 "</div></div>",
@@ -843,21 +843,21 @@ def main():
     if pitch_mode:
         st.markdown(
             "<div style='background:linear-gradient(135deg,"
-            "#0A1F3A 0%,#1A4A7F 50%,#0A1F3A 100%);"
-            "border:3px solid #FFD60A;border-radius:10px;"
+            "#0F1F12 0%,#3A5A28 50%,#0F1F12 100%);"
+            "border:3px solid #DAA520;border-radius:10px;"
             "padding:24px 28px;margin-bottom:14px;"
             "box-shadow:0 0 30px rgba(255,214,10,0.25);"
             "font-family:Orbitron,monospace'>"
 
-            "<div style='color:#FFD60A;font-size:0.85rem;"
+            "<div style='color:#DAA520;font-size:0.85rem;"
             "letter-spacing:0.3em;margin-bottom:6px'>"
             "ADVANCED DEFENSE PITCH DAY 2026 // CLASSIFIED DEMO</div>"
 
-            "<div style='color:#00D9FF;font-size:2.2rem;font-weight:900;"
+            "<div style='color:#C9A961;font-size:2.2rem;font-weight:900;"
             "letter-spacing:0.05em;margin-bottom:4px;line-height:1.05'>"
             "한국형 드론 함대 음향 정찰 AI</div>"
 
-            "<div style='color:#E5F0FF;font-size:1.05rem;"
+            "<div style='color:#E8E2D5;font-size:1.05rem;"
             "margin-bottom:18px'>"
             "Mamba SSM 기반 엣지 다중표적 추적 — 50KB 칩으로 14표적 동시 탐지</div>"
 
@@ -866,39 +866,39 @@ def main():
             "grid-template-columns:repeat(4,1fr);gap:14px'>"
 
             "<div style='background:rgba(0,217,255,0.08);"
-            "border-left:4px solid #00D9FF;padding:12px 14px;border-radius:4px'>"
-            "<div style='color:#5B7FA3;font-size:0.7rem;letter-spacing:0.15em'>"
+            "border-left:4px solid #C9A961;padding:12px 14px;border-radius:4px'>"
+            "<div style='color:#8FA88B;font-size:0.7rem;letter-spacing:0.15em'>"
             "MODEL FOOTPRINT</div>"
-            "<div style='color:#00D9FF;font-size:1.8rem;font-weight:900'>"
+            "<div style='color:#C9A961;font-size:1.8rem;font-weight:900'>"
             "50 KB</div>"
-            "<div style='color:#7FB3D5;font-size:0.75rem'>"
+            "<div style='color:#A3B8A0;font-size:0.75rem'>"
             "INT8 / 카톡 사진 1장 미만</div></div>"
 
             "<div style='background:rgba(46,230,166,0.08);"
-            "border-left:4px solid #2EE6A6;padding:12px 14px;border-radius:4px'>"
-            "<div style='color:#5B7FA3;font-size:0.7rem;letter-spacing:0.15em'>"
+            "border-left:4px solid #7BA05B;padding:12px 14px;border-radius:4px'>"
+            "<div style='color:#8FA88B;font-size:0.7rem;letter-spacing:0.15em'>"
             "PER-SCAN LATENCY</div>"
-            "<div style='color:#2EE6A6;font-size:1.8rem;font-weight:900'>"
+            "<div style='color:#7BA05B;font-size:1.8rem;font-weight:900'>"
             "3.4 MS</div>"
-            "<div style='color:#7FB3D5;font-size:0.75rem'>"
+            "<div style='color:#A3B8A0;font-size:0.75rem'>"
             "STM32H7 Cortex-M7</div></div>"
 
             "<div style='background:rgba(255,214,10,0.08);"
-            "border-left:4px solid #FFD60A;padding:12px 14px;border-radius:4px'>"
-            "<div style='color:#5B7FA3;font-size:0.7rem;letter-spacing:0.15em'>"
+            "border-left:4px solid #DAA520;padding:12px 14px;border-radius:4px'>"
+            "<div style='color:#8FA88B;font-size:0.7rem;letter-spacing:0.15em'>"
             "SOURCE CAPACITY</div>"
-            "<div style='color:#FFD60A;font-size:1.8rem;font-weight:900'>"
+            "<div style='color:#DAA520;font-size:1.8rem;font-weight:900'>"
             "8 → 14</div>"
-            "<div style='color:#7FB3D5;font-size:0.75rem'>"
+            "<div style='color:#A3B8A0;font-size:0.75rem'>"
             "마이크 8 → 표적 14 (4× 기존)</div></div>"
 
             "<div style='background:rgba(255,59,92,0.08);"
-            "border-left:4px solid #FF3B5C;padding:12px 14px;border-radius:4px'>"
-            "<div style='color:#5B7FA3;font-size:0.7rem;letter-spacing:0.15em'>"
+            "border-left:4px solid #A93226;padding:12px 14px;border-radius:4px'>"
+            "<div style='color:#8FA88B;font-size:0.7rem;letter-spacing:0.15em'>"
             "UNIT COST</div>"
-            "<div style='color:#FF3B5C;font-size:1.8rem;font-weight:900'>"
+            "<div style='color:#A93226;font-size:1.8rem;font-weight:900'>"
             "&lt; $300</div>"
-            "<div style='color:#7FB3D5;font-size:0.75rem'>"
+            "<div style='color:#A3B8A0;font-size:0.75rem'>"
             "Iron Dome 1발 = $50K~80K</div></div>"
 
             "</div></div>",
@@ -918,30 +918,30 @@ def main():
             ("NC-SSM", "Tiny / Small", "4.5 / 11.8 KB",
              ":ear: KWS (귀)",
              "Interspeech 2026 / IEEE TASLP 2026",
-             "#00D9FF",
+             "#C9A961",
              ("ACTIVE" if kws_model == "nc-ssm" else "READY")),
             ("NC-TCN audio", "20K", "21.2 KB",
              ":ear: KWS (귀, dilated TCN)",
              "ICASSP 2027 / MLSP 2026",
-             "#2EE6A6",
+             "#7BA05B",
              ("ACTIVE" if kws_model == "nc-tcn" else "READY")),
             ("NC-TCN Vision :star:", "Dilated {1,2,4}", "253 KB",
              ":eye: VISION (눈, 고성능)",
              "IEEE TIP 2027 :  +8.1% on CIFAR-10-C  (Best-in-stack)",
-             "#FFD60A", "READY"),
+             "#DAA520", "READY"),
             ("NC-Conv-SSM", "Dual-path", "253 KB",
              ":eye: VISION (눈, 베이스)",
              "ACCV 2026 / BMVC / CVPR 2027 / ICCV 2027  ( +5.7% )",
-             "#9B59B6", "READY"),
+             "#8B6F47", "READY"),
             ("Mamba-COP-RFS", "RL Encoder", "41.4 KB",
              ":compass: SPATIAL (공간 추적)",
              "IEEE SPL 2026  (under review)",
-             "#FF3B5C", "ACTIVE"),
+             "#A93226", "ACTIVE"),
         ]
         cards = []
         for name, variant, size, role, venue, color, status in models:
-            led = ("#2EE6A6" if status == "ACTIVE"
-                   else "#5B7FA3")
+            led = ("#7BA05B" if status == "ACTIVE"
+                   else "#8FA88B")
             cards.append(
                 "<div style='background:rgba(0,217,255,0.04);"
                 "border:1px solid " + color + "55;"
@@ -958,20 +958,20 @@ def main():
                 "height:10px;border-radius:50%;background:" + led + ";"
                 "box-shadow:0 0 8px " + led + "'></span></div>"
                 # Variant
-                "<div style='color:#7FB3D5;font-size:0.78rem;"
+                "<div style='color:#A3B8A0;font-size:0.78rem;"
                 "margin-bottom:4px'>" + variant + "</div>"
                 # Role
-                "<div style='color:#E5F0FF;font-size:0.92rem;"
+                "<div style='color:#E8E2D5;font-size:0.92rem;"
                 "font-weight:600;margin:6px 0'>" + role + "</div>"
                 # Size
                 "<div style='color:" + color + ";font-size:1.4rem;"
                 "font-weight:900;margin-top:8px'>" + size + "</div>"
-                "<div style='color:#5B7FA3;font-size:0.7rem;"
+                "<div style='color:#8FA88B;font-size:0.7rem;"
                 "letter-spacing:0.1em;margin-top:2px'>INT8 EDGE</div>"
                 # Venue
-                "<div style='color:#7FB3D5;font-size:0.7rem;"
+                "<div style='color:#A3B8A0;font-size:0.7rem;"
                 "margin-top:10px;padding-top:8px;"
-                "border-top:1px solid #1E3A5F'>" + venue + "</div>"
+                "border-top:1px solid #3D4F33'>" + venue + "</div>"
                 # Status
                 "<div style='color:" + led + ";font-size:0.72rem;"
                 "letter-spacing:0.15em;font-weight:700;margin-top:4px'>"
@@ -979,10 +979,10 @@ def main():
                 "</div>")
         st.markdown(
             "<div style='margin-bottom:10px'><span style='"
-            "color:#FFD60A;font-family:Orbitron,monospace;"
+            "color:#DAA520;font-family:Orbitron,monospace;"
             "font-size:0.95rem;letter-spacing:0.15em;font-weight:700'>"
             ":satellite_antenna: NC AI MODEL STACK</span>"
-            "<span style='color:#5B7FA3;font-size:0.78rem;"
+            "<span style='color:#8FA88B;font-size:0.78rem;"
             "margin-left:12px'>"
             "총 5종 / 모두 본 저자 단일 IP / KWS+Vision+Spatial 풀스택"
             "</span></div>"
@@ -1151,7 +1151,7 @@ def main():
             f":satellite_antenna:  {selected['id']} LIVE FEED</div>",
             unsafe_allow_html=True)
         st.markdown(
-            f"<span class='led green'></span><span style='font-family:JetBrains Mono,monospace;color:#5B7FA3;font-size:0.78rem'>"
+            f"<span class='led green'></span><span style='font-family:JetBrains Mono,monospace;color:#8FA88B;font-size:0.78rem'>"
             f"OPS={sel_sc['name'].upper()} &nbsp;|&nbsp; "
             f"POS=({selected['pos'][0]:+03d},{selected['pos'][1]:+03d}) &nbsp;|&nbsp; "
             f"HDG={selected['heading']:03d}°</span>",
@@ -1165,9 +1165,9 @@ def main():
             if not selected["live_cam"]:
                 st.markdown(
                     "<div style='font-family:JetBrains Mono,monospace;"
-                    "color:#5B7FA3;font-size:0.78rem;margin-top:8px'>"
+                    "color:#8FA88B;font-size:0.78rem;margin-top:8px'>"
                     ":movie_camera:  EYE  //  "
-                    "<span style='color:#FFB400'>SIMULATED</span></div>",
+                    "<span style='color:#C09030'>SIMULATED</span></div>",
                     unsafe_allow_html=True)
                 return
 
@@ -1175,9 +1175,9 @@ def main():
                           else ":eye: IDLE")
             st.markdown(
                 f"<div style='font-family:JetBrains Mono,monospace;"
-                f"color:#00D9FF;font-size:0.82rem;margin-top:8px'>"
+                f"color:#C9A961;font-size:0.82rem;margin-top:8px'>"
                 f":movie_camera:  EYE  //  NC-Conv-SSM  "
-                f"&nbsp;<span style='color:#5B7FA3'>{cam_status}</span>"
+                f"&nbsp;<span style='color:#8FA88B'>{cam_status}</span>"
                 f"</div>",
                 unsafe_allow_html=True)
             manual_btn = st.button("CAPTURE FRAME", key="eye_btn",
@@ -1221,9 +1221,9 @@ def main():
                            else ":ear: IDLE")
             st.markdown(
                 f"<div style='font-family:JetBrains Mono,monospace;"
-                f"color:#00D9FF;font-size:0.82rem;margin-top:12px'>"
+                f"color:#C9A961;font-size:0.82rem;margin-top:12px'>"
                 f":microphone:  EAR  //  NC-{kws_model.upper()}  "
-                f"&nbsp;<span style='color:#5B7FA3'>{mic_status}</span>"
+                f"&nbsp;<span style='color:#8FA88B'>{mic_status}</span>"
                 f"</div>",
                 unsafe_allow_html=True)
             manual_btn = st.button("CAPTURE 1.0s AUDIO", key="ear_btn",
@@ -1260,7 +1260,7 @@ def main():
                         f"font-size:1.4em;font-weight:700;"
                         f"letter-spacing:0.06em'>"
                         f"{kw_kr(label).upper()} "
-                        f"<small style='font-size:0.6em;color:#5B7FA3'>"
+                        f"<small style='font-size:0.6em;color:#8FA88B'>"
                         f"CONF {conf:.2f}</small></div>",
                         unsafe_allow_html=True)
                     st.session_state.log.append(
@@ -1272,9 +1272,9 @@ def main():
 
         if not selected["live_mic"]:
             st.markdown(
-                "<div style='font-family:JetBrains Mono,monospace;color:#5B7FA3;"
+                "<div style='font-family:JetBrains Mono,monospace;color:#8FA88B;"
                 "font-size:0.78rem;margin-top:12px'>:microphone:  EAR  //  "
-                "<span style='color:#FFB400'>SIMULATED</span></div>",
+                "<span style='color:#C09030'>SIMULATED</span></div>",
                 unsafe_allow_html=True)
             cur = sel_lab[min(scan_idx, len(sel_lab) - 1)]
             if cur:
@@ -1301,7 +1301,7 @@ def main():
     cur_tracks = sel_lab[min(scan_idx, len(sel_lab) - 1)]
     if not cur_tracks:
         st.markdown(
-            "<div style='color:#5B7FA3;font-family:JetBrains Mono,monospace;"
+            "<div style='color:#8FA88B;font-family:JetBrains Mono,monospace;"
             "font-size:0.85rem;text-align:center;padding:14px'>"
             "NO ACTIVE CONTACTS</div>",
             unsafe_allow_html=True)
@@ -1337,7 +1337,7 @@ def main():
     # ---- Tracking timeline (full width, bottom hero) ----
     st.markdown(
         "<div class='sec-title'>:dart:  TRACKING TIMELINE  "
-        "<span style='color:#5B7FA3;font-weight:400;font-size:0.7em'>"
+        "<span style='color:#8FA88B;font-weight:400;font-size:0.7em'>"
         "  ―  표적 추적 + 음성 인식 시간선 (전체 임무)</span></div>",
         unsafe_allow_html=True)
 
@@ -1360,8 +1360,8 @@ def main():
         with sp_col2:
             st.pyplot(fig_sparkline(
                 st.session_state.threat_history,
-                color="#FF3B5C" if total_threats >= 15
-                else "#FFB400" if total_threats >= 8 else "#2EE6A6"),
+                color="#A93226" if total_threats >= 15
+                else "#C09030" if total_threats >= 8 else "#7BA05B"),
                 clear_figure=True)
 
     # ---- Comm log ----
@@ -1377,65 +1377,65 @@ def main():
     if pitch_mode:
         st.markdown(
             "<div style='margin-top:24px;padding:22px 26px;"
-            "background:linear-gradient(135deg,#0F2545,#1A3A5F);"
-            "border:2px solid #FFD60A;border-radius:8px;"
+            "background:linear-gradient(135deg,#1F3320,#2D4A2D);"
+            "border:2px solid #DAA520;border-radius:8px;"
             "font-family:Orbitron,monospace'>"
 
-            "<div style='color:#FFD60A;font-size:1.3rem;font-weight:800;"
+            "<div style='color:#DAA520;font-size:1.3rem;font-weight:800;"
             "letter-spacing:0.1em;margin-bottom:14px'>"
             ":dart:  전략 가치 제안</div>"
 
             # 비교 표
             "<table style='width:100%;border-collapse:collapse;"
-            "color:#E5F0FF;font-size:0.92rem'>"
+            "color:#E8E2D5;font-size:0.92rem'>"
             "<tr style='background:rgba(0,217,255,0.10);"
-            "border-bottom:1px solid #1E3A5F'>"
+            "border-bottom:1px solid #3D4F33'>"
             "<th style='text-align:left;padding:8px 10px'>지표</th>"
-            "<th style='text-align:left;padding:8px 10px;color:#FF3B5C'>"
+            "<th style='text-align:left;padding:8px 10px;color:#A93226'>"
             "현행 한국형 방공 (Iron Dome 도입案)</th>"
-            "<th style='text-align:left;padding:8px 10px;color:#2EE6A6'>"
+            "<th style='text-align:left;padding:8px 10px;color:#7BA05B'>"
             "본 제안 (NC-SSM 드론 함대)</th></tr>"
 
-            "<tr style='border-bottom:1px solid #1A3A5F'>"
-            "<td style='padding:8px 10px;color:#5B7FA3'>1발 단가</td>"
+            "<tr style='border-bottom:1px solid #2D4A2D'>"
+            "<td style='padding:8px 10px;color:#8FA88B'>1발 단가</td>"
             "<td style='padding:8px 10px'>$50,000 ~ $80,000 (Tamir)</td>"
-            "<td style='padding:8px 10px;color:#FFD60A;font-weight:700'>"
+            "<td style='padding:8px 10px;color:#DAA520;font-weight:700'>"
             "&lt; $300 / 드론 (양산 시)</td></tr>"
 
-            "<tr style='border-bottom:1px solid #1A3A5F'>"
-            "<td style='padding:8px 10px;color:#5B7FA3'>1대 시스템</td>"
+            "<tr style='border-bottom:1px solid #2D4A2D'>"
+            "<td style='padding:8px 10px;color:#8FA88B'>1대 시스템</td>"
             "<td style='padding:8px 10px'>$50M (라다 + 발사대 + 통제소)</td>"
-            "<td style='padding:8px 10px;color:#FFD60A;font-weight:700'>"
+            "<td style='padding:8px 10px;color:#DAA520;font-weight:700'>"
             "$30K (드론 100기 함대)</td></tr>"
 
-            "<tr style='border-bottom:1px solid #1A3A5F'>"
-            "<td style='padding:8px 10px;color:#5B7FA3'>탐지 모드</td>"
+            "<tr style='border-bottom:1px solid #2D4A2D'>"
+            "<td style='padding:8px 10px;color:#8FA88B'>탐지 모드</td>"
             "<td style='padding:8px 10px'>레이더 (RF) — 드론 회피 가능</td>"
-            "<td style='padding:8px 10px;color:#FFD60A;font-weight:700'>"
+            "<td style='padding:8px 10px;color:#DAA520;font-weight:700'>"
             "음향 + 광학 융합 — 스텔스 드론도 추적</td></tr>"
 
-            "<tr style='border-bottom:1px solid #1A3A5F'>"
-            "<td style='padding:8px 10px;color:#5B7FA3'>전개 시간</td>"
+            "<tr style='border-bottom:1px solid #2D4A2D'>"
+            "<td style='padding:8px 10px;color:#8FA88B'>전개 시간</td>"
             "<td style='padding:8px 10px'>수 주 ~ 수 개월 (고정 포대)</td>"
-            "<td style='padding:8px 10px;color:#FFD60A;font-weight:700'>"
+            "<td style='padding:8px 10px;color:#DAA520;font-weight:700'>"
             "수 분 (드론 자율 이륙)</td></tr>"
 
-            "<tr style='border-bottom:1px solid #1A3A5F'>"
-            "<td style='padding:8px 10px;color:#5B7FA3'>다중 표적 동시 처리</td>"
+            "<tr style='border-bottom:1px solid #2D4A2D'>"
+            "<td style='padding:8px 10px;color:#8FA88B'>다중 표적 동시 처리</td>"
             "<td style='padding:8px 10px'>Iron Dome: 동시 ~10발 한계</td>"
-            "<td style='padding:8px 10px;color:#FFD60A;font-weight:700'>"
+            "<td style='padding:8px 10px;color:#DAA520;font-weight:700'>"
             "함대 4기 × 14표적 = 56표적 동시</td></tr>"
 
-            "<tr style='border-bottom:1px solid #1A3A5F'>"
-            "<td style='padding:8px 10px;color:#5B7FA3'>인터넷 의존도</td>"
+            "<tr style='border-bottom:1px solid #2D4A2D'>"
+            "<td style='padding:8px 10px;color:#8FA88B'>인터넷 의존도</td>"
             "<td style='padding:8px 10px'>중앙 통제소 필수</td>"
-            "<td style='padding:8px 10px;color:#FFD60A;font-weight:700'>"
+            "<td style='padding:8px 10px;color:#DAA520;font-weight:700'>"
             "엣지 자율 (50KB MCU)</td></tr>"
 
             "<tr>"
-            "<td style='padding:8px 10px;color:#5B7FA3'>국내 기술 자립</td>"
+            "<td style='padding:8px 10px;color:#8FA88B'>국내 기술 자립</td>"
             "<td style='padding:8px 10px'>이스라엘 라이선스 의존</td>"
-            "<td style='padding:8px 10px;color:#FFD60A;font-weight:700'>"
+            "<td style='padding:8px 10px;color:#DAA520;font-weight:700'>"
             "100% 국내 IP (KR + US 특허 출원)</td></tr>"
 
             "</table>"
@@ -1445,20 +1445,20 @@ def main():
             "gap:14px;margin-top:18px'>"
 
             "<div style='background:rgba(46,230,166,0.10);"
-            "border:1px solid #2EE6A6;border-radius:4px;padding:14px'>"
-            "<div style='color:#2EE6A6;font-size:0.8rem;"
+            "border:1px solid #7BA05B;border-radius:4px;padding:14px'>"
+            "<div style='color:#7BA05B;font-size:0.8rem;"
             "letter-spacing:0.15em;font-weight:700'>"
             "TRL // 기술 성숙도</div>"
-            "<div style='color:#E5F0FF;font-size:1.05rem;margin-top:6px'>"
+            "<div style='color:#E8E2D5;font-size:1.05rem;margin-top:6px'>"
             "TRL 5-6 / 알고리즘 검증 완료, 엣지 포팅 시연 완료<br>"
             "(STM32H7 INT8 / 41.4KB / 3.4ms 실측)</div></div>"
 
             "<div style='background:rgba(255,214,10,0.10);"
-            "border:1px solid #FFD60A;border-radius:4px;padding:14px'>"
-            "<div style='color:#FFD60A;font-size:0.8rem;"
+            "border:1px solid #DAA520;border-radius:4px;padding:14px'>"
+            "<div style='color:#DAA520;font-size:0.8rem;"
             "letter-spacing:0.15em;font-weight:700'>"
             "PARTNERSHIP // 협력 가능 분야</div>"
-            "<div style='color:#E5F0FF;font-size:1.05rem;margin-top:6px'>"
+            "<div style='color:#E8E2D5;font-size:1.05rem;margin-top:6px'>"
             "ADD 시제 통합 / 한화·LIG 양산 / DAPA 사업화<br>"
             "IEEE SPL 2026 게재 후 IP 라이선싱 가능</div></div>"
 
@@ -1470,7 +1470,7 @@ def main():
         "<div style='margin-top:20px;padding-top:14px;"
         "border-top:1px solid rgba(0,217,255,0.18);"
         "font-family:JetBrains Mono,monospace;font-size:0.7rem;"
-        "color:#5B7FA3;text-align:center;letter-spacing:0.12em'>"
+        "color:#8FA88B;text-align:center;letter-spacing:0.12em'>"
         "IRONDOME LATTICE  //  github.com/DrJinHoChoi/IronDome-DOA-Tracking  //  "
         "DUAL LICENSE (ACADEMIC + COMMERCIAL)  //  jinhochoi@smartear.co.kr"
         "</div>",
