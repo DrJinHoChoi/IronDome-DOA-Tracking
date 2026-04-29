@@ -912,22 +912,30 @@ def main():
                     else "11.8 KB" if (kws_model == "nc-ssm"
                                         and kws_backbone == "Small")
                     else "21.2 KB")
+        # 5장 카드. NC-TCN은 audio(KWS) + vision 양쪽에 존재.
+        # TIP 논문에서 NC-TCN Vision이 +8.1% (NC-Conv +5.7% 대비 우월)
         models = [
             ("NC-SSM", "Tiny / Small", "4.5 / 11.8 KB",
-             ":ear: KWS (귀)", "Interspeech 2026 + IEEE TASLP",
+             ":ear: KWS (귀)",
+             "Interspeech 2026 / IEEE TASLP 2026",
              "#00D9FF",
              ("ACTIVE" if kws_model == "nc-ssm" else "READY")),
-            ("NC-TCN", "20K", "21.2 KB",
-             ":ear: KWS (귀, 대안)", "ICASSP 2027 / MLSP 2026",
+            ("NC-TCN audio", "20K", "21.2 KB",
+             ":ear: KWS (귀, dilated TCN)",
+             "ICASSP 2027 / MLSP 2026",
              "#2EE6A6",
              ("ACTIVE" if kws_model == "nc-tcn" else "READY")),
-            ("NC-Conv-SSM", "Vision", "247 KB",
-             ":eye: VISION (눈)", "ICCV 2027 (BMVC/ACCV/CVPR/TIP)",
-             "#FFD60A",
-             "READY"),
+            ("NC-TCN Vision :star:", "Dilated {1,2,4}", "253 KB",
+             ":eye: VISION (눈, 고성능)",
+             "IEEE TIP 2027 :  +8.1% on CIFAR-10-C  (Best-in-stack)",
+             "#FFD60A", "READY"),
+            ("NC-Conv-SSM", "Dual-path", "253 KB",
+             ":eye: VISION (눈, 베이스)",
+             "ACCV 2026 / BMVC / CVPR 2027 / ICCV 2027  ( +5.7% )",
+             "#9B59B6", "READY"),
             ("Mamba-COP-RFS", "RL Encoder", "41.4 KB",
              ":compass: SPATIAL (공간 추적)",
-             "IEEE SPL 2026 (under review)",
+             "IEEE SPL 2026  (under review)",
              "#FF3B5C", "ACTIVE"),
         ]
         cards = []
@@ -976,9 +984,11 @@ def main():
             ":satellite_antenna: NC AI MODEL STACK</span>"
             "<span style='color:#5B7FA3;font-size:0.78rem;"
             "margin-left:12px'>"
-            "총 4종 / Sub-320 KB / 모두 본 저자 단일 IP</span></div>"
-            "<div style='display:grid;grid-template-columns:repeat(4,1fr);"
-            "gap:12px;margin-bottom:20px'>" + "".join(cards) + "</div>",
+            "총 5종 / 모두 본 저자 단일 IP / KWS+Vision+Spatial 풀스택"
+            "</span></div>"
+            "<div style='display:grid;"
+            "grid-template-columns:repeat(5,1fr);"
+            "gap:10px;margin-bottom:20px'>" + "".join(cards) + "</div>",
             unsafe_allow_html=True)
 
     # ---- Header HERO ----
