@@ -904,6 +904,83 @@ def main():
             "</div></div>",
             unsafe_allow_html=True)
 
+        # ---- NC AI MODEL STACK (4종 모델 카드) ----
+        kws_active = ("NC-SSM-" + kws_backbone) if kws_model == "nc-ssm" \
+                     else "NC-TCN-20K"
+        kws_size = ("4.5 KB" if (kws_model == "nc-ssm"
+                                  and kws_backbone == "Tiny")
+                    else "11.8 KB" if (kws_model == "nc-ssm"
+                                        and kws_backbone == "Small")
+                    else "21.2 KB")
+        models = [
+            ("NC-SSM", "Tiny / Small", "4.5 / 11.8 KB",
+             ":ear: KWS (귀)", "Interspeech 2026 + IEEE TASLP",
+             "#00D9FF",
+             ("ACTIVE" if kws_model == "nc-ssm" else "READY")),
+            ("NC-TCN", "20K", "21.2 KB",
+             ":ear: KWS (귀, 대안)", "ICASSP 2027 / MLSP 2026",
+             "#2EE6A6",
+             ("ACTIVE" if kws_model == "nc-tcn" else "READY")),
+            ("NC-Conv-SSM", "Vision", "247 KB",
+             ":eye: VISION (눈)", "ICCV 2027 (BMVC/ACCV/CVPR/TIP)",
+             "#FFD60A",
+             "READY"),
+            ("Mamba-COP-RFS", "RL Encoder", "41.4 KB",
+             ":compass: SPATIAL (공간 추적)",
+             "IEEE SPL 2026 (under review)",
+             "#FF3B5C", "ACTIVE"),
+        ]
+        cards = []
+        for name, variant, size, role, venue, color, status in models:
+            led = ("#2EE6A6" if status == "ACTIVE"
+                   else "#5B7FA3")
+            cards.append(
+                "<div style='background:rgba(0,217,255,0.04);"
+                "border:1px solid " + color + "55;"
+                "border-top:3px solid " + color + ";"
+                "border-radius:6px;padding:14px;"
+                "font-family:JetBrains Mono,monospace'>"
+                # Top: model name + LED
+                "<div style='display:flex;justify-content:space-between;"
+                "align-items:center;margin-bottom:6px'>"
+                "<span style='color:" + color + ";font-weight:700;"
+                "font-size:1.05rem;letter-spacing:0.05em'>" + name +
+                "</span>"
+                "<span style='display:inline-block;width:10px;"
+                "height:10px;border-radius:50%;background:" + led + ";"
+                "box-shadow:0 0 8px " + led + "'></span></div>"
+                # Variant
+                "<div style='color:#7FB3D5;font-size:0.78rem;"
+                "margin-bottom:4px'>" + variant + "</div>"
+                # Role
+                "<div style='color:#E5F0FF;font-size:0.92rem;"
+                "font-weight:600;margin:6px 0'>" + role + "</div>"
+                # Size
+                "<div style='color:" + color + ";font-size:1.4rem;"
+                "font-weight:900;margin-top:8px'>" + size + "</div>"
+                "<div style='color:#5B7FA3;font-size:0.7rem;"
+                "letter-spacing:0.1em;margin-top:2px'>INT8 EDGE</div>"
+                # Venue
+                "<div style='color:#7FB3D5;font-size:0.7rem;"
+                "margin-top:10px;padding-top:8px;"
+                "border-top:1px solid #1E3A5F'>" + venue + "</div>"
+                # Status
+                "<div style='color:" + led + ";font-size:0.72rem;"
+                "letter-spacing:0.15em;font-weight:700;margin-top:4px'>"
+                "● " + status + "</div>"
+                "</div>")
+        st.markdown(
+            "<div style='margin-bottom:10px'><span style='"
+            "color:#FFD60A;font-family:Orbitron,monospace;"
+            "font-size:0.95rem;letter-spacing:0.15em;font-weight:700'>"
+            ":satellite_antenna: NC AI MODEL STACK</span>"
+            "<span style='color:#5B7FA3;font-size:0.78rem;"
+            "margin-left:12px'>"
+            "총 4종 / Sub-320 KB / 모두 본 저자 단일 IP</span></div>"
+            "<div style='display:grid;grid-template-columns:repeat(4,1fr);"
+            "gap:12px;margin-bottom:20px'>" + "".join(cards) + "</div>",
+            unsafe_allow_html=True)
+
     # ---- Header HERO ----
     elapsed = int(time.time() - st.session_state.mission_start)
     h, m, s = elapsed // 3600, (elapsed // 60) % 60, elapsed % 60
