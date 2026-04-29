@@ -763,7 +763,7 @@ def main():
 
     # ---- Sidebar ----
     st.sidebar.markdown(
-        "<div style='font-family:Orbitron,monospace;font-size:1.72rem;"
+        "<div style='font-family:Orbitron,monospace;font-size:1.1rem;"
         "font-weight:700;color:#C9A961;letter-spacing:0.1em'>"
         "OPS CONTROL</div><hr style='border-color:rgba(0,217,255,0.2)'>",
         unsafe_allow_html=True)
@@ -876,12 +876,12 @@ def main():
                 "#2D4A2D);border:2px solid #C9A961;border-radius:8px;"
                 "padding:18px 22px;margin-bottom:14px;color:#E8E2D5;"
                 "font-family:Consolas,monospace'>"
-                "<div style='color:#C9A961;font-size:2.03em;"
+                "<div style='color:#C9A961;font-size:1.3em;"
                 "font-weight:700;margin-bottom:10px'>"
                 ":eyes:  처음 방문하셨나요? 30초 안에 데모 이해하기"
                 "</div>"
                 "<div style='display:grid;grid-template-columns:1fr 1fr;"
-                "gap:18px;font-size:1.44em;line-height:1.55'>"
+                "gap:18px;font-size:0.92em;line-height:1.55'>"
 
                 # Left column
                 "<div>"
@@ -940,15 +940,15 @@ def main():
             "box-shadow:0 0 30px rgba(255,214,10,0.25);"
             "font-family:Orbitron,monospace'>"
 
-            "<div style='color:#DAA520;font-size:1.33rem;"
+            "<div style='color:#DAA520;font-size:0.85rem;"
             "letter-spacing:0.3em;margin-bottom:6px'>"
             "ADVANCED DEFENSE PITCH DAY 2026 // CLASSIFIED DEMO</div>"
 
-            "<div style='color:#C9A961;font-size:3.44rem;font-weight:900;"
+            "<div style='color:#C9A961;font-size:2.2rem;font-weight:900;"
             "letter-spacing:0.05em;margin-bottom:4px;line-height:1.05'>"
             "한국형 드론 함대 음향 정찰 AI</div>"
 
-            "<div style='color:#E8E2D5;font-size:1.64rem;"
+            "<div style='color:#E8E2D5;font-size:1.05rem;"
             "margin-bottom:18px'>"
             "Mamba SSM 기반 엣지 다중표적 추적 — 50KB 칩으로 14표적 동시 탐지</div>"
 
@@ -958,38 +958,38 @@ def main():
 
             "<div style='background:rgba(0,217,255,0.08);"
             "border-left:4px solid #C9A961;padding:12px 14px;border-radius:4px'>"
-            "<div style='color:#8FA88B;font-size:1.1rem;letter-spacing:0.15em'>"
+            "<div style='color:#8FA88B;font-size:0.7rem;letter-spacing:0.15em'>"
             "MODEL FOOTPRINT</div>"
-            "<div style='color:#C9A961;font-size:2.81rem;font-weight:900'>"
+            "<div style='color:#C9A961;font-size:1.8rem;font-weight:900'>"
             "50 KB</div>"
-            "<div style='color:#A3B8A0;font-size:1.17rem'>"
+            "<div style='color:#A3B8A0;font-size:0.75rem'>"
             "INT8 / 카톡 사진 1장 미만</div></div>"
 
             "<div style='background:rgba(46,230,166,0.08);"
             "border-left:4px solid #7BA05B;padding:12px 14px;border-radius:4px'>"
-            "<div style='color:#8FA88B;font-size:1.1rem;letter-spacing:0.15em'>"
+            "<div style='color:#8FA88B;font-size:0.7rem;letter-spacing:0.15em'>"
             "PER-SCAN LATENCY</div>"
-            "<div style='color:#7BA05B;font-size:2.81rem;font-weight:900'>"
+            "<div style='color:#7BA05B;font-size:1.8rem;font-weight:900'>"
             "3.4 MS</div>"
-            "<div style='color:#A3B8A0;font-size:1.17rem'>"
+            "<div style='color:#A3B8A0;font-size:0.75rem'>"
             "STM32H7 Cortex-M7</div></div>"
 
             "<div style='background:rgba(255,214,10,0.08);"
             "border-left:4px solid #DAA520;padding:12px 14px;border-radius:4px'>"
-            "<div style='color:#8FA88B;font-size:1.1rem;letter-spacing:0.15em'>"
+            "<div style='color:#8FA88B;font-size:0.7rem;letter-spacing:0.15em'>"
             "SOURCE CAPACITY</div>"
-            "<div style='color:#DAA520;font-size:2.81rem;font-weight:900'>"
+            "<div style='color:#DAA520;font-size:1.8rem;font-weight:900'>"
             "8 → 14</div>"
-            "<div style='color:#A3B8A0;font-size:1.17rem'>"
+            "<div style='color:#A3B8A0;font-size:0.75rem'>"
             "마이크 8 → 표적 14 (4× 기존)</div></div>"
 
             "<div style='background:rgba(255,59,92,0.08);"
             "border-left:4px solid #A93226;padding:12px 14px;border-radius:4px'>"
-            "<div style='color:#8FA88B;font-size:1.1rem;letter-spacing:0.15em'>"
+            "<div style='color:#8FA88B;font-size:0.7rem;letter-spacing:0.15em'>"
             "UNIT COST</div>"
-            "<div style='color:#A93226;font-size:2.81rem;font-weight:900'>"
+            "<div style='color:#A93226;font-size:1.8rem;font-weight:900'>"
             "&lt; $300</div>"
-            "<div style='color:#A3B8A0;font-size:1.17rem'>"
+            "<div style='color:#A3B8A0;font-size:0.75rem'>"
             "Iron Dome 1발 = $50K~80K</div></div>"
 
             "</div></div>",
@@ -1043,37 +1043,37 @@ def main():
                 "<div style='display:flex;justify-content:space-between;"
                 "align-items:center;margin-bottom:6px'>"
                 "<span style='color:" + color + ";font-weight:700;"
-                "font-size:1.64rem;letter-spacing:0.05em'>" + name +
+                "font-size:1.05rem;letter-spacing:0.05em'>" + name +
                 "</span>"
                 "<span style='display:inline-block;width:10px;"
                 "height:10px;border-radius:50%;background:" + led + ";"
                 "box-shadow:0 0 8px " + led + "'></span></div>"
                 # Variant
-                "<div style='color:#A3B8A0;font-size:1.23rem;"
+                "<div style='color:#A3B8A0;font-size:0.78rem;"
                 "margin-bottom:4px'>" + variant + "</div>"
                 # Role
-                "<div style='color:#E8E2D5;font-size:1.44rem;"
+                "<div style='color:#E8E2D5;font-size:0.92rem;"
                 "font-weight:600;margin:6px 0'>" + role + "</div>"
                 # Size
-                "<div style='color:" + color + ";font-size:2.19rem;"
+                "<div style='color:" + color + ";font-size:1.4rem;"
                 "font-weight:900;margin-top:8px'>" + size + "</div>"
-                "<div style='color:#8FA88B;font-size:1.1rem;"
+                "<div style='color:#8FA88B;font-size:0.7rem;"
                 "letter-spacing:0.1em;margin-top:2px'>INT8 EDGE</div>"
                 # Venue
-                "<div style='color:#A3B8A0;font-size:1.1rem;"
+                "<div style='color:#A3B8A0;font-size:0.7rem;"
                 "margin-top:10px;padding-top:8px;"
                 "border-top:1px solid #3D4F33'>" + venue + "</div>"
                 # Status
-                "<div style='color:" + led + ";font-size:1.12rem;"
+                "<div style='color:" + led + ";font-size:0.72rem;"
                 "letter-spacing:0.15em;font-weight:700;margin-top:4px'>"
                 "● " + status + "</div>"
                 "</div>")
         st.markdown(
             "<div style='margin-bottom:10px'><span style='"
             "color:#DAA520;font-family:Orbitron,monospace;"
-            "font-size:1.49rem;letter-spacing:0.15em;font-weight:700'>"
+            "font-size:0.95rem;letter-spacing:0.15em;font-weight:700'>"
             ":satellite_antenna: NC AI MODEL STACK</span>"
-            "<span style='color:#8FA88B;font-size:1.23rem;"
+            "<span style='color:#8FA88B;font-size:0.78rem;"
             "margin-left:12px'>"
             "총 5종 / 모두 본 저자 단일 IP / KWS+Vision+Spatial 풀스택"
             "</span></div>"
@@ -1240,7 +1240,7 @@ def main():
             f":satellite_antenna:  {selected['id']} LIVE FEED</div>",
             unsafe_allow_html=True)
         st.markdown(
-            f"<span class='led green'></span><span style='font-family:JetBrains Mono,monospace;color:#8FA88B;font-size:1.23rem'>"
+            f"<span class='led green'></span><span style='font-family:JetBrains Mono,monospace;color:#8FA88B;font-size:0.78rem'>"
             f"OPS={sel_sc['name'].upper()} &nbsp;|&nbsp; "
             f"POS=({selected['pos'][0]:+03d},{selected['pos'][1]:+03d}) &nbsp;|&nbsp; "
             f"HDG={selected['heading']:03d}°</span>",
@@ -1254,7 +1254,7 @@ def main():
             if not selected["live_cam"]:
                 st.markdown(
                     "<div style='font-family:JetBrains Mono,monospace;"
-                    "color:#8FA88B;font-size:1.23rem;margin-top:8px'>"
+                    "color:#8FA88B;font-size:0.78rem;margin-top:8px'>"
                     ":movie_camera:  EYE  //  "
                     "<span style='color:#C09030'>SIMULATED</span></div>",
                     unsafe_allow_html=True)
@@ -1264,7 +1264,7 @@ def main():
                           else ":eye: IDLE")
             st.markdown(
                 f"<div style='font-family:JetBrains Mono,monospace;"
-                f"color:#C9A961;font-size:1.27rem;margin-top:8px'>"
+                f"color:#C9A961;font-size:0.82rem;margin-top:8px'>"
                 f":movie_camera:  EYE  //  NC-Conv-SSM  "
                 f"&nbsp;<span style='color:#8FA88B'>{cam_status}</span>"
                 f"</div>",
@@ -1297,12 +1297,12 @@ def main():
                             f"border:2px solid #C9A961;"
                             f"color:#FFFFFF;text-align:center;"
                             f"font-family:Orbitron,monospace;"
-                            f"font-size:2.5em;font-weight:900;"
+                            f"font-size:1.6em;font-weight:900;"
                             f"letter-spacing:0.05em;margin-top:6px'>"
                             f"NC-Conv :  {label.upper()}  "
                             f"<span style='color:#7BA05B'>"
                             f"({conf*100:.0f}%)</span>"
-                            f"<div style='font-size:0.86em;color:#A3B8A0;"
+                            f"<div style='font-size:0.55em;color:#A3B8A0;"
                             f"font-weight:600;letter-spacing:0.12em;"
                             f"margin-top:4px'>"
                             f"σ-GATE  {sigma:.2f}</div></div>",
@@ -1325,7 +1325,7 @@ def main():
                            else ":ear: IDLE")
             st.markdown(
                 f"<div style='font-family:JetBrains Mono,monospace;"
-                f"color:#C9A961;font-size:1.27rem;margin-top:12px'>"
+                f"color:#C9A961;font-size:0.82rem;margin-top:12px'>"
                 f":microphone:  EAR  //  NC-{kws_model.upper()}  "
                 f"&nbsp;<span style='color:#8FA88B'>{mic_status}</span>"
                 f"</div>",
@@ -1362,11 +1362,11 @@ def main():
                         f"{col}11);border:2px solid {col};"
                         f"color:#FFFFFF;text-align:center;"
                         f"font-family:Orbitron,monospace;"
-                        f"font-size:3.44em;font-weight:900;"
+                        f"font-size:2.2em;font-weight:900;"
                         f"letter-spacing:0.08em;"
                         f"box-shadow:0 0 18px {col}44'>"
                         f"{kw_kr(label).upper()} "
-                        f"<div style='font-size:0.66em;color:#A3B8A0;"
+                        f"<div style='font-size:0.42em;color:#A3B8A0;"
                         f"font-weight:600;letter-spacing:0.15em;"
                         f"margin-top:6px'>"
                         f"CONF {conf:.2f}</div></div>",
@@ -1381,7 +1381,7 @@ def main():
         if not selected["live_mic"]:
             st.markdown(
                 "<div style='font-family:JetBrains Mono,monospace;color:#8FA88B;"
-                "font-size:1.23rem;margin-top:12px'>:microphone:  EAR  //  "
+                "font-size:0.78rem;margin-top:12px'>:microphone:  EAR  //  "
                 "<span style='color:#C09030'>SIMULATED</span></div>",
                 unsafe_allow_html=True)
             cur = sel_lab[min(scan_idx, len(sel_lab) - 1)]
@@ -1395,7 +1395,7 @@ def main():
                         ";color:" + col +
                         ";padding:3px 10px;border-radius:10px;"
                         "font-family:JetBrains Mono,monospace;"
-                        "font-size:1.23em;font-weight:600;margin:2px 3px'>" +
+                        "font-size:0.78em;font-weight:600;margin:2px 3px'>" +
                         kw_kr(kw) + "</span>")
                 st.markdown(
                     "<div style='margin-top:6px'>" +
@@ -1406,7 +1406,7 @@ def main():
     st.markdown(
         "<div class='sec-title'>:chart_with_upwards_trend:  "
         "THREAT TREND  "
-        "<span style='color:#8FA88B;font-weight:400;font-size:1.1em'>"
+        "<span style='color:#8FA88B;font-weight:400;font-size:0.7em'>"
         "  ―  최근 60초 함대 위협 점수 추세 (실시간 갱신)</span></div>",
         unsafe_allow_html=True)
 
@@ -1437,11 +1437,11 @@ def main():
             st.markdown(
                 f"<div style='font-family:Orbitron,monospace;"
                 f"text-align:center;padding:6px'>"
-                f"<div style='color:#8FA88B;font-size:1.1rem;"
+                f"<div style='color:#8FA88B;font-size:0.7rem;"
                 f"letter-spacing:0.15em'>SCORE</div>"
-                f"<div style='color:{trend_color};font-size:3.75rem;"
+                f"<div style='color:{trend_color};font-size:2.4rem;"
                 f"font-weight:900;margin:2px 0'>{cur:02d}</div>"
-                f"<div style='color:{trend_color};font-size:1.17rem;"
+                f"<div style='color:{trend_color};font-size:0.75rem;"
                 f"letter-spacing:0.15em;font-weight:700'>{label}</div>"
                 f"</div>",
                 unsafe_allow_html=True)
@@ -1456,7 +1456,7 @@ def main():
             peak = max(st.session_state.threat_history)
             st.markdown(
                 f"<div style='font-family:JetBrains Mono,monospace;"
-                f"font-size:1.33rem;line-height:1.7;color:#A3B8A0;"
+                f"font-size:0.85rem;line-height:1.7;color:#A3B8A0;"
                 f"padding:8px'>"
                 f"AVG 60s &nbsp;<b style='color:#C9A961'>{avg_60s:.1f}</b><br>"
                 f"PEAK &nbsp;<b style='color:#A93226'>{peak}</b><br>"
@@ -1473,7 +1473,7 @@ def main():
     if not cur_tracks:
         st.markdown(
             "<div style='color:#8FA88B;font-family:JetBrains Mono,monospace;"
-            "font-size:1.33rem;text-align:center;padding:14px'>"
+            "font-size:0.85rem;text-align:center;padding:14px'>"
             "NO ACTIVE CONTACTS</div>",
             unsafe_allow_html=True)
     else:
@@ -1508,7 +1508,7 @@ def main():
     # ---- Tracking timeline (full width, bottom hero) ----
     st.markdown(
         "<div class='sec-title'>:dart:  TRACKING TIMELINE  "
-        "<span style='color:#8FA88B;font-weight:400;font-size:1.1em'>"
+        "<span style='color:#8FA88B;font-weight:400;font-size:0.7em'>"
         "  ―  표적 추적 + 음성 인식 시간선 (전체 임무)</span></div>",
         unsafe_allow_html=True)
 
@@ -1524,7 +1524,7 @@ def main():
     # ---- SITUATIONAL GRAPHS (fleet snapshot) ----
     st.markdown(
         "<div class='sec-title'>:bar_chart:  SITUATIONAL GRAPHS  "
-        "<span style='color:#8FA88B;font-weight:400;font-size:1.1em'>"
+        "<span style='color:#8FA88B;font-weight:400;font-size:0.7em'>"
         "  ―  함대 상황 다중 그래프 (실시간)</span></div>",
         unsafe_allow_html=True)
 
@@ -1658,13 +1658,13 @@ def main():
             "border:2px solid #DAA520;border-radius:8px;"
             "font-family:Orbitron,monospace'>"
 
-            "<div style='color:#DAA520;font-size:2.03rem;font-weight:800;"
+            "<div style='color:#DAA520;font-size:1.3rem;font-weight:800;"
             "letter-spacing:0.1em;margin-bottom:14px'>"
             ":dart:  전략 가치 제안</div>"
 
             # 비교 표
             "<table style='width:100%;border-collapse:collapse;"
-            "color:#E8E2D5;font-size:1.44rem'>"
+            "color:#E8E2D5;font-size:0.92rem'>"
             "<tr style='background:rgba(0,217,255,0.10);"
             "border-bottom:1px solid #3D4F33'>"
             "<th style='text-align:left;padding:8px 10px'>지표</th>"
@@ -1723,19 +1723,19 @@ def main():
 
             "<div style='background:rgba(46,230,166,0.10);"
             "border:1px solid #7BA05B;border-radius:4px;padding:14px'>"
-            "<div style='color:#7BA05B;font-size:1.25rem;"
+            "<div style='color:#7BA05B;font-size:0.8rem;"
             "letter-spacing:0.15em;font-weight:700'>"
             "TRL // 기술 성숙도</div>"
-            "<div style='color:#E8E2D5;font-size:1.64rem;margin-top:6px'>"
+            "<div style='color:#E8E2D5;font-size:1.05rem;margin-top:6px'>"
             "TRL 5-6 / 알고리즘 검증 완료, 엣지 포팅 시연 완료<br>"
             "(STM32H7 INT8 / 41.4KB / 3.4ms 실측)</div></div>"
 
             "<div style='background:rgba(255,214,10,0.10);"
             "border:1px solid #DAA520;border-radius:4px;padding:14px'>"
-            "<div style='color:#DAA520;font-size:1.25rem;"
+            "<div style='color:#DAA520;font-size:0.8rem;"
             "letter-spacing:0.15em;font-weight:700'>"
             "PARTNERSHIP // 협력 가능 분야</div>"
-            "<div style='color:#E8E2D5;font-size:1.64rem;margin-top:6px'>"
+            "<div style='color:#E8E2D5;font-size:1.05rem;margin-top:6px'>"
             "ADD 시제 통합 / 한화·LIG 양산 / DAPA 사업화<br>"
             "IEEE SPL 2026 게재 후 IP 라이선싱 가능</div></div>"
 
@@ -1746,7 +1746,7 @@ def main():
     st.markdown(
         "<div style='margin-top:20px;padding-top:14px;"
         "border-top:1px solid rgba(0,217,255,0.18);"
-        "font-family:JetBrains Mono,monospace;font-size:1.1rem;"
+        "font-family:JetBrains Mono,monospace;font-size:0.7rem;"
         "color:#8FA88B;text-align:center;letter-spacing:0.12em'>"
         "IRONDOME LATTICE  //  github.com/DrJinHoChoi/IronDome-DOA-Tracking  //  "
         "DUAL LICENSE (ACADEMIC + COMMERCIAL)  //  jinhochoi@smartear.co.kr"
