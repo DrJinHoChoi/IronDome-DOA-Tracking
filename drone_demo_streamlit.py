@@ -726,6 +726,70 @@ def main():
     scan_idx = min(st.session_state.get("scan_idx", n_scans // 2),
                    n_scans - 1)
 
+    # ---- Onboarding (first visit, dismissible) ----
+    if "onboard_dismissed" not in st.session_state:
+        st.session_state.onboard_dismissed = False
+    if not st.session_state.onboard_dismissed:
+        with st.container():
+            st.markdown(
+                "<div style='background:linear-gradient(135deg,#0F2545,"
+                "#1A3A5F);border:2px solid #00D9FF;border-radius:8px;"
+                "padding:18px 22px;margin-bottom:14px;color:#E5F0FF;"
+                "font-family:Consolas,monospace'>"
+                "<div style='color:#00D9FF;font-size:1.3em;"
+                "font-weight:700;margin-bottom:10px'>"
+                ":eyes:  처음 방문하셨나요? 30초 안에 데모 이해하기"
+                "</div>"
+                "<div style='display:grid;grid-template-columns:1fr 1fr;"
+                "gap:18px;font-size:0.92em;line-height:1.55'>"
+
+                # Left column
+                "<div>"
+                "<b style='color:#FFD60A'>:helicopter: 무엇을 보여주는가</b><br>"
+                "4기 드론 함대를 가상 시나리오로 운용하는 콘솔. "
+                "논문이 제안한 4종 AI 모델 (NC-Conv-SSM 영상, "
+                "NC-SSM/NC-TCN 음성, Mamba-COP-RFS 공간) 이 "
+                "<b>실시간 처리한 결과</b>를 시각화.<br><br>"
+                "<b style='color:#2EE6A6'>:white_check_mark: 진짜 vs 시뮬</b><br>"
+                "&bull; 알파-1 (운용자기 :star:): 노트북 진짜 카메라/마이크<br>"
+                "&bull; 알파-2 / 브라보-1,2: 시뮬레이션<br>"
+                "&bull; 8-mic 어레이 신호: 시뮬 (실배치 시 ReSpeaker)<br>"
+                "&bull; 드론 위치/배터리: 데모용 가짜 값"
+                "</div>"
+
+                # Right column
+                "<div>"
+                "<b style='color:#FFD60A'>:bar_chart: 패널별 데이터</b><br>"
+                "<b>① 헤더</b>: 임무 시간, 위협 점수, 모델 풋프린트<br>"
+                "<b>② 함대 카드</b>: 4기 상태 (배터리/임무/탐지수)<br>"
+                "<b>③ 전술 상황도</b>: 드론 위치 + 표적 X 마크<br>"
+                "<b>④ 운용자기 상세</b>: 라이브 카메라/마이크<br>"
+                "<b>⑤ 위협 보드</b>: 우선순위 정렬 (위협도 1-5)<br>"
+                "<b>⑥ 폴라 스펙트럼</b>: 음원 방향 분포 (현재 스캔)<br>"
+                "<b>⑦ 추적 시간선</b>: 표적 30스캔 궤적 + KWS 라벨<br><br>"
+                "<b style='color:#FF3B5C'>:rocket: 자동 데모</b><br>"
+                "사이드바 <i>실시간 운용</i>의 토글 4개를 켜면 손 떼고 진행 가능."
+                "</div>"
+                "</div></div>",
+                unsafe_allow_html=True)
+            cb1, cb2, cb3 = st.columns([1, 1, 4])
+            with cb1:
+                if st.button(":white_check_mark: 이해했습니다",
+                              use_container_width=True, type="primary"):
+                    st.session_state.onboard_dismissed = True
+                    st.rerun()
+            with cb2:
+                if st.button(":books: 다시 안 보기",
+                              use_container_width=True):
+                    st.session_state.onboard_dismissed = True
+                    st.rerun()
+    else:
+        # 작은 도움말 토글 (사이드바)
+        if st.sidebar.button(":eyes: 데모 가이드 다시 보기",
+                              use_container_width=True):
+            st.session_state.onboard_dismissed = False
+            st.rerun()
+
     # ---- Header HERO ----
     elapsed = int(time.time() - st.session_state.mission_start)
     h, m, s = elapsed // 3600, (elapsed // 60) % 60, elapsed % 60
