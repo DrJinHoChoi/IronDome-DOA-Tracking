@@ -419,7 +419,7 @@ def fig_tactical(fleet, selected_id, fleet_data, scan_idx):
                           lw=0.81, alpha=0.55, linestyle="--")
         ax.add_patch(circ)
         ax.text(r * 0.71, -r * 0.71, f"{r:02d} KM", color="#2D4A2D",
-                fontsize=9.8, ha="center",
+                fontsize=12.7, ha="center",
                 family="monospace")
     ax.axhline(0, color="#2D4A2D", lw=0.4, alpha=0.45)
     ax.axvline(0, color="#2D4A2D", lw=0.4, alpha=0.45)
@@ -427,7 +427,7 @@ def fig_tactical(fleet, selected_id, fleet_data, scan_idx):
     for ang, lab in [(0, "N"), (90, "E"), (180, "S"), (270, "W")]:
         x = 56 * np.sin(np.deg2rad(ang))
         y = 56 * np.cos(np.deg2rad(ang))
-        ax.text(x, y, lab, color="#C9A961", fontsize=19.6,
+        ax.text(x, y, lab, color="#C9A961", fontsize=25.5,
                 fontweight="bold", ha="center", va="center",
                 family="monospace")
 
@@ -486,7 +486,7 @@ def fig_tactical(fleet, selected_id, fleet_data, scan_idx):
                             lw=2.7 if is_sel else 0.6, zorder=6)
         ax.add_patch(poly)
         ax.text(x, y - 7, d["code"], color=d["color"],
-                fontsize=12.6, fontweight="bold", ha="center",
+                fontsize=16.4, fontweight="bold", ha="center",
                 family="monospace",
                 bbox=dict(facecolor=bg, edgecolor="none",
                           alpha=0.85, pad=2))
@@ -500,12 +500,12 @@ def fig_tactical(fleet, selected_id, fleet_data, scan_idx):
 
     ax.set_xticks([]); ax.set_yticks([])
     ax.text(-62, 51, f"TACTICAL  //  T+{scan_idx:03d}",
-            color="#C9A961", fontsize=15.4, fontweight="bold",
+            color="#C9A961", fontsize=20, fontweight="bold",
             family="monospace")
     ax.text(-62, 47, f"FLEET={len(fleet):02d}  CONTACTS={len(target_xy):02d}",
-            color="#8FA88B", fontsize=12.6, family="monospace")
+            color="#8FA88B", fontsize=16.4, family="monospace")
     ax.text(45, 51, f"GRID 10KM", color="#8FA88B",
-            fontsize=11.2, family="monospace")
+            fontsize=14.6, family="monospace")
     for spine in ax.spines.values():
         spine.set_color("#2D4A2D")
     fig.tight_layout()
@@ -527,7 +527,7 @@ def fig_polar(history, labelled, scan_idx, drone_color):
         ax.plot([np.deg2rad(deg)], [1.0], "o", color=col, ms=12,
                 markeredgecolor="white", markeredgewidth=1.5)
         ax.text(np.deg2rad(deg), 1.22, kw_kr(kw), color=col,
-                fontweight="bold", fontsize=12.6, ha="center",
+                fontweight="bold", fontsize=16.4, ha="center",
                 family="monospace")
     ax.set_theta_zero_location("N")
     ax.set_theta_direction(-1)
@@ -535,7 +535,7 @@ def fig_polar(history, labelled, scan_idx, drone_color):
     ax.set_yticklabels([])
     ax.tick_params(colors="#8FA88B")
     ax.set_title("DOA SPECTRUM // 8-CH ULA",
-                 color="#C9A961", fontsize=14, fontweight="bold",
+                 color="#C9A961", fontsize=18.2, fontweight="bold",
                  family="monospace", pad=10)
     fig.tight_layout()
     return fig
@@ -572,7 +572,7 @@ def fig_timeline(history, labelled, scenario, scan_idx, color,
             ax.axvline(b, color="#DAA520", lw=1.0, ls=":",
                        alpha=0.6, zorder=2)
             ax.text((a + b) / 2, angles[-1] - 6,
-                    "OCCLUSION", fontsize=9, color="#DAA520",
+                    "OCCLUSION", fontsize=11.7, color="#DAA520",
                     fontweight="bold", ha="center", family="monospace",
                     alpha=0.85, zorder=3)
 
@@ -599,7 +599,7 @@ def fig_timeline(history, labelled, scenario, scan_idx, color,
         if pts:
             sx, sy, _ = pts[-1]
             ax.text(sx + 0.5, sy, f"TRK#{tid:02d}",
-                    fontsize=10, color=col, fontweight="bold",
+                    fontsize=13, color=col, fontweight="bold",
                     family="monospace", va="center",
                     bbox=dict(facecolor="#0A0F08", edgecolor=col,
                               boxstyle="round,pad=0.25",
@@ -612,7 +612,7 @@ def fig_timeline(history, labelled, scenario, scan_idx, color,
         for s, d, kw in pts:
             if kw and kw != prev:
                 kc = KW_COLOURS.get(kw, "#888")
-                ax.text(s, d + 7, kw_kr(kw), fontsize=11,
+                ax.text(s, d + 7, kw_kr(kw), fontsize=14.3,
                         color="white", fontweight="bold", ha="center",
                         family="monospace",
                         bbox=dict(facecolor=kc, edgecolor="white",
@@ -628,17 +628,17 @@ def fig_timeline(history, labelled, scenario, scan_idx, color,
                s=160, color="#A93226", edgecolor="white", lw=1.2,
                zorder=9)
     ax.text(scan_idx, angles[-1] + 1, f"NOW T+{scan_idx:03d}",
-            fontsize=10, color="#A93226", fontweight="bold",
+            fontsize=13, color="#A93226", fontweight="bold",
             ha="center", family="monospace", zorder=10)
 
     # 6) Axes
     ax.set_xlim(-0.8, n + 1.5)
     ax.set_ylim(angles[0] - 4, angles[-1] + 8)
     ax.set_xlabel("MISSION SCAN  (T+)", color="#A3B8A0",
-                  family="monospace", fontsize=12, fontweight="bold")
+                  family="monospace", fontsize=15.6, fontweight="bold")
     ax.set_ylabel("TARGET BEARING  (DEG)", color="#A3B8A0",
-                  family="monospace", fontsize=12, fontweight="bold")
-    ax.tick_params(colors="#A3B8A0", labelsize=11)
+                  family="monospace", fontsize=15.6, fontweight="bold")
+    ax.tick_params(colors="#A3B8A0", labelsize=14.3)
 
     # Bearing reference lines
     for ref in (-60, -30, 0, 30, 60):
@@ -651,14 +651,14 @@ def fig_timeline(history, labelled, scenario, scan_idx, color,
 
     # Title (left) + meta (right)
     ax.set_title("TRACK  +  KWS  TIMELINE",
-                 color="#C9A961", fontsize=15, fontweight="bold",
+                 color="#C9A961", fontsize=19.5, fontweight="bold",
                  family="monospace", loc="left", pad=12)
     n_tracks = len(by_id)
     n_dets = sum(len(p) for p in by_id.values())
     fig.text(0.985, 0.965,
              f"TRACKS  {n_tracks}  //  DETECTIONS  {n_dets}  //  "
              f"SCANS  {n}",
-             ha="right", va="top", fontsize=10, color="#8FA88B",
+             ha="right", va="top", fontsize=13, color="#8FA88B",
              family="monospace")
 
     fig.tight_layout()
@@ -678,9 +678,9 @@ def fig_sparkline(values, color="#C9A961"):
         # Threshold lines
         ax.axhline(8, color="#DAA520", lw=0.8, ls=":", alpha=0.6)
         ax.axhline(15, color="#A93226", lw=0.8, ls=":", alpha=0.6)
-        ax.text(0, 8.2, "ELEVATED 8", fontsize=8, color="#DAA520",
+        ax.text(0, 8.2, "ELEVATED 8", fontsize=10.4, color="#DAA520",
                 fontweight="bold", family="monospace")
-        ax.text(0, 15.2, "CRITICAL 15", fontsize=8, color="#A93226",
+        ax.text(0, 15.2, "CRITICAL 15", fontsize=10.4, color="#A93226",
                 fontweight="bold", family="monospace")
         # Highlight latest point
         ax.scatter([x[-1]], [values[-1]], s=160, color=color,
@@ -1549,13 +1549,13 @@ def main():
                 ax.text(bar.get_x() + bar.get_width()/2,
                         bar.get_height() + 0.08, str(val),
                         ha="center", color="white",
-                        fontweight="bold", fontsize=12,
+                        fontweight="bold", fontsize=15.6,
                         family="monospace")
             ax.set_title("CONTACTS  PER  DRONE",
-                         color="#C9A961", fontsize=12,
+                         color="#C9A961", fontsize=15.6,
                          fontweight="bold", family="monospace",
                          loc="left", pad=10)
-            ax.tick_params(colors="#A3B8A0", labelsize=10)
+            ax.tick_params(colors="#A3B8A0", labelsize=13.0)
             for s in ax.spines.values():
                 s.set_color("#2D4A2D")
             ax.set_ylim(0, max(counts + [1]) * 1.3)
@@ -1577,16 +1577,16 @@ def main():
             for bar, val in zip(bars, bats):
                 ax.text(val + 1.5, bar.get_y() + bar.get_height()/2,
                         f"{val}%", va="center", color="white",
-                        fontweight="bold", fontsize=11,
+                        fontweight="bold", fontsize=14.3,
                         family="monospace")
             ax.set_xlim(0, 110)
             ax.axvline(30, color="#A93226", lw=1, ls=":", alpha=0.6)
             ax.axvline(60, color="#DAA520", lw=1, ls=":", alpha=0.6)
             ax.set_title("FLEET  BATTERY  (%)",
-                         color="#C9A961", fontsize=12,
+                         color="#C9A961", fontsize=15.6,
                          fontweight="bold", family="monospace",
                          loc="left", pad=10)
-            ax.tick_params(colors="#A3B8A0", labelsize=10)
+            ax.tick_params(colors="#A3B8A0", labelsize=13.0)
             for s in ax.spines.values():
                 s.set_color("#2D4A2D")
             ax.grid(axis="x", alpha=0.15, color="#2D4A2D")
@@ -1618,13 +1618,13 @@ def main():
                                 startangle=90, counterclock=False)
             ax.text(0, 0.05, str(sum(vals)),
                     ha="center", va="center",
-                    color="#C9A961", fontsize=22, fontweight="bold",
+                    color="#C9A961", fontsize=28.6, fontweight="bold",
                     family="monospace")
             ax.text(0, -0.18, "DETECTIONS", ha="center", va="center",
-                    color="#A3B8A0", fontsize=8.5,
+                    color="#A3B8A0", fontsize=11.1,
                     fontweight="bold", family="monospace")
             ax.set_title("KWS  CLASS  MIX",
-                         color="#C9A961", fontsize=12,
+                         color="#C9A961", fontsize=15.6,
                          fontweight="bold", family="monospace",
                          loc="left", pad=10)
             # legend (right side)
@@ -1634,7 +1634,7 @@ def main():
                        for k, v in zip(kws, vals)],
                        handles=handles, loc="center left",
                        bbox_to_anchor=(1.0, 0.5),
-                       frameon=False, fontsize=9,
+                       frameon=False, fontsize=11.7,
                        labelcolor="#A3B8A0",
                        prop={"family": "monospace"})
             fig.tight_layout()
