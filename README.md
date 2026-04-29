@@ -1,5 +1,19 @@
 # Iron Dome DOA Estimation + Tracking Simulation
 
+> ## :rocket: IEEE SPL 2026 reviewers — start here
+>
+> If you arrived from the IEEE Signal Processing Letters review system
+> for the manuscript **"When Does Temporal Memory Help? Selective SSM
+> vs. MLP in RL-Based Multi-Target DOA Track Management"**, please go
+> directly to **[SPL2026_REVIEWERS.md](SPL2026_REVIEWERS.md)** — a
+> single-page guide with the relevant files, a one-command
+> reproduction script, and a paper-claim → code map.
+>
+> Quick check: `python reproduce_spl.py` reproduces Table II within
+> tolerance (exit 0 = pass).
+
+---
+
 Underdetermined high-resolution DOA estimation using **2ρth-order Subspace Constrained Optimization (COP)**, extended with multi-target tracking for missile defense simulation.
 
 ## Key Innovation
