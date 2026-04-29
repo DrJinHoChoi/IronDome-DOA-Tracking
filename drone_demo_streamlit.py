@@ -677,6 +677,17 @@ def main():
         "OPS CONTROL</div><hr style='border-color:rgba(0,217,255,0.2)'>",
         unsafe_allow_html=True)
 
+    # PITCH MODE 토글 — 첨단국방피치데이용 hero overlay
+    pitch_mode = st.sidebar.toggle(
+        ":fire: PITCH MODE",
+        value=st.session_state.get("pitch_mode", False),
+        help="첨단 국방 피치 데이 발표 모드. Hero 패널 + 가치 비교 + "
+             "전 자동 토글 활성화.")
+    st.session_state.pitch_mode = pitch_mode
+    if pitch_mode:
+        # 자동 토글 모두 ON으로 강제
+        st.session_state["__force_auto"] = True
+
     st.sidebar.markdown("**MISSION ENV**")
     snr_db = st.sidebar.slider("ACOUSTIC SNR (dB)", 0.0, 20.0, 12.0, 0.5)
     n_scans = st.sidebar.slider("MISSION DURATION (scans)", 10, 60, 30)
@@ -700,13 +711,19 @@ def main():
 
     st.sidebar.markdown("---")
     st.sidebar.markdown("**:arrow_forward: AUTONOMOUS**")
-    auto_play = st.sidebar.toggle("Auto-advance scan", value=False)
+    _auto_default = pitch_mode  # PITCH MODE 시 모두 ON
+    auto_play = st.sidebar.toggle("Auto-advance scan",
+                                   value=_auto_default)
     play_speed = st.sidebar.select_slider("Speed",
-        options=[0.5, 1.0, 1.5, 2.0, 3.0], value=1.0,
+        options=[0.5, 1.0, 1.5, 2.0, 3.0],
+        value=1.5 if pitch_mode else 1.0,
         format_func=lambda v: f"{v}x", disabled=not auto_play)
-    auto_capture_cam = st.sidebar.toggle("Auto camera (3s)", value=False)
-    auto_capture_mic = st.sidebar.toggle("Auto mic (3s)", value=False)
-    auto_select = st.sidebar.toggle("Cycle drones (10s)", value=False)
+    auto_capture_cam = st.sidebar.toggle("Auto camera (3s)",
+                                          value=_auto_default)
+    auto_capture_mic = st.sidebar.toggle("Auto mic (3s)",
+                                          value=_auto_default)
+    auto_select = st.sidebar.toggle("Cycle drones (10s)",
+                                     value=_auto_default)
 
     st.sidebar.markdown("---")
     if st.sidebar.button(":arrows_counterclockwise:  RESTART MISSION",
@@ -823,6 +840,71 @@ def main():
                               use_container_width=True):
             st.session_state.onboard_dismissed = False
             st.rerun()
+
+    # ---- PITCH MODE Hero Splash (피치 데이용) ----
+    if pitch_mode:
+        st.markdown(
+            "<div style='background:linear-gradient(135deg,"
+            "#0A1F3A 0%,#1A4A7F 50%,#0A1F3A 100%);"
+            "border:3px solid #FFD60A;border-radius:10px;"
+            "padding:24px 28px;margin-bottom:14px;"
+            "box-shadow:0 0 30px rgba(255,214,10,0.25);"
+            "font-family:Orbitron,monospace'>"
+
+            "<div style='color:#FFD60A;font-size:0.85rem;"
+            "letter-spacing:0.3em;margin-bottom:6px'>"
+            "ADVANCED DEFENSE PITCH DAY 2026 // CLASSIFIED DEMO</div>"
+
+            "<div style='color:#00D9FF;font-size:2.2rem;font-weight:900;"
+            "letter-spacing:0.05em;margin-bottom:4px;line-height:1.05'>"
+            "한국형 드론 함대 음향 정찰 AI</div>"
+
+            "<div style='color:#E5F0FF;font-size:1.05rem;"
+            "margin-bottom:18px'>"
+            "Mamba SSM 기반 엣지 다중표적 추적 — 50KB 칩으로 14표적 동시 탐지</div>"
+
+            # 4-grid hero numbers
+            "<div style='display:grid;"
+            "grid-template-columns:repeat(4,1fr);gap:14px'>"
+
+            "<div style='background:rgba(0,217,255,0.08);"
+            "border-left:4px solid #00D9FF;padding:12px 14px;border-radius:4px'>"
+            "<div style='color:#5B7FA3;font-size:0.7rem;letter-spacing:0.15em'>"
+            "MODEL FOOTPRINT</div>"
+            "<div style='color:#00D9FF;font-size:1.8rem;font-weight:900'>"
+            "50 KB</div>"
+            "<div style='color:#7FB3D5;font-size:0.75rem'>"
+            "INT8 / 카톡 사진 1장 미만</div></div>"
+
+            "<div style='background:rgba(46,230,166,0.08);"
+            "border-left:4px solid #2EE6A6;padding:12px 14px;border-radius:4px'>"
+            "<div style='color:#5B7FA3;font-size:0.7rem;letter-spacing:0.15em'>"
+            "PER-SCAN LATENCY</div>"
+            "<div style='color:#2EE6A6;font-size:1.8rem;font-weight:900'>"
+            "3.4 MS</div>"
+            "<div style='color:#7FB3D5;font-size:0.75rem'>"
+            "STM32H7 Cortex-M7</div></div>"
+
+            "<div style='background:rgba(255,214,10,0.08);"
+            "border-left:4px solid #FFD60A;padding:12px 14px;border-radius:4px'>"
+            "<div style='color:#5B7FA3;font-size:0.7rem;letter-spacing:0.15em'>"
+            "SOURCE CAPACITY</div>"
+            "<div style='color:#FFD60A;font-size:1.8rem;font-weight:900'>"
+            "8 → 14</div>"
+            "<div style='color:#7FB3D5;font-size:0.75rem'>"
+            "마이크 8 → 표적 14 (4× 기존)</div></div>"
+
+            "<div style='background:rgba(255,59,92,0.08);"
+            "border-left:4px solid #FF3B5C;padding:12px 14px;border-radius:4px'>"
+            "<div style='color:#5B7FA3;font-size:0.7rem;letter-spacing:0.15em'>"
+            "UNIT COST</div>"
+            "<div style='color:#FF3B5C;font-size:1.8rem;font-weight:900'>"
+            "&lt; $300</div>"
+            "<div style='color:#7FB3D5;font-size:0.75rem'>"
+            "Iron Dome 1발 = $50K~80K</div></div>"
+
+            "</div></div>",
+            unsafe_allow_html=True)
 
     # ---- Header HERO ----
     elapsed = int(time.time() - st.session_state.mission_start)
@@ -1175,6 +1257,98 @@ def main():
     else:
         log_text = "\n".join(reversed(st.session_state.log[-15:]))
         st.code(log_text, language="text")
+
+    # ---- PITCH MODE: 가치 비교 + CTA 패널 ----
+    if pitch_mode:
+        st.markdown(
+            "<div style='margin-top:24px;padding:22px 26px;"
+            "background:linear-gradient(135deg,#0F2545,#1A3A5F);"
+            "border:2px solid #FFD60A;border-radius:8px;"
+            "font-family:Orbitron,monospace'>"
+
+            "<div style='color:#FFD60A;font-size:1.3rem;font-weight:800;"
+            "letter-spacing:0.1em;margin-bottom:14px'>"
+            ":dart:  전략 가치 제안</div>"
+
+            # 비교 표
+            "<table style='width:100%;border-collapse:collapse;"
+            "color:#E5F0FF;font-size:0.92rem'>"
+            "<tr style='background:rgba(0,217,255,0.10);"
+            "border-bottom:1px solid #1E3A5F'>"
+            "<th style='text-align:left;padding:8px 10px'>지표</th>"
+            "<th style='text-align:left;padding:8px 10px;color:#FF3B5C'>"
+            "현행 한국형 방공 (Iron Dome 도입案)</th>"
+            "<th style='text-align:left;padding:8px 10px;color:#2EE6A6'>"
+            "본 제안 (NC-SSM 드론 함대)</th></tr>"
+
+            "<tr style='border-bottom:1px solid #1A3A5F'>"
+            "<td style='padding:8px 10px;color:#5B7FA3'>1발 단가</td>"
+            "<td style='padding:8px 10px'>$50,000 ~ $80,000 (Tamir)</td>"
+            "<td style='padding:8px 10px;color:#FFD60A;font-weight:700'>"
+            "&lt; $300 / 드론 (양산 시)</td></tr>"
+
+            "<tr style='border-bottom:1px solid #1A3A5F'>"
+            "<td style='padding:8px 10px;color:#5B7FA3'>1대 시스템</td>"
+            "<td style='padding:8px 10px'>$50M (라다 + 발사대 + 통제소)</td>"
+            "<td style='padding:8px 10px;color:#FFD60A;font-weight:700'>"
+            "$30K (드론 100기 함대)</td></tr>"
+
+            "<tr style='border-bottom:1px solid #1A3A5F'>"
+            "<td style='padding:8px 10px;color:#5B7FA3'>탐지 모드</td>"
+            "<td style='padding:8px 10px'>레이더 (RF) — 드론 회피 가능</td>"
+            "<td style='padding:8px 10px;color:#FFD60A;font-weight:700'>"
+            "음향 + 광학 융합 — 스텔스 드론도 추적</td></tr>"
+
+            "<tr style='border-bottom:1px solid #1A3A5F'>"
+            "<td style='padding:8px 10px;color:#5B7FA3'>전개 시간</td>"
+            "<td style='padding:8px 10px'>수 주 ~ 수 개월 (고정 포대)</td>"
+            "<td style='padding:8px 10px;color:#FFD60A;font-weight:700'>"
+            "수 분 (드론 자율 이륙)</td></tr>"
+
+            "<tr style='border-bottom:1px solid #1A3A5F'>"
+            "<td style='padding:8px 10px;color:#5B7FA3'>다중 표적 동시 처리</td>"
+            "<td style='padding:8px 10px'>Iron Dome: 동시 ~10발 한계</td>"
+            "<td style='padding:8px 10px;color:#FFD60A;font-weight:700'>"
+            "함대 4기 × 14표적 = 56표적 동시</td></tr>"
+
+            "<tr style='border-bottom:1px solid #1A3A5F'>"
+            "<td style='padding:8px 10px;color:#5B7FA3'>인터넷 의존도</td>"
+            "<td style='padding:8px 10px'>중앙 통제소 필수</td>"
+            "<td style='padding:8px 10px;color:#FFD60A;font-weight:700'>"
+            "엣지 자율 (50KB MCU)</td></tr>"
+
+            "<tr>"
+            "<td style='padding:8px 10px;color:#5B7FA3'>국내 기술 자립</td>"
+            "<td style='padding:8px 10px'>이스라엘 라이선스 의존</td>"
+            "<td style='padding:8px 10px;color:#FFD60A;font-weight:700'>"
+            "100% 국내 IP (KR + US 특허 출원)</td></tr>"
+
+            "</table>"
+
+            # CTA 박스
+            "<div style='display:grid;grid-template-columns:1fr 1fr;"
+            "gap:14px;margin-top:18px'>"
+
+            "<div style='background:rgba(46,230,166,0.10);"
+            "border:1px solid #2EE6A6;border-radius:4px;padding:14px'>"
+            "<div style='color:#2EE6A6;font-size:0.8rem;"
+            "letter-spacing:0.15em;font-weight:700'>"
+            "TRL // 기술 성숙도</div>"
+            "<div style='color:#E5F0FF;font-size:1.05rem;margin-top:6px'>"
+            "TRL 5-6 / 알고리즘 검증 완료, 엣지 포팅 시연 완료<br>"
+            "(STM32H7 INT8 / 41.4KB / 3.4ms 실측)</div></div>"
+
+            "<div style='background:rgba(255,214,10,0.10);"
+            "border:1px solid #FFD60A;border-radius:4px;padding:14px'>"
+            "<div style='color:#FFD60A;font-size:0.8rem;"
+            "letter-spacing:0.15em;font-weight:700'>"
+            "PARTNERSHIP // 협력 가능 분야</div>"
+            "<div style='color:#E5F0FF;font-size:1.05rem;margin-top:6px'>"
+            "ADD 시제 통합 / 한화·LIG 양산 / DAPA 사업화<br>"
+            "IEEE SPL 2026 게재 후 IP 라이선싱 가능</div></div>"
+
+            "</div></div>",
+            unsafe_allow_html=True)
 
     # ---- Footer ----
     st.markdown(
