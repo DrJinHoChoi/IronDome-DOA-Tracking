@@ -416,10 +416,10 @@ def fig_tactical(fleet, selected_id, fleet_data, scan_idx):
     # 격자
     for r in (10, 20, 30, 40, 50):
         circ = plt.Circle((0, 0), r, fill=False, color="#2D4A2D",
-                          lw=0.6, alpha=0.55, linestyle="--")
+                          lw=0.81, alpha=0.55, linestyle="--")
         ax.add_patch(circ)
         ax.text(r * 0.71, -r * 0.71, f"{r:02d} KM", color="#2D4A2D",
-                fontsize=7, ha="center",
+                fontsize=9.8, ha="center",
                 family="monospace")
     ax.axhline(0, color="#2D4A2D", lw=0.4, alpha=0.45)
     ax.axvline(0, color="#2D4A2D", lw=0.4, alpha=0.45)
@@ -427,7 +427,7 @@ def fig_tactical(fleet, selected_id, fleet_data, scan_idx):
     for ang, lab in [(0, "N"), (90, "E"), (180, "S"), (270, "W")]:
         x = 56 * np.sin(np.deg2rad(ang))
         y = 56 * np.cos(np.deg2rad(ang))
-        ax.text(x, y, lab, color="#C9A961", fontsize=14,
+        ax.text(x, y, lab, color="#C9A961", fontsize=19.6,
                 fontweight="bold", ha="center", va="center",
                 family="monospace")
 
@@ -449,7 +449,7 @@ def fig_tactical(fleet, selected_id, fleet_data, scan_idx):
             target_xy.append((tx, ty, kw))
             ax.plot([dx, tx], [dy, ty],
                     color=KW_COLOURS.get(kw, "#888"),
-                    lw=0.8, alpha=0.45, linestyle=":")
+                    lw=1.08, alpha=0.45, linestyle=":")
 
     for x, y, kw in target_xy:
         col = KW_COLOURS.get(kw, "#888")
@@ -461,7 +461,7 @@ def fig_tactical(fleet, selected_id, fleet_data, scan_idx):
         if lvl >= 4:
             for r_ring, alpha in [(3, 0.7), (4.5, 0.4)]:
                 ring = plt.Circle((x, y), r_ring, fill=False,
-                                   color="#A93226", lw=1.5, alpha=alpha)
+                                   color="#A93226", lw=2.03, alpha=alpha)
                 ax.add_patch(ring)
 
     # Drones
@@ -483,29 +483,29 @@ def fig_tactical(fleet, selected_id, fleet_data, scan_idx):
         tri = (rot @ tri.T).T + np.array([x, y])
         poly = plt.Polygon(tri, color=d["color"],
                             ec="#FFFFFF" if is_sel else "white",
-                            lw=2 if is_sel else 0.6, zorder=6)
+                            lw=2.7 if is_sel else 0.6, zorder=6)
         ax.add_patch(poly)
         ax.text(x, y - 7, d["code"], color=d["color"],
-                fontsize=9, fontweight="bold", ha="center",
+                fontsize=12.6, fontweight="bold", ha="center",
                 family="monospace",
                 bbox=dict(facecolor=bg, edgecolor="none",
                           alpha=0.85, pad=2))
         if is_sel:
             for r in (6, 8.5):
                 ring = plt.Circle((x, y), r, fill=False,
-                                   color="#C9A961", lw=1.0,
+                                   color="#C9A961", lw=1.35,
                                    alpha=0.7 - r * 0.05,
                                    linestyle="-")
                 ax.add_patch(ring)
 
     ax.set_xticks([]); ax.set_yticks([])
     ax.text(-62, 51, f"TACTICAL  //  T+{scan_idx:03d}",
-            color="#C9A961", fontsize=11, fontweight="bold",
+            color="#C9A961", fontsize=15.4, fontweight="bold",
             family="monospace")
     ax.text(-62, 47, f"FLEET={len(fleet):02d}  CONTACTS={len(target_xy):02d}",
-            color="#8FA88B", fontsize=9, family="monospace")
+            color="#8FA88B", fontsize=12.6, family="monospace")
     ax.text(45, 51, f"GRID 10KM", color="#8FA88B",
-            fontsize=8, family="monospace")
+            fontsize=11.2, family="monospace")
     for spine in ax.spines.values():
         spine.set_color("#2D4A2D")
     fig.tight_layout()
@@ -520,14 +520,14 @@ def fig_polar(history, labelled, scan_idx, drone_color):
     fig.patch.set_facecolor("#0A0F08")
     ax = fig.add_subplot(111, projection="polar")
     ax.set_facecolor("#14201A")
-    ax.plot(np.deg2rad(angles), P, color=drone_color, lw=1.6)
+    ax.plot(np.deg2rad(angles), P, color=drone_color, lw=2.16)
     ax.fill(np.deg2rad(angles), P, color=drone_color, alpha=0.15)
     for tid, deg, kw in labelled[scan_idx]:
         col = KW_COLOURS.get(kw, "#888")
         ax.plot([np.deg2rad(deg)], [1.0], "o", color=col, ms=12,
                 markeredgecolor="white", markeredgewidth=1.5)
         ax.text(np.deg2rad(deg), 1.22, kw_kr(kw), color=col,
-                fontweight="bold", fontsize=9, ha="center",
+                fontweight="bold", fontsize=12.6, ha="center",
                 family="monospace")
     ax.set_theta_zero_location("N")
     ax.set_theta_direction(-1)
@@ -535,7 +535,7 @@ def fig_polar(history, labelled, scan_idx, drone_color):
     ax.set_yticklabels([])
     ax.tick_params(colors="#8FA88B")
     ax.set_title("DOA SPECTRUM // 8-CH ULA",
-                 color="#C9A961", fontsize=10, fontweight="bold",
+                 color="#C9A961", fontsize=14, fontweight="bold",
                  family="monospace", pad=10)
     fig.tight_layout()
     return fig
@@ -555,13 +555,13 @@ def fig_timeline(history, labelled, scenario, scan_idx, color,
             by_id.setdefault(tid, []).append((s, deg, kw))
     for tid, pts in by_id.items():
         ss = [p[0] for p in pts]; ds = [p[1] for p in pts]
-        ax.plot(ss, ds, "-", color=palette[tid % 10], lw=1.7,
+        ax.plot(ss, ds, "-", color=palette[tid % 10], lw=2.29,
                 marker="o", ms=3)
         prev = None
         for s, d, kw in pts:
             if kw and kw != prev:
                 col = KW_COLOURS.get(kw, "#888")
-                ax.text(s, d + 6, kw_kr(kw), fontsize=7, color=col,
+                ax.text(s, d + 6, kw_kr(kw), fontsize=9.8, color=col,
                         fontweight="bold", ha="center",
                         family="monospace")
                 prev = kw
@@ -569,11 +569,11 @@ def fig_timeline(history, labelled, scenario, scan_idx, color,
         gt = history["gt"]
         for k in range(gt.shape[1]):
             ax.plot(np.arange(n), gt[:, k], color="#8FA88B",
-                    lw=0.5, linestyle="--", alpha=0.4)
+                    lw=0.68, linestyle="--", alpha=0.4)
     if show_occl:
         for sidx, a, b in scenario["occlusions"]:
             ax.axvspan(a, b, alpha=0.18, color="#C09030")
-    ax.axvline(scan_idx, color=color, lw=2, alpha=0.9)
+    ax.axvline(scan_idx, color=color, lw=2.7, alpha=0.9)
     ax.set_xlim(-0.5, n - 0.5)
     ax.set_ylim(angles[0], angles[-1])
     ax.set_xlabel("MISSION SCAN", color="#8FA88B", family="monospace")
@@ -583,7 +583,7 @@ def fig_timeline(history, labelled, scenario, scan_idx, color,
         spine.set_color("#2D4A2D")
     ax.grid(alpha=0.18, color="#2D4A2D")
     ax.set_title("TRACK + KWS TIMELINE",
-                 color="#C9A961", fontsize=10, fontweight="bold",
+                 color="#C9A961", fontsize=14, fontweight="bold",
                  family="monospace", loc="left")
     fig.tight_layout()
     return fig
@@ -594,7 +594,7 @@ def fig_sparkline(values, color="#C9A961"):
     fig.patch.set_facecolor("#14201A")
     ax.set_facecolor("#14201A")
     if len(values) > 1:
-        ax.plot(values, color=color, lw=1.5)
+        ax.plot(values, color=color, lw=2.03)
         ax.fill_between(range(len(values)), values, color=color, alpha=0.18)
     ax.set_xticks([]); ax.set_yticks([])
     for s in ax.spines.values():
