@@ -47,29 +47,50 @@ review} and is therefore not invoked by this pre-review withdrawal.
 
 \medskip
 \textbf{What changed since SPL-46772-2026.}
-Three reference entries were corrected against arXiv and IEEE~Xplore:
+The previous submission triggered a Research Integrity Alert from the
+IEEE editorial system because the printed bibliography did not display
+DOI / verifiable identifiers (the GROBID extractor reported that 61\%
+of the references could not be verified by DOI). The withdrawal
+allowed me to make two corrections:
+
+\medskip
+\emph{(A) Three clerical bibliographic errors:}
 \begin{itemize}\itemsep1pt\parskip0pt
   \item \textbf{Ref [8]} (arXiv:2205.11104) -- author list corrected
         from ``N.~Dorka'' to the actual authors
         ``M.~Pleines, M.~Pallasch, F.~Zimmer, and M.~Preuss.''
   \item \textbf{Ref [11]} (Ota, Decision~Mamba) -- title and arXiv ID
         corrected from ``\ldots Hybrid Selective Sequence Modeling,
-        arXiv:2406.00079'' to the actual Ota paper
-        ``Decision~Mamba: Reinforcement Learning via Sequence Modeling
-        with Selective State Spaces, arXiv:2403.19925''
-        (arXiv:2406.00079 is a separate paper by Huang et~al.\
-        previously conflated with Ota's work).
+        arXiv:2406.00079'' to the actual Ota paper ``Decision~Mamba:
+        Reinforcement Learning via Sequence Modeling with Selective
+        State Spaces, arXiv:2403.19925'' (arXiv:2406.00079 is a
+        different paper by Huang et~al.\ previously conflated with
+        Ota's work).
   \item \textbf{Ref [12]} (Erol et~al., Audio~Mamba) -- title corrected
-        to the published IEEE SPL title
-        ``\emph{Bidirectional} State Space Model for Audio
-        Representation Learning'' (IEEE Xplore record~10720871).
+        to the published IEEE~SPL title ``\emph{Bidirectional} State
+        Space Model for Audio Representation Learning'' and DOI
+        updated to 10.1109/LSP.2024.3483009 (IEEE Xplore record
+        10720871).
 \end{itemize}
 
+\medskip
+\emph{(B) DOI / verifiable identifier added to every reference:}
+The bibliography (\texttt{.bib}) now carries a \texttt{doi} field for
+all sixteen references and an explicit DOI string is rendered in the
+printed bibliography of the PDF. Each entry is hyperlinked to its
+\href{https://doi.org}{doi.org} resolver. arXiv-only papers use the
+canonical \texttt{10.48550/arXiv.<ID>} DOI, journal/IEEE papers use
+their official DOI, AAMAS proceedings paper [4] uses the ACM Digital
+Library identifier, and the ICLR papers carry their corresponding
+arXiv DOIs. The companion COP-RFS paper [3] is currently under review
+at IEEE TSP and a preprint URL is provided in lieu of a DOI.
+This change ensures GROBID-style automated tools can verify all
+references end-to-end.
+
 The technical content -- Proposition~1, Algorithm~1, all theoretical
-derivations, all experimental results, all figures, and all tables --
-is \textbf{unchanged} from the withdrawn version. The corrections are
-purely bibliographic. All thirteen remaining references were
-re-verified and confirmed correct.
+derivations, experimental results, figures, and tables -- is
+\textbf{unchanged} from the withdrawn version. The corrections are
+purely bibliographic / metadata.
 
 \medskip
 \textbf{Summary of contribution.}

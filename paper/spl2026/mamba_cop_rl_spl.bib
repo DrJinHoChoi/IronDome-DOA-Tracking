@@ -1,6 +1,15 @@
 % =========================================================
 %  Bibliography — Mamba-COP-RL IEEE SPL 2026
+%  All entries include DOI/URL for verification.
 % =========================================================
+
+% ---- IEEEtran CTL block ----
+@IEEEtranBSTCTL{IEEEexample:BSTcontrol,
+  CTLuse_article_number  = "yes",
+  CTLuse_paper           = "yes",
+  CTLdash_repeated_names = "no",
+  CTLname_format_string  = "{f.~}{vv~}{ll}{, jj}"
+}
 
 % ---- COP / DOA ----
 
@@ -14,7 +23,8 @@
   number    = {7},
   pages     = {1858--1873},
   year      = {2015},
-  doi       = {10.1109/TSP.2014.2385036}
+  doi       = {10.1109/TSP.2014.2385036},
+  note      = {DOI: \href{https://doi.org/10.1109/TSP.2014.2385036}{10.1109/TSP.2014.2385036}}
 }
 
 @article{choi2026irondome,
@@ -23,7 +33,8 @@
                Multi-Target Tracking via {COP-RFS}},
   journal   = {IEEE Transactions on Signal Processing},
   year      = {2026},
-  note      = {submitted}
+  note      = {Submitted; preprint at
+               \href{https://github.com/DrJinHoChoi/IronDome-DOA-Tracking}{github.com/DrJinHoChoi/IronDome-DOA-Tracking}}
 }
 
 % ---- GM-PHD / RFS ----
@@ -36,7 +47,8 @@
   number    = {11},
   pages     = {4091--4104},
   year      = {2006},
-  doi       = {10.1109/TSP.2006.881190}
+  doi       = {10.1109/TSP.2006.881190},
+  note      = {DOI: \href{https://doi.org/10.1109/TSP.2006.881190}{10.1109/TSP.2006.881190}}
 }
 
 % ---- GOSPA ----
@@ -48,7 +60,8 @@
   title     = {Generalized Optimal Sub-pattern Assignment Metric},
   booktitle = {20th International Conference on Information Fusion (Fusion)},
   year      = {2017},
-  doi       = {10.23919/ICIF.2017.8009645}
+  doi       = {10.23919/ICIF.2017.8009645},
+  note      = {DOI: \href{https://doi.org/10.23919/ICIF.2017.8009645}{10.23919/ICIF.2017.8009645}}
 }
 
 % ---- RL for tracking ----
@@ -59,7 +72,8 @@
   booktitle = {Proceedings of the 17th International Conference on
                Autonomous Agents and Multi-Agent Systems (AAMAS)},
   pages     = {1397--1404},
-  year      = {2018}
+  year      = {2018},
+  note      = {ACM DL: \href{https://dl.acm.org/doi/10.5555/3237383.3237908}{10.5555/3237383.3237908}}
 }
 
 @article{stephan2022scene,
@@ -71,7 +85,8 @@
   volume    = {8},
   pages     = {100284},
   year      = {2022},
-  doi       = {10.1016/j.mlwa.2022.100284}
+  doi       = {10.1016/j.mlwa.2022.100284},
+  note      = {DOI: \href{https://doi.org/10.1016/j.mlwa.2022.100284}{10.1016/j.mlwa.2022.100284}}
 }
 
 @article{ewers2025multitarget,
@@ -81,7 +96,8 @@
                Deep Reinforcement Learning},
   journal   = {arXiv preprint arXiv:2502.13584},
   year      = {2025},
-  doi       = {10.48550/arXiv.2502.13584}
+  doi       = {10.48550/arXiv.2502.13584},
+  note      = {DOI: \href{https://doi.org/10.48550/arXiv.2502.13584}{10.48550/arXiv.2502.13584}}
 }
 
 % ---- Recurrent RL ----
@@ -91,7 +107,10 @@
   title     = {Deep Recurrent {Q}-Learning for Partially Observable {MDP}s},
   booktitle = {AAAI Fall Symposium on Sequential Decision Making for
                Intelligent Agents (AAAI-SDMIA15)},
-  year      = {2015}
+  year      = {2015},
+  doi       = {10.48550/arXiv.1507.06527},
+  note      = {arXiv: \href{https://arxiv.org/abs/1507.06527}{1507.06527},
+               DOI: \href{https://doi.org/10.48550/arXiv.1507.06527}{10.48550/arXiv.1507.06527}}
 }
 
 @inproceedings{kapturowski2019r2d2,
@@ -100,7 +119,8 @@
   title     = {Recurrent Experience Replay in Distributed Reinforcement
                Learning},
   booktitle = {International Conference on Learning Representations (ICLR)},
-  year      = {2019}
+  year      = {2019},
+  note      = {OpenReview: \href{https://openreview.net/forum?id=r1lyTjAqYX}{r1lyTjAqYX}}
 }
 
 @article{pleines2022recurrent,
@@ -110,7 +130,8 @@
                Policy Optimization},
   journal   = {arXiv preprint arXiv:2205.11104},
   year      = {2022},
-  doi       = {10.48550/arXiv.2205.11104}
+  doi       = {10.48550/arXiv.2205.11104},
+  note      = {DOI: \href{https://doi.org/10.48550/arXiv.2205.11104}{10.48550/arXiv.2205.11104}}
 }
 
 % ---- PPO ----
@@ -121,7 +142,8 @@
   title     = {Proximal Policy Optimization Algorithms},
   journal   = {arXiv preprint arXiv:1707.06347},
   year      = {2017},
-  doi       = {10.48550/arXiv.1707.06347}
+  doi       = {10.48550/arXiv.1707.06347},
+  note      = {DOI: \href{https://doi.org/10.48550/arXiv.1707.06347}{10.48550/arXiv.1707.06347}}
 }
 
 % ---- SSM / Mamba ----
@@ -131,7 +153,10 @@
   title     = {Efficiently Modeling Long Sequences with Structured State
                Spaces},
   booktitle = {International Conference on Learning Representations (ICLR)},
-  year      = {2022}
+  year      = {2022},
+  doi       = {10.48550/arXiv.2111.00396},
+  note      = {arXiv: \href{https://arxiv.org/abs/2111.00396}{2111.00396},
+               DOI: \href{https://doi.org/10.48550/arXiv.2111.00396}{10.48550/arXiv.2111.00396}}
 }
 
 @inproceedings{smith2023s5,
@@ -139,7 +164,10 @@
                Scott W. Linderman},
   title     = {Simplified State Space Layers for Sequence Modeling},
   booktitle = {International Conference on Learning Representations (ICLR)},
-  year      = {2023}
+  year      = {2023},
+  doi       = {10.48550/arXiv.2208.04933},
+  note      = {arXiv: \href{https://arxiv.org/abs/2208.04933}{2208.04933},
+               DOI: \href{https://doi.org/10.48550/arXiv.2208.04933}{10.48550/arXiv.2208.04933}}
 }
 
 @article{gu2023mamba,
@@ -148,7 +176,8 @@
                Spaces},
   journal   = {arXiv preprint arXiv:2312.00752},
   year      = {2023},
-  doi       = {10.48550/arXiv.2312.00752}
+  doi       = {10.48550/arXiv.2312.00752},
+  note      = {DOI: \href{https://doi.org/10.48550/arXiv.2312.00752}{10.48550/arXiv.2312.00752}}
 }
 
 @article{ota2024decisionmamba,
@@ -157,7 +186,8 @@
                Modeling with Selective State Spaces},
   journal   = {arXiv preprint arXiv:2403.19925},
   year      = {2024},
-  doi       = {10.48550/arXiv.2403.19925}
+  doi       = {10.48550/arXiv.2403.19925},
+  note      = {DOI: \href{https://doi.org/10.48550/arXiv.2403.19925}{10.48550/arXiv.2403.19925}}
 }
 
 @article{han2024audiomamba,
@@ -169,7 +199,8 @@
   volume    = {31},
   pages     = {2975--2979},
   year      = {2024},
-  doi       = {10.1109/LSP.2024.3399753}
+  doi       = {10.1109/LSP.2024.3483009},
+  note      = {DOI: \href{https://doi.org/10.1109/LSP.2024.3483009}{10.1109/LSP.2024.3483009}}
 }
 
 % ---- Information Theory ----
@@ -180,7 +211,8 @@
   edition   = {2nd},
   publisher = {Wiley},
   year      = {2006},
-  doi       = {10.1002/047174882X}
+  doi       = {10.1002/047174882X},
+  note      = {DOI: \href{https://doi.org/10.1002/047174882X}{10.1002/047174882X}}
 }
 
 % ---- Recurrent universality / POMDP ----
@@ -193,7 +225,8 @@
   number    = {4},
   pages     = {253--263},
   year      = {2006},
-  doi       = {10.1142/S0129065706000333}
+  doi       = {10.1142/S0129065706000333},
+  note      = {DOI: \href{https://doi.org/10.1142/S0129065706000333}{10.1142/S0129065706000333}}
 }
 
 @article{kaelbling1998planning,
@@ -206,5 +239,6 @@
   number    = {1--2},
   pages     = {99--134},
   year      = {1998},
-  doi       = {10.1016/S0004-3702(98)00023-X}
+  doi       = {10.1016/S0004-3702(98)00023-X},
+  note      = {DOI: \href{https://doi.org/10.1016/S0004-3702(98)00023-X}{10.1016/S0004-3702(98)00023-X}}
 }
