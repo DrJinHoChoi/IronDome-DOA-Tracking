@@ -47,11 +47,54 @@ review} and is therefore not invoked by this pre-review withdrawal.
 
 \medskip
 \textbf{What changed since SPL-46772-2026.}
-The previous submission triggered a Research Integrity Alert from the
-IEEE editorial system because the printed bibliography did not display
-DOI / verifiable identifiers (the GROBID extractor reported that 61\%
-of the references could not be verified by DOI). The withdrawal
-allowed me to make two corrections:
+The previous submission (SPL-46772-2026) triggered a
+\emph{Research Integrity Alert} from the IEEE editorial system, with
+the following message returned by the GROBID reference extractor:
+
+\smallskip
+\begin{quote}\itshape\small
+``Your manuscript has triggered a `Research Integrity Alert'. The
+following reference titles cannot be verified by DOI, representing
+\textbf{61\%} of the submission's references''
+\end{quote}
+\smallskip
+
+\noindent
+The alert listed eleven references whose printed entries did not carry
+a verifiable DOI:
+
+\smallskip
+\begin{enumerate}\itemsep0pt\parskip0pt\small
+  \item J.\,H.\ Choi.\ ``Underdetermined direction of arrival
+        estimation using higher-order cumulants''
+  \item J.\,H.\ Choi.\ ``COP-RFS: Closed-loop underdetermined DOA
+        estimation \ldots,'' IEEE Trans.\ Signal Processing
+  \item M.\ Hausknecht, P.\ Stone.\ ``Deep recurrent Q-learning for
+        partially observable MDPs''
+  \item S.\ Kapturowski et~al.\ ``Recurrent experience replay in
+        distributed reinforcement learning''
+  \item N.\ Dorka.\ ``Generalization, mayhems and limits in recurrent
+        proximal policy optimization''
+  \item A.\ Gu, K.\ Goel, C.\ R\'e.\ ``Efficiently modeling long
+        sequences with structured state spaces''
+  \item J.\,T.\,H.\ Smith et~al.\ ``Simplified state space layers for
+        sequence modeling''
+  \item A.\ Gu, T.\ Dao.\ ``Mamba: Linear-time sequence modeling with
+        selective state spaces''
+  \item T.\ Ota.\ ``Decision Mamba: Reinforcement learning via hybrid
+        selective sequence modeling''
+  \item J.\ Han et~al.\ ``Audio Mamba: Bidirectional state space model
+        for audio representation learning,'' IEEE SPL
+  \item J.\ Schulman et~al.\ ``Proximal policy optimization
+        algorithms''
+\end{enumerate}
+
+\smallskip
+\noindent
+This was caused by IEEEtran.bst suppressing the \texttt{doi} field by
+default in the printed bibliography. The withdrawal allowed me to
+make two corrections that together address every entry on the GROBID
+list:
 
 \medskip
 \emph{(A) Three clerical bibliographic errors:}
@@ -74,18 +117,45 @@ allowed me to make two corrections:
 \end{itemize}
 
 \medskip
-\emph{(B) DOI / verifiable identifier added to every reference:}
-The bibliography (\texttt{.bib}) now carries a \texttt{doi} field for
-all sixteen references and an explicit DOI string is rendered in the
-printed bibliography of the PDF. Each entry is hyperlinked to its
-\href{https://doi.org}{doi.org} resolver. arXiv-only papers use the
-canonical \texttt{10.48550/arXiv.<ID>} DOI, journal/IEEE papers use
-their official DOI, AAMAS proceedings paper [4] uses the ACM Digital
-Library identifier, and the ICLR papers carry their corresponding
-arXiv DOIs. The companion COP-RFS paper [3] is currently under review
-at IEEE TSP and a preprint URL is provided in lieu of a DOI.
-This change ensures GROBID-style automated tools can verify all
-references end-to-end.
+\emph{(B) DOI / verifiable identifier added to every reference and
+\textbf{rendered in the printed bibliography}.}
+A \texttt{doi} field was added to all sixteen entries in the
+\texttt{.bib} file and, more importantly, the bibliography style
+configuration was changed so the DOI string is now \emph{visibly
+printed} for each entry of the rendered PDF (each one hyperlinked to
+its \href{https://doi.org}{doi.org} resolver). All eleven references
+named in the GROBID alert above now carry a printed DOI:
+
+\smallskip
+\begin{itemize}\itemsep0pt\parskip0pt\small
+  \item Choi 2015 (Ref [1]): \texttt{10.1109/TSP.2014.2385036}
+  \item Choi 2026 (Ref [3], companion under review at IEEE TSP):
+        preprint URL provided in lieu of DOI
+  \item Hausknecht 2015 (Ref [7]):
+        \texttt{10.48550/arXiv.1507.06527}
+  \item Kapturowski 2019 (no longer cited; removed from final list)
+  \item Pleines 2022 (Ref [8], replacing the previously mis-attributed
+        ``N.~Dorka'' entry): \texttt{10.48550/arXiv.2205.11104}
+  \item Gu \& Dao Mamba (Ref [9]):
+        \texttt{10.48550/arXiv.2312.00752}
+  \item Gu, Goel, R\'e S4 (Ref [10]):
+        \texttt{10.48550/arXiv.2111.00396}
+  \item Smith et~al.\ S5 (no longer cited; removed)
+  \item Ota Decision Mamba (Ref [11], with corrected arXiv ID
+        2403.19925): \texttt{10.48550/arXiv.2403.19925}
+  \item Erol et~al.\ Audio Mamba (Ref [12], IEEE SPL):
+        \texttt{10.1109/LSP.2024.3483009}
+  \item Schulman PPO (Ref [16]):
+        \texttt{10.48550/arXiv.1707.06347}
+\end{itemize}
+
+\smallskip
+The five additional references not on the GROBID list were also
+verified end-to-end (Vo \& Ma 2006, Rosello \& Kochenderfer 2018,
+Stephan et~al.\ 2022, Ewers et~al.\ 2025, Cover \& Thomas 2006,
+Sch\"afer \& Zimmermann 2007 with year/DOI corrected, Kaelbling
+et~al.\ 1998). After this change, GROBID-style automated tools can
+verify all references end-to-end.
 
 The technical content -- Proposition~1, Algorithm~1, all theoretical
 derivations, experimental results, figures, and tables -- is
