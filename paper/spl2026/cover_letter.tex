@@ -46,8 +46,20 @@ Processing Society Policies and Procedures Manual Section~6.16, whose
 review} and is therefore not invoked by this pre-review withdrawal.
 
 \medskip
-\textbf{What changed since SPL-46772-2026.}
-The previous submission (SPL-46772-2026) triggered a
+\textbf{Submission history.}
+This is the second resubmission after two prior submissions
+(SPL-46772-2026 and SPL-47058-2026) were rescinded by the
+editorial system due to GROBID-based reference verification:
+the extractor flagged 61\% (first submission) and 50\% (second
+submission) of references as DOI-unverifiable. The present
+resubmission addresses the root cause directly: every reference
+now carries a verbatim \texttt{\textbackslash url\{https://doi.org/\ldots\}}
+string in the printed bibliography that GROBID can extract as
+plain text.
+
+\medskip
+\textbf{What changed since SPL-46772-2026 / SPL-47058-2026.}
+The previous submissions triggered a
 \emph{Research Integrity Alert} from the IEEE editorial system, with
 the following message returned by the GROBID reference extractor:
 
@@ -118,12 +130,17 @@ list:
 
 \medskip
 \emph{(B) DOI / verifiable identifier added to every reference and
-\textbf{rendered in the printed bibliography}.}
+\textbf{rendered as plain-text \texttt{https://doi.org/...} URL in
+the printed bibliography}.}
 A \texttt{doi} field was added to all sixteen entries in the
-\texttt{.bib} file and, more importantly, the bibliography style
-configuration was changed so the DOI string is now \emph{visibly
-printed} for each entry of the rendered PDF (each one hyperlinked to
-its \href{https://doi.org}{doi.org} resolver). All eleven references
+\texttt{.bib} file. More importantly, after SPL-47058-2026 was
+rescinded with 50\% references still flagged, the rendering format
+was changed from a hyperlinked DOI string to a verbatim
+\texttt{\textbackslash url\{https://doi.org/\ldots\}} that displays
+the full URL as plain text in the printed bibliography. This
+matches the format requested in the editorial system's example
+(``\texttt{\textbackslash url\{https://doi.org/10.1177/...\}}'') and
+is directly extractable by GROBID. All eleven references
 named in the GROBID alert above now carry a printed DOI:
 
 \smallskip
