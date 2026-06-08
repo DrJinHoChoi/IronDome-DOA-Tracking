@@ -48,12 +48,27 @@ class LMBTracker:
 
     # ---- RFS interface (matches COPPHD) ----
     def process_scan(self, X, scan_angles=None):
+        self._feed_prior()                     # closed-loop: prediction -> front-end
         Z, spectrum = self.est.estimate(X, scan_angles)
         Z = np.asarray(Z, float).ravel()
         self._predict()
         self._update(Z)
         self.scan_count += 1
         return self.get_doa_estimates(), Z, spectrum
+
+    def _feed_prior(self):
+        """Closed-loop coupling: feed confirmed tracks' motion-compensated DOA
+        predictions (theta + thetadot*dt) to the front-end if it accepts a
+        temporal prior. No-op for an open-loop estimator (duck-typed)."""
+        if not hasattr(self.est, "set_tracker_predictions"):
+            return
+        pdoas, pvels = [], []
+        for t in self.tracks:
+            if t["r"] >= self.extract_r:
+                pdoas.append(t["m"][0] + t["m"][1] * self.dt)
+                pvels.append(t["m"][1])
+        self.est.set_tracker_predictions(np.array(pdoas),
+                                         predicted_vels=np.array(pvels))
 
     def get_doa_estimates(self):
         return np.array([t["m"][0] for t in self.tracks if t["r"] >= self.extract_r])

@@ -61,11 +61,28 @@ class GLMBTracker:
 
     # ---- RFS interface (matches COPPHD / LMBTracker) ----
     def process_scan(self, X, scan_angles=None):
+        self._feed_prior()                     # closed-loop: prediction -> front-end
         Z, spectrum = self.est.estimate(X, scan_angles)
         Z = np.asarray(Z, float).ravel()
         self._predict_update(Z)
         self.scan_count += 1
         return self.get_doa_estimates(), Z, spectrum
+
+    def _feed_prior(self):
+        """Closed-loop coupling: feed confirmed tracks' motion-compensated DOA
+        predictions from the cardinality-MAP hypothesis to the front-end if it
+        accepts a temporal prior. No-op for an open-loop estimator (duck-typed)."""
+        if not hasattr(self.est, "set_tracker_predictions"):
+            return
+        h = self._best_hyp()
+        pdoas, pvels = [], []
+        if h is not None:
+            for t in h["tracks"]:
+                if self.age.get(t["l"], 0) >= self.min_age:
+                    pdoas.append(t["m"][0] + t["m"][1] * self.dt)
+                    pvels.append(t["m"][1])
+        self.est.set_tracker_predictions(np.array(pdoas),
+                                         predicted_vels=np.array(pvels))
 
     def _marginals(self):
         """label -> marginal existence prob q(l) = sum_{h ni l} w_h."""

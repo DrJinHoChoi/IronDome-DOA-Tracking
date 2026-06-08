@@ -63,10 +63,11 @@ class GatedTemporalCOP(TemporalCOP):
         K = self._determine_num_sources(C_new)
 
         # --- 속도 게이트: 정지/저속인가? ---
-        motion = 0.0
-        if self.predicted_vels is not None and len(self.predicted_vels):
-            motion = float(np.mean(np.abs(self.predicted_vels)))
-        slow = motion < self.vel_thresh
+        # 보수적 기본값: 속도 정보가 없으면(콜드스타트/미확정) '이동'으로 간주해 개루프.
+        # 이렇게 해야 이동 시나리오 초기에 누적이 켜져 표적을 번지게 하는 악순환을 막는다.
+        have_vel = self.predicted_vels is not None and len(self.predicted_vels) > 0
+        motion = float(np.mean(np.abs(self.predicted_vels))) if have_vel else np.inf
+        slow = have_vel and (motion < self.vel_thresh)
 
         # --- 누적: 정지면 ON, 이동이면 리셋(현재 스캔만) ---
         if slow:

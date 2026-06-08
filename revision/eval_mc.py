@@ -74,6 +74,30 @@ SCENARIOS = {
         rates_deg=[2.5, -2.5, 1.5, -1.5],
         pipelines=["COP+Standard", "COP+Physics", "COP+LMB", "COP+GLMB"],
     ),
+    "compose": dict(       # do front-end loop and SOTA back-end gains compose? (crossing)
+        M=8, K=4, SNR_DB=15, T=512, N_SCANS=30, proc_noise_deg=0.5,
+        base_deg=[-40, 40, -20, 20],
+        rates_deg=[2.5, -2.5, 1.5, -1.5],
+        pipelines=["COP+LMB", "COP-MC+LMB", "COP+GLMB", "COP-MC+GLMB"],
+    ),
+    "compose_stat": dict(  # clean composition: low-SNR STATIONARY, CL front-end x SOTA back-end
+        M=8, K=6, SNR_DB=5, T=256, N_SCANS=20, proc_noise_deg=0.2,
+        base_deg=[-50, -30, -10, 10, 30, 50],
+        rates_deg=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        pipelines=["COP+LMB", "COP-CL+LMB", "COP+GLMB", "COP-CL+GLMB"],
+    ),
+    "gate_cross": dict(    # GATE safety on the crossing where naive MC HURT: GCL must match open
+        M=8, K=4, SNR_DB=15, T=512, N_SCANS=30, proc_noise_deg=0.5,
+        base_deg=[-40, 40, -20, 20],
+        rates_deg=[2.5, -2.5, 1.5, -1.5],
+        pipelines=["COP+GLMB", "COP-MC+GLMB", "COP-GCL+GLMB"],
+    ),
+    "gate_stat": dict(     # GATE on the stationary regime where CL HELPED: GCL must still help
+        M=8, K=6, SNR_DB=5, T=256, N_SCANS=20, proc_noise_deg=0.2,
+        base_deg=[-50, -30, -10, 10, 30, 50],
+        rates_deg=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
+        pipelines=["COP+GLMB", "COP-CL+GLMB", "COP-GCL+GLMB"],
+    ),
     "k4move": dict(        # determined FAST crossing: gate-safety demo (stable tracks)
         M=8, K=4, SNR_DB=15, T=512, N_SCANS=30, proc_noise_deg=0.5,
         base_deg=[-40, 40, -20, 20],
@@ -180,7 +204,7 @@ def count_switches(label_hist, l2s, K):
 # ===================================================================== #
 def build_estimator(name, array, K):
     from iron_dome_sim.doa import SubspaceCOP, MUSIC
-    if name.endswith("-MC"):                              # 운동보상 T-COP (예측 prior, 누적 없음)
+    if "-MC" in name:                                     # 운동보상 T-COP (예측 prior, 누적 없음); 결합 pipe "COP-MC+GLMB" 포함
         from gated_tcop import MotionCompTCOP
         return MotionCompTCOP(array, rho=2, num_sources=K,
                               prior_weight=0.5, gate_delta2=0.3)

@@ -188,24 +188,49 @@ then combine the estimate and the aligned prior in the normal (tangent) coordina
 \end{equation}
 where $\mat{\Sigma}_{\mathrm{est}},\mat{\Sigma}_{\mathrm{pri}}$ are the tangent-space error covariances of the data estimate and the aligned prior, and $\mathrm{retr}(\cdot)$ denotes the Grassmann retraction. The prior covariance is induced from the tracker's predicted-DOA covariance $\mat{C}_\theta$ through the steering Jacobian, $\mat{\Sigma}_{\mathrm{pri}}=\mat{G}\mat{C}_\theta\mat{G}^H$ with columns $\mat{G}_k\propto\mat{P}_{\mat{A}_v}^\perp\dot{\mat{a}}_v(\theta_k)$; in the isotropic special case $\mat{\Sigma}_{\mathrm{est}}=\sigma_e^2\mat{I},\,\mat{\Sigma}_{\mathrm{pri}}=\sigma_p^2\mat{I}$ this recovers a scalar weight $w_p=\sigma_e^2/(\sigma_e^2+\sigma_p^2)$. The refinement~\eqref{eq:tcop_prior} provably reduces the subspace MSE under an explicit, checkable prior-accuracy condition (Theorem~2, Section~\ref{sec:theory}), creating a principled feedback loop in which accurate tracking lowers estimation error and improved estimation in turn sharpens tracking.
 
+\textbf{Gated operation.} In deployment the refinement~\eqref{eq:tcop_prior} is guarded by two gates (Algorithm~\ref{alg:gate}), both of which must pass to engage the loop. A \emph{velocity} gate resets the accumulator when the tracker's mean predicted DOA-rate exceeds $\tau_v$ and---absent a reliable velocity estimate (e.g.\ at track initiation)---defaults conservatively to open-loop, so an early accumulation never smears moving sources. A \emph{subspace-bias} gate $d^2\le\delta_g$ then operationalizes Theorem~2's prior-accuracy condition, with $d^2=\tfrac{1}{2\hat K}\|\mat{U}_s\mat{U}_s^H-\mat{U}^{\mathrm{prior}}\mat{U}^{\mathrm{prior}H}\|_F^2$ the normalized chordal distance between the data and prior subspaces---a checkable surrogate for $\|\mat{b}\|^2<D(\sigma_e^2+\sigma_p^2)$. When either fails the estimator returns \emph{exactly} the open-loop COP estimate, guaranteeing no degradation (deployed $\tau_v=0.4^\circ$/scan, $\delta_g=0.3$, $\alpha=0.85$).
+
+\begin{algorithm}[t]
+\caption{Gated T-COP refinement (single scan $n$)}
+\label{alg:gate}
+\begin{algorithmic}[1]
+\REQUIRE snapshot $\mat{X}_n$; predictions $\hat{\vect{\theta}}^{\mathrm{pred}},\dot{\vect{\theta}}^{\mathrm{pred}}$ ($\varnothing$ if unavailable); thresholds $\tau_v,\delta_g$; forgetting $\alpha$
+\STATE $\hat{\mat{C}} \leftarrow \mathrm{cum}_{2\rho}(\mat{X}_n)$, \quad $\hat{K} \leftarrow$ source count
+\STATE // \textbf{Gate 1 (velocity):} accumulation valid only for slow sources
+\IF{$\hat{\vect{\theta}}^{\mathrm{pred}} \neq \varnothing$}
+    \STATE $m \leftarrow \mathrm{mean}_k\, |\dot{\theta}_k^{\mathrm{pred}}|$
+\ELSE
+    \STATE $m \leftarrow \infty$ \hfill // no estimate $\Rightarrow$ assume moving
+\ENDIF
+\STATE $\mathrm{slow} \leftarrow (\hat{\vect{\theta}}^{\mathrm{pred}} \neq \varnothing) \wedge (m < \tau_v)$
+\IF{$\mathrm{slow}$}
+    \STATE $\hat{\mat{C}}_{\mathrm{acc}} \leftarrow \alpha\,\hat{\mat{C}}_{\mathrm{acc}} + (1-\alpha)\,\hat{\mat{C}}$ \hfill // accumulate
+\ELSE
+    \STATE $\hat{\mat{C}}_{\mathrm{acc}} \leftarrow \hat{\mat{C}}$ \hfill // reset (current scan only)
+\ENDIF
+\STATE // \textbf{Gate 2 (subspace bias):} enforces Theorem~2 prior-accuracy
+\STATE $\mathrm{prior\_ok} \leftarrow \mathrm{false}$
+\IF{$\mathrm{slow} \wedge (\hat{\vect{\theta}}^{\mathrm{pred}} \neq \varnothing)$}
+    \STATE $\mat{U}_s \leftarrow$ signal subspace of $\hat{\mat{C}}_{\mathrm{acc}}$; \ $\mat{U}^{\mathrm{prior}} \leftarrow \mathrm{orth}(\mat{A}_v(\hat{\vect{\theta}}^{\mathrm{pred}}))$
+    \STATE $d^2 \leftarrow \tfrac{1}{2\hat{K}}\| \mat{U}_s\mat{U}_s^H - \mat{U}^{\mathrm{prior}}\mat{U}^{\mathrm{prior}H} \|_F^2$
+    \STATE $\mathrm{prior\_ok} \leftarrow (d^2 \leq \delta_g)$
+\ENDIF
+\IF{$\mathrm{prior\_ok}$}
+    \STATE $P \leftarrow$ prior-refined T-COP spectrum via~\eqref{eq:tcop_prior}
+    \STATE $\hat{\vect{\theta}} \leftarrow$ prior-guided peaks of $P$ \hfill // engage loop
+\ELSE
+    \STATE $P \leftarrow$ open-loop COP spectrum of $\hat{\mat{C}}_{\mathrm{acc}}$; \ $\hat{\vect{\theta}} \leftarrow$ peaks of $P$ \hfill // fall back
+\ENDIF
+\RETURN $\hat{\vect{\theta}}$ (and $P$ for tracker likelihoods)
+\end{algorithmic}
+\end{algorithm}
+
 \subsection{Sequential Deflation COP (SD-COP)}
 \label{sec:sdcop}
 
 SD-COP is a \emph{supporting} extension---not a central contribution---that pushes operation into the super-underdetermined regime $K>\rho(M{-}1)$; it complements the closed-loop guarantee of Theorem~1, whose corollary shows that sources beyond the static virtual-array limit remain identifiable once the temporal prior makes $\mat{J}_{k|k-1}\succ0$ on the data-unresolved subspace. When $K$ approaches the COP capacity $\rho(M-1)$, batch estimation accuracy degrades due to exhaustion of virtual degrees of freedom. SD-COP addresses this through iterative signal-domain deflation, analogous to successive interference cancellation (SIC) in communications~\cite{andrews2005sic}. Rather than deflating in the cumulant domain---which requires accurate estimation of source cumulant powers and is prone to error accumulation---SD-COP operates on the original received signal $\mat{X}$ and recomputes the cumulant at each stage from the deflated signal residual.
 
-At stage $s$, the source signals corresponding to previously estimated DOAs $\hat{\Theta}_{1:s-1}$ are reconstructed via joint least-squares estimation:
-\begin{equation}
-\hat{\mat{S}} = \left(\mat{A}^H(\hat{\Theta})\,\mat{A}(\hat{\Theta}) + \lambda\mat{I}\right)^{-1} \mat{A}^H(\hat{\Theta})\,\mat{X}
-\label{eq:sdcop_ls}
-\end{equation}
-where $\lambda$ is a regularization parameter proportional to $\mathrm{tr}(\mat{A}^H\mat{A})/|\hat{\Theta}|$. The residual signal is
-\begin{equation}
-\mat{X}_{\mathrm{res}}^{(s)} = \mat{X} - \mat{A}(\hat{\Theta}_{1:s-1})\,\hat{\mat{S}}
-\label{eq:sdcop_deflation}
-\end{equation}
-and the COP algorithm is applied to $\mathrm{cum}_{2\rho}(\mat{X}_{\mathrm{res}}^{(s)})$ to discover additional sources. Crucially, the deflation is always performed from the \emph{original} signal $\mat{X}$ using the cumulative set of all previously estimated DOAs, avoiding cascaded error accumulation.
-
-An optional multi-pass leave-one-out refinement then re-estimates each $\hat{\theta}_k$ from the residual obtained by deflating all \emph{other} sources, narrowing the search window across passes and merging near-duplicates. Because deflation acts on the \emph{original} signal rather than in the cumulant domain, it avoids estimating source cumulant powers---notoriously inaccurate in the underdetermined regime---and limits error accumulation; each stage respects the per-stage capacity $K_{\mathrm{batch}} \leq \rho(M{-}1)$. As SD-COP is a supporting extension, we omit the (straightforward sequential) pseudocode.
+At each stage, the already-estimated sources are reconstructed by regularized least squares and subtracted from the \emph{original} received signal $\mat{X}$---always referencing the cumulative DOA set, so deflation never cascades error---after which COP is re-applied to the cumulant of the residual to discover further sources. Each stage respects the per-stage capacity $K_{\mathrm{batch}}\le\rho(M{-}1)$, and an optional leave-one-out pass re-estimates each DOA from the residual of all others. As a supporting extension, we omit the (straightforward sequential) pseudocode.
 
 \section{Physics-Based Track-Oriented PHD Filter for DOA Tracking}
 \label{sec:tracking}
@@ -458,7 +483,7 @@ regime in which the higher-order front-end is decisively advantageous.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/fig0_spatial_spectrum.png}
+\includegraphics[width=0.8\linewidth]{figures/fig0_spatial_spectrum.png}
 \caption{Spatial spectrum for $K=10$ sources, $M=8$ ($K>M{-}1=7$): COP-4th
 resolves all sources via the virtual aperture, while MUSIC and Capon fail.
 (Top) pseudo-spectra; (bottom) COP peak detection.}
@@ -495,7 +520,7 @@ unresolvable sources.)
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/fig_pd_vs_k.png}
+\includegraphics[width=0.8\linewidth]{figures/fig_pd_vs_k.png}
 \caption{Front-end detection rate vs.\ source count $K$ ($M=8$, SNR$=15$~dB,
 $T=512$, $60$ trials, $95\%$ CIs). MUSIC collapses for $K>M{-}1=7$ toward its
 $(M{-}1)/K$ capacity, while COP-4th sustains detection up to the virtual-array
@@ -524,7 +549,7 @@ of the two, consistent with Section~\ref{sec:exp_underdet}.)
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\linewidth]{figures/fig_loop_2x2.png}
+\includegraphics[width=0.76\linewidth]{figures/fig_loop_2x2.png}
 \caption{Closed-loop refinement improves both the cumulant (COP) and covariance
 (MUSIC) front-ends (stationary, SNR$=5$~dB, $K=6$). Bars: matched-pair
 localization RMSE; error bars are $95\%$ CIs.}
@@ -561,7 +586,7 @@ merely the idealized loop, attains the determined-regime gain.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/fig_snr_determined.png}
+\includegraphics[width=0.8\linewidth]{figures/fig_snr_determined.png}
 \caption{Determined regime ($K=6<M{-}1$): localization RMSE vs.\ SNR for COP and
 MUSIC (open- and closed-loop) plus the deployed gated COP (GCL), which overlaps
 the full closed loop ($30$ trials, $95\%$ CIs). The closed loop helps both
@@ -575,24 +600,18 @@ variance keeps the prior informative.}
 
 The temporal accumulation that drives the closed-loop gain is valid only for
 slowly varying targets: for fast targets it smears the moving sources and the
-accumulating loop \emph{collapses}. In a determined crossing ($K=4$,
-$2.5^\circ$/scan) the full closed loop drops $P_d$ from $80.4\%$ to $14.6\%$, and
-in the underdetermined scenario from $60.3\%$ to $44.6\%$ (MUSIC's closed loop
-degrades identically). The remedy reflects the tracker's motion model into the
-prior: we feed back the constant-velocity \emph{prediction}
-$\theta+\dot{\theta}\,\Delta t$ instead of the one-scan-lagged current estimate,
-and disable accumulation, so the prior matches the current target position even
-under motion (Theorem~2's bias $\|\mat{b}\|$ is then governed by the prediction
-error, not by the displacement). This motion-compensated refinement is
-\emph{safe at arbitrary speed}: on the same $K=4$ crossing it tracks open-loop COP
-across SNR$\,\in\{0,5,15\}$~dB ($P_d=77.9$--$79.4\%$ vs.\ open-loop
-$78.3$--$80.4\%$, no collapse). A naive velocity-\emph{gated} accumulation cannot
-achieve this, because the smear it is meant to suppress also corrupts the velocity
-estimate the gate relies on---a circular dependency the prediction-prior variant
-sidesteps. The deployed system therefore uses temporal accumulation for slowly
-varying targets (the gain of Section~\ref{sec:exp_loop}) and the
-motion-compensated refinement otherwise, so the closed loop improves estimation
-when the prior is informative and never degrades it.
+accumulating loop \emph{collapses} (on a $K=4$, $2.5^\circ$/scan crossing the full
+closed loop drops $P_d$ from $80.4\%$ to $14.6\%$; $60.3\%\!\to\!44.6\%$
+underdetermined, and MUSIC's loop degrades identically). The gate of
+Algorithm~\ref{alg:gate} prevents this: under motion it disables accumulation and
+feeds back the constant-velocity \emph{prediction} $\theta+\dot{\theta}\,\Delta t$
+(so Theorem~2's bias $\|\mat{b}\|$ is governed by the prediction error, not the
+displacement), making the refinement \emph{safe at arbitrary speed}---on the same
+crossing it matches open-loop COP across SNR$\,\in\{0,5,15\}$~dB
+($P_d=77.9$--$79.4\%$ vs.\ $78.3$--$80.4\%$, no collapse). The deployed system thus
+accumulates for slow targets (the gain of \S\ref{sec:exp_loop}) and falls back
+otherwise, improving estimation when the prior is informative and never degrading
+it.
 
 Beyond doing no harm, the motion-compensated loop yields a genuine \emph{identity}
 benefit for moving targets. On the underdetermined moving scenario ($K=10$), at
@@ -647,7 +666,7 @@ bounds coincide, matching the regime delineation above.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.92\linewidth]{figures/fig_pcrb_validation.png}
+\includegraphics[width=0.8\linewidth]{figures/fig_pcrb_validation.png}
 \caption{Validation of Theorem~1: open-loop bound diverges at the virtual-array
 limit while the closed-loop PCRB stays finite; near-parity in the
 well-determined regime.}
@@ -663,7 +682,7 @@ fused MSE at or below the data-only MSE.
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/fig_tcop_mse_validation.png}
+\includegraphics[width=0.86\linewidth]{figures/fig_tcop_mse_validation.png}
 \caption{Validation of Theorem~2: (left) unbiased-prior MSE follows $1/(1+\kappa)$;
 (right) biased-prior break-even at $\|\mat{b}\|^2=D(\sigma_e^2+\sigma_p^2)$ and
 the gated estimator never exceeds the data-only MSE.}
@@ -699,8 +718,37 @@ accuracy. We do not claim TO-PHD is the optimal tracker---the labeled-RFS filter
 are more accurate---but that the framework's contributions are orthogonal to, and
 compatible with, the choice of back-end. (This determined crossing stresses
 identity; the COP front-end's advantage lies in the underdetermined regime of
-Section~\ref{sec:exp_underdet}.) A summary of the operating regimes is given in
-Table~\ref{tab:regime}.
+Section~\ref{sec:exp_underdet}.)
+
+\textbf{The front-end loop and the labeled back-end compose under the gate.}
+Since the loop is front-end-agnostic (\S\ref{sec:exp_loop}) and the back-end
+interchangeable, we confirm the two combine without conflict
+(Table~\ref{tab:compose}). Composition is regime-dependent: in the low-SNR slow
+regime the loop sharpens $\delta$-GLMB's localization
+($0.68^\circ\!\to\!0.47^\circ$), but at a fast crossing an \emph{ungated} loop
+\emph{degrades} it ($1.55^\circ$ vs.\ $0.90^\circ$), as the prediction-guided
+front-end and the tracker's association amplify each other's errors. The gate
+(Algorithm~\ref{alg:gate}) resolves this---engaging only when the prior is
+reliable---so the gated system gains where the prior helps and falls back
+\emph{exactly} to open-loop under motion (last column), extending Theorem~2's
+no-harm guarantee from the front-end to the \emph{complete system}. A summary of
+the operating regimes is given in Table~\ref{tab:regime}.
+
+\begin{table}[t]
+\centering
+\caption{Gated closed-loop front-end $\times$ SOTA $\delta$-GLMB back-end ($30$ trials, $95\%$ CIs). ``Ungated'' is the best naive loop per regime (full accumulation when slow, motion-compensated when fast). The gate captures the localization gain where the prior is reliable and falls back exactly to open-loop under motion; the ungated loop---lowest error when stationary---is not deployable across regimes.}
+\label{tab:compose}
+\small
+\begin{tabular}{@{}llccc@{}}
+\toprule
+Regime & Metric & open & ungated & gated \\
+\midrule
+Stationary, $5$~dB & locRMSE ($^\circ$) & $0.68$ & $0.34$ & $\mathbf{0.47}$ \\
+Crossing, $15$~dB & locRMSE ($^\circ$) & $0.90$ & $1.55$ & $\mathbf{0.90}$ \\
+Crossing, $15$~dB & switches & $17.5$ & $27.8$ & $\mathbf{17.5}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
 
 \begin{table}[t]
 \centering
