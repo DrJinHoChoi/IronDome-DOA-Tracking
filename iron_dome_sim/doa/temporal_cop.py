@@ -68,6 +68,7 @@ class TemporalCOP(DOAEstimator):
         self.scan_count = 0
         self.predicted_doas = None  # From tracker
         self.predicted_covs = None  # DOA uncertainties from tracker
+        self.predicted_vels = None  # DOA rates from tracker (for motion gating)
         self.n_confirmed_tracks = 0
 
     @property
@@ -79,7 +80,7 @@ class TemporalCOP(DOAEstimator):
         return self.array.max_sources(self.rho)
 
     def set_tracker_predictions(self, predicted_doas, predicted_covs=None,
-                                n_confirmed=0):
+                                n_confirmed=0, predicted_vels=None):
         """Receive predictions from the tracker (feedback loop).
 
         Called before each scan's DOA estimation.
@@ -88,9 +89,11 @@ class TemporalCOP(DOAEstimator):
             predicted_doas: Predicted DOA angles from tracker (radians).
             predicted_covs: DOA variance for each prediction.
             n_confirmed: Number of confirmed tracks.
+            predicted_vels: Predicted DOA rates (rad/scan) for motion gating.
         """
         self.predicted_doas = np.array(predicted_doas) if len(predicted_doas) > 0 else None
         self.predicted_covs = np.array(predicted_covs) if predicted_covs is not None else None
+        self.predicted_vels = np.array(predicted_vels) if predicted_vels is not None else None
         self.n_confirmed_tracks = n_confirmed
 
     def estimate(self, X, scan_angles=None):
