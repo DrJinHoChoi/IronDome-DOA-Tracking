@@ -356,7 +356,7 @@ where each confirmed track uses \emph{only its matched measurement} $z_{m(j)}$, 
 \frac{(\theta_i - \theta_j)^2}{[\mat{P}_i]_{11}} < \delta_m^2 \;\;\text{and}\;\; |\dot{\theta}_i - \dot{\theta}_j| < \delta_v,
 \label{eq:vel_gated_merge}
 \end{equation}
-where $[\mat{P}_i]_{11}$ is the DOA-component (position) variance of $\mat{P}_i$. We gate position and velocity \emph{separately} rather than via a full-state Mahalanobis distance $(\mat{m}_i-\mat{m}_j)^T\mat{P}_i^{-1}(\mat{m}_i-\mat{m}_j)$: since the state $\mat{m}=[\theta,\dot\theta]^T$ already contains the velocity, a full-state quadratic form would couple and \emph{double-count} the velocity discrepancy that the second condition already tests. This prevents track coalescence at crossing points where targets share a position but differ in velocity.
+with $[\mat{P}_i]_{11}$ the position variance. Gating position and velocity \emph{separately}---rather than via a full-state Mahalanobis distance, which would \emph{double-count} the velocity already encoded in the state $\mat{m}=[\theta,\dot\theta]^T$---prevents track coalescence at crossings, where targets share a position but differ in velocity.
 \item \textbf{Birth from COP spectrum} (Step~4): Birth component weight is proportional to the COP spectrum height at the unassociated measurement:
 \begin{equation}
 w_b = w_0 \cdot \frac{P_{\mathrm{COP}}(z_b)}{\max_\theta P_{\mathrm{COP}}(\theta)}
@@ -486,25 +486,19 @@ the number of label switches.
 
 We first isolate the front-end. Fig.~\ref{fig:spectrum} shows that for $K=10$
 sources with $M=8$ ($K>M-1=7$), the COP-4th pseudo-spectrum~\eqref{eq:cop_spectrum}
-resolves all sources, while MUSIC (limited to $M-1$) and Capon fail. We then run
-the full pipeline on $K=10$ moving targets over $30$ scans (SNR$=15$~dB).
-Table~\ref{tab:underdet} reports the result: \emph{COP-RFS detects significantly
-more targets than the MUSIC--PHD cascade}, $P_d=60.3\%\pm0.2$ vs.
-$51.9\%\pm0.1$ (non-overlapping CIs), because MUSIC structurally cannot detect
-the $K-(M-1)$ excess sources. Run at its maximum capacity
-($\min(K,M{-}1)=7$ sources per scan), MUSIC's detection rate is upper-bounded by
-$(M{-}1)/K=70\%$; it reaches only $52\%$ because, for $K>M{-}1$, the unmodeled
-excess sources contaminate the $M\times M$ signal/noise subspaces and bias
-several of the seven peaks beyond the $3^\circ$ detection gate, while the three
-weakest targets are never resolvable and hence never tracked. COP removes this
-structural cap through the size-$M_v{=}15$ virtual aperture (up to $14$ DOF), so
-its $60\%$ is limited only by finite-snapshot fourth-order variance---not by the
-array---and approaches $100\%$ as SNR and $T$ grow. The per-target localization
-is comparable
-($3.0^\circ$ vs.\ $2.6^\circ$); the overall GOSPA is close, and we note honestly
-that with the standard missed-target weight the cascade's GOSPA is not worse,
-since COP's gain is in \emph{detection}, not localization. This is the one
-regime in which the higher-order front-end is decisively advantageous.
+resolves all sources while MUSIC and Capon fail. On the full pipeline ($K=10$
+moving targets, $30$ scans, SNR$=15$~dB), Table~\ref{tab:underdet} shows that
+\emph{COP-RFS detects significantly more targets than the MUSIC--PHD cascade},
+$P_d=60.3\%\pm0.2$ vs.\ $51.9\%\pm0.1$ (non-overlapping CIs). MUSIC is structurally
+capped: running at most $\min(K,M{-}1)=7$ sources, its detection cannot exceed
+$(M{-}1)/K=70\%$, and for $K>M{-}1$ the unmodeled excess sources contaminate the
+$M\times M$ subspaces, biasing several peaks beyond the $3^\circ$ gate so that it
+reaches only $52\%$. COP removes this cap through the size-$M_v{=}15$ virtual
+aperture (up to $14$ DOF); its $60\%$ is limited only by finite-snapshot
+fourth-order variance and approaches $100\%$ as SNR and $T$ grow. Localization is
+comparable ($3.0^\circ$ vs.\ $2.6^\circ$) and the overall GOSPA close---honestly,
+COP's gain is in \emph{detection}, not localization---making this the one regime
+where the higher-order front-end is decisively advantageous.
 
 \begin{figure}[t]
 \centering
@@ -531,17 +525,14 @@ MUSIC-PHD & $51.9\pm0.1$ & $\mathbf{2.61\pm0.01}$ & $\mathbf{15.39\pm0.01}$ & $\
 \end{tabular}}
 \end{table}
 
-Fig.~\ref{fig:pdk} sweeps the front-end detection rate over $K$ (estimator only,
-no tracker). The two methods are indistinguishable for $K\le M{-}1=7$, but at
-$K=8$ MUSIC collapses (from $100\%$ to $49\%$) and remains near its $(M{-}1)/K$
-ceiling, whereas COP degrades only gradually toward the virtual-array limit
-$\rho(M{-}1)=14$. The sharp divergence at $K=7$ is the structural signature of
-the extended aperture and confirms that the advantage stems from the array
-structure rather than from parameter tuning. (The raw front-end rate at $K=10$---about $25\%$
-for MUSIC---is lower than the $52\%$ of the end-to-end MUSIC--PHD in
-Table~\ref{tab:underdet}: the tracker recovers some detections through temporal
-integration and coasting, but cannot create measurements for the structurally
-unresolvable sources.)
+Fig.~\ref{fig:pdk} sweeps the \emph{front-end} detection rate over $K$ (no
+tracker): the two methods are indistinguishable for $K\le M{-}1=7$, but at $K=8$
+MUSIC collapses ($100\%\!\to\!49\%$) toward its $(M{-}1)/K$ ceiling while COP
+degrades only gradually toward the virtual-array limit $\rho(M{-}1)=14$---the
+structural signature of the extended aperture, not parameter tuning. (The raw
+front-end MUSIC rate at $K=10$, ${\sim}25\%$, is below the $52\%$ end-to-end of
+Table~\ref{tab:underdet}: the tracker recovers some detections by temporal
+integration but cannot resolve structurally-lost sources.)
 
 \begin{figure}[t]
 \centering
@@ -587,21 +578,19 @@ severely fluctuating Swerling returns.}
 \subsection{The Closed Loop is Front-End-Agnostic}
 \label{sec:exp_loop}
 
-We next isolate the closed loop via a $2\times2$ (front-end $\times$ loop)
-study in the regime where Theorem~2's prior-accuracy condition holds: low SNR
-($5$~dB), slowly varying targets ($K=6$). Fig.~\ref{fig:loop2x2} and
-Table~\ref{tab:loop2x2} show that the tracker-aided refinement \emph{lowers the
-localization error of both front-ends}---COP from $0.71^\circ$ to $0.31^\circ$
-($-56\%$) and MUSIC from $0.09^\circ$ to $0.05^\circ$ ($-44\%$). The closed loop
-is therefore a front-end-agnostic principle, exactly as predicted by Theorem~2,
-rather than a COP-specific mechanism. The larger COP improvement
-($-56\%$ vs.\ $-44\%$) is the loop paying down precisely the fourth-order
-variance penalty of the higher-order front-end (Section~\ref{sec:signal_model}),
-realizing the extended aperture and Gaussian-noise immunity of HOS at a variance
-approaching that of second-order MUSIC. This synergy---higher-order statistics
-made practical \emph{within} a closed loop---is the central message of the paper. (In this
-\emph{determined} regime the lower-variance MUSIC front-end is the more accurate
-of the two, consistent with Section~\ref{sec:exp_underdet}.)
+We next isolate the closed loop via a $2\times2$ (front-end $\times$ loop) study
+in the regime where Theorem~2's prior-accuracy condition holds: low SNR ($5$~dB),
+slowly varying targets ($K=6$). Fig.~\ref{fig:loop2x2} and Table~\ref{tab:loop2x2}
+show the tracker-aided refinement \emph{lowers the localization error of both
+front-ends}---COP $0.71^\circ\!\to\!0.31^\circ$ ($-56\%$), MUSIC
+$0.09^\circ\!\to\!0.05^\circ$ ($-44\%$)---confirming the closed loop as a
+front-end-agnostic principle, exactly as Theorem~2 predicts, not a COP-specific
+trick. The larger COP gain pays down precisely the fourth-order variance penalty
+of the higher-order front-end (\S\ref{sec:signal_model}), realizing HOS's extended
+aperture and Gaussian-noise immunity at a variance approaching second-order
+MUSIC's---the synergy of HOS made practical \emph{within} a closed loop that is the
+paper's central message. (In this determined regime the lower-variance MUSIC is the
+more accurate front-end, consistent with \S\ref{sec:exp_underdet}.)
 
 \begin{figure}[t]
 \centering
@@ -628,17 +617,14 @@ MUSIC & $0.09\pm0.00$ & $\mathbf{0.05\pm0.00}$ \\
 \end{table}
 
 This gain persists across the determined regime. Fig.~\ref{fig:snrdet} sweeps SNR
-at $K=6$: the closed loop lowers COP's localization error at \emph{every} SNR (by
-about half), while MUSIC's gain is large at low SNR and vanishes as SNR grows---
-precisely the $1/(1{+}\kappa)$ behaviour of Theorem~2, since the prior helps most
-when the data subspace is noisy ($\kappa$ large). COP benefits more than MUSIC at
-all SNR because its fourth-order variance keeps $\kappa$ large; this is the
-higher-order-statistics--closed-loop synergy of Section~\ref{sec:signal_model}
-made quantitative. Hence the closed loop is useful \emph{even where MUSIC is
-applicable}, not only in the underdetermined regime. Importantly, the
-\emph{deployed} gated variant (GCL) matches the full closed loop throughout---its
-velocity gate engages for these slow targets---so the practical system, not
-merely the idealized loop, attains the determined-regime gain.
+at $K=6$: the closed loop halves COP's localization error at \emph{every} SNR,
+while MUSIC's gain is large at low SNR and vanishes as SNR grows---precisely
+Theorem~2's $1/(1{+}\kappa)$ behaviour, since the prior helps most when the data
+subspace is noisy ($\kappa$ large). COP benefits more at all SNR because its
+fourth-order variance keeps $\kappa$ large. Hence the closed loop helps \emph{even
+where MUSIC is applicable}, and the \emph{deployed} gated variant (GCL) matches the
+full loop throughout (its velocity gate engages for these slow targets), so the
+practical system attains the gain.
 
 \begin{figure}[t]
 \centering
@@ -670,14 +656,13 @@ otherwise, improving estimation when the prior is informative and never degradin
 it.
 
 Beyond doing no harm, the motion-compensated loop yields a genuine \emph{identity}
-benefit for moving targets. On the underdetermined moving scenario ($K=10$), at
-matched detection ($P_d\approx52\%$) and localization, it reduces label switches
-from $214\pm9$ to $181\pm10$ ($-15\%$, non-overlapping $95\%$ CIs): the
-prediction-aligned estimates stabilize the tracker's data association through
-crossings. The closed loop's value for moving targets is thus in \emph{track
-continuity}, not per-scan localization (which the tracker's own filtering already
-optimizes)---complementing its detection gain in the underdetermined regime and
-its estimation gain in the low-SNR/slow regime.
+benefit for moving targets: on the underdetermined moving scenario ($K=10$), at
+matched detection ($P_d\approx52\%$) and localization, the prediction-aligned
+estimates stabilize data association through crossings, reducing label switches
+from $214\pm9$ to $181\pm10$ ($-15\%$, non-overlapping CIs). For moving targets the
+closed loop's value is thus \emph{track continuity}, not per-scan localization
+(which the tracker's own filtering already optimizes)---complementing its detection
+gain when underdetermined and its estimation gain at low SNR.
 
 Table~\ref{tab:cl_efficacy} consolidates these results into a single statement of
 the closed loop's efficacy. The temporal feedback delivers a \emph{concrete,
@@ -754,27 +739,18 @@ standard GM-PHD~\cite{vo2006gmphd}, the labeled multi-Bernoulli (LMB)
 filter~\cite{vo2014lmb}, and the full $\delta$-GLMB filter~\cite{vo2013glmb}
 implemented with the Gibbs-sampling truncation of~\cite{vo2017efficient}---the
 state-of-the-art labeled-RFS trackers requested in review.
-Table~\ref{tab:ablation} shows that all three \emph{labeled} filters reduce
-identity switches by an order of magnitude over the unlabeled GM-PHD ($17$--$37$
-vs.\ $385$), whose first-moment recursion coalesces tracks at crossings, while all
-four attain comparable detection ($80$--$82\%$, Proposition~1). Among the labeled
-trackers, the full $\delta$-GLMB---which propagates the joint distribution over
-label-to-measurement association histories that LMB approximates by its
-marginals---attains the \emph{cleanest identity} (fewest switches, $17\pm2$) and
-the \emph{sharpest matched localization} (locRMSE $0.91^\circ$), consistent with
-its status as the exact labeled filter; LMB attains the best aggregate GOSPA, its
-marginally higher detection offsetting $\delta$-GLMB's localization edge. The
-small $\delta$-GLMB--LMB gap confirms LMB as a faithful, cheaper approximation,
-and our physics-based TO-PHD is a competitive lightweight alternative (no
-association-hypothesis sampling). Crucially, the COP-RFS framework is
-\emph{agnostic to the back-end}: the closed-loop higher-order front-end of
-Sections~\ref{sec:exp_underdet}--\ref{sec:exp_loop} can drive any RFS tracker, and
-moving from TO-PHD to LMB or $\delta$-GLMB trades computation for identity
-accuracy. We do not claim TO-PHD is the optimal tracker---the labeled-RFS filters
-are more accurate---but that the framework's contributions are orthogonal to, and
-compatible with, the choice of back-end. (This determined crossing stresses
-identity; the COP front-end's advantage lies in the underdetermined regime of
-Section~\ref{sec:exp_underdet}.)
+Table~\ref{tab:ablation} shows all three \emph{labeled} filters reduce identity
+switches by an order of magnitude over the unlabeled GM-PHD ($17$--$37$ vs.\
+$385$, whose first-moment recursion coalesces tracks at crossings), at comparable
+detection ($80$--$82\%$). The full $\delta$-GLMB---propagating the joint
+association-history distribution that LMB approximates by its marginals---attains
+the cleanest identity ($17\pm2$ switches) and sharpest localization (locRMSE
+$0.91^\circ$), while LMB attains the best aggregate GOSPA; the small gap confirms
+LMB as a faithful cheaper approximation, and our TO-PHD a competitive lightweight
+alternative. The point is that the framework is \emph{agnostic to the back-end}:
+the closed-loop front-end can drive any RFS tracker, trading computation for
+identity accuracy. (This determined crossing stresses identity; the COP front-end's
+advantage lies in the underdetermined regime of \S\ref{sec:exp_underdet}.)
 
 \textbf{Physics-based motion makes the SOTA back-end best under maneuver.}
 Back-end agnosticism also exposes the \emph{motion model} as a design choice. For
