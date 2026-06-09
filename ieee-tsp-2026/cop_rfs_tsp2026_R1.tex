@@ -1,4 +1,4 @@
-% COP-RFS: IEEE Transactions on Signal Processing, 2026
+% A Closed-Loop Subspace-RFS Framework for DOA Estimation and Multi-Target Tracking -- IEEE TSP 2026
 \documentclass[journal]{IEEEtran}
 
 \usepackage{amsmath,amssymb,amsfonts}
@@ -42,7 +42,7 @@
 \maketitle
 
 \begin{abstract}
-We present a closed-loop subspace--RFS framework that couples direction-of-arrival (DOA) estimation with random-finite-set (RFS) multi-target tracking and, unlike prior open-loop cascades, analyzes the coupling itself. The closed loop is \emph{front-end-agnostic}: the tracker's temporal prediction is fed back to refine the signal subspace of any subspace DOA estimator. We instantiate it with a higher-order-cumulant front-end (COP, which extends operation to the underdetermined regime $K>M{-}1$; the resulting tracker is COP-RFS) and a covariance front-end (MUSIC). Our central contributions are theoretical: (i)~a posterior Cram\'{e}r--Rao bound for the \emph{complete closed-loop} estimator--tracker, proving the temporal prior restores identifiability exactly where the data-only bound diverges; and (ii)~a recasting of the subspace refinement as minimum-variance inverse-variance fusion on the Grassmann manifold, with a validation gate guaranteeing the loop never degrades performance. The framework is also \emph{back-end-agnostic}, integrating track-oriented PHD, labeled multi-Bernoulli (LMB), and $\delta$-GLMB filters; a physics-based constant-acceleration model makes the $\delta$-GLMB back-end best for maneuvering targets, yielding our recommended configuration---a gated closed-loop front-end (COP, or the lower-variance MUSIC when determined) driving a physics-based, interchangeable SOTA back-end (here, $\delta$-GLMB). Monte-Carlo experiments (up to $500$ trials, $95\%$ confidence intervals) show that COP-RFS detects significantly more targets than a MUSIC--PHD baseline when $K>M{-}1$, and that the gated loop lowers low-SNR localization error by up to $56\%$ for both front-ends while cutting moving-target identity switches by $15\%$, matching the open-loop baseline otherwise. We delineate the operating regime in which the higher-order front-end is advantageous rather than claiming uniform superiority.
+We present a closed-loop subspace--RFS framework that couples direction-of-arrival (DOA) estimation with random-finite-set (RFS) multi-target tracking and, unlike prior open-loop cascades, analyzes the coupling itself. The closed loop is \emph{front-end-agnostic}: the tracker's temporal prediction is fed back to refine the signal subspace of any subspace DOA estimator. We instantiate it with a higher-order-cumulant front-end (COP, which extends operation to the underdetermined regime $K>M{-}1$; the resulting tracker is COP-RFS) and a covariance front-end (MUSIC). Our central contributions are theoretical: (i)~a posterior Cram\'{e}r--Rao bound for the \emph{complete closed-loop} estimator--tracker, proving the temporal prior restores identifiability exactly where the data-only bound diverges; and (ii)~a recasting of the subspace refinement as minimum-variance inverse-variance fusion on the Grassmann manifold, with a validation gate guaranteeing the loop never degrades performance. The framework is also \emph{back-end-agnostic}, integrating track-oriented PHD, labeled multi-Bernoulli (LMB), and $\delta$-GLMB filters; a physics-based constant-acceleration model makes the $\delta$-GLMB back-end best for maneuvering targets, yielding our recommended configuration---a gated closed-loop front-end (COP, or the lower-variance MUSIC when determined) driving a physics-based, interchangeable SOTA back-end (here, $\delta$-GLMB). Monte-Carlo experiments (up to $500$ trials, $95\%$ confidence intervals) show that COP-RFS detects significantly more targets than a MUSIC--PHD baseline when $K>M{-}1$, and that the gated loop lowers low-SNR localization error by up to $56\%$ (COP) and $44\%$ (MUSIC) while cutting moving-target identity switches by $15\%$, matching the open-loop baseline otherwise. We delineate the operating regime in which the higher-order front-end is advantageous rather than claiming uniform superiority.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -262,11 +262,11 @@ At each stage, the already-estimated sources are reconstructed by regularized le
 
 \subsection{Random Finite Set Formulation}
 
-The multi-target DOA tracking problem is naturally modeled using random finite sets (RFS)~\cite{mahler2003phd,mahler2007statistical}. Extensions such as the cardinalized PHD~\cite{vo2007cphd}, labeled multi-Bernoulli filter~\cite{vo2014lmb}, and data association schemes~\cite{panta2009gmphd,georgescu2012phd_doa} have been proposed. The present work differs by coupling the tracker to a \emph{higher-order cumulant} front-end (COP), enabling underdetermined DOA estimation and COP-spectrum-informed birth---capabilities absent from all prior PHD-based DOA tracking pipelines. At scan $n$, the multi-target state is the RFS
+The multi-target DOA tracking problem is naturally modeled using random finite sets (RFS)~\cite{mahler2003phd,mahler2007statistical}. Extensions such as the cardinalized PHD~\cite{vo2007cphd}, labeled multi-Bernoulli filter~\cite{vo2014lmb}, and data association schemes~\cite{panta2009gmphd,georgescu2012phd_doa} have been proposed. The present work differs by embedding the tracker in a \emph{closed loop} with an interchangeable subspace front-end (COP or MUSIC); the higher-order COP additionally enables underdetermined DOA estimation, and front-end-spectrum-informed birth---capabilities absent from all prior PHD-based DOA tracking pipelines. At scan $n$, the multi-target state is the RFS
 \begin{equation}
 \mathcal{X}_n = \{\mat{x}_{n,1}, \ldots, \mat{x}_{n,K_n}\}
 \end{equation}
-where $K_n$ is the (unknown, time-varying) number of targets and each $\mat{x}_{n,k} = [\theta_k, \dot{\theta}_k]^T$ contains the DOA and DOA rate. The measurement set from COP estimation is
+where $K_n$ is the (unknown, time-varying) number of targets and each $\mat{x}_{n,k} = [\theta_k, \dot{\theta}_k]^T$ contains the DOA and DOA rate. The measurement set from the subspace front-end (COP or MUSIC) is
 \begin{equation}
 \mathcal{Z}_n = \{z_{n,1}, \ldots, z_{n,M_n}\}
 \end{equation}
@@ -278,9 +278,9 @@ v_{n|n}(\mat{x}) = \sum_{j=1}^{J_{n|n}} w_{n|n}^{(j)}\,\mathcal{N}(\mat{x};\, \m
 \label{eq:phd_gm}
 \end{equation}
 
-\subsection{Constant-Velocity Motion Model}
+\subsection{Physics-Based Motion Model (CV / CA)}
 
-Each target state $\mat{x} = [\theta, \dot{\theta}]^T$ evolves according to the constant-velocity model~\cite{simon2006optimal}:
+Each target state $\mat{x} = [\theta, \dot{\theta}]^T$ evolves according to the constant-velocity (CV) model~\cite{simon2006optimal}:
 \begin{equation}
 \mat{x}_{n+1} = \mat{F}\,\mat{x}_n + \mat{w}_n, \quad
 \mat{F} = \begin{bmatrix} 1 & \Delta t \\ 0 & 1 \end{bmatrix}
@@ -291,13 +291,13 @@ where $\Delta t$ is the inter-scan interval and $\mat{w}_n \sim \mathcal{N}(\mat
 \mat{Q} = \sigma_w^2 \begin{bmatrix} \Delta t^3/3 & \Delta t^2/2 \\ \Delta t^2/2 & \Delta t \end{bmatrix}.
 \label{eq:process_noise}
 \end{equation}
-The measurement model is $z_n = \mat{H}\,\mat{x}_n + v_n$ with $\mat{H} = [1,\, 0]$ and $v_n \sim \mathcal{N}(0, \sigma_\theta^2)$.
+The measurement model is $z_n = \mat{H}\,\mat{x}_n + v_n$ with $\mat{H} = [1,\, 0]$ and $v_n \sim \mathcal{N}(0, \sigma_\theta^2)$. For \emph{maneuvering} targets (non-zero angular curvature) we use the constant-acceleration (CA) model, augmenting the state to $\mat{x}=[\theta,\dot{\theta},\ddot{\theta}]^T$ with $\mat{F}_{\mathrm{CA}}=[\,1,\Delta t,\tfrac12\Delta t^2;\,0,1,\Delta t;\,0,0,1\,]$, $\mat{H}=[1,0,0]$, and a white-noise-jerk $\mat{Q}$. Throughout, \emph{physics-based} denotes this kinematic (CV or CA) motion model---shared by the TO-PHD and the labeled-RFS back-ends---with CA preferred under maneuver (\S\ref{sec:exp_cross}).
 
 \subsection{Physics-Based Predict--Identify--Update Pipeline}
 
 The standard GM-PHD filter processes measurements in a ``predict--update'' pipeline where every measurement updates every predicted component, creating $\mathcal{O}(J \cdot M)$ updated components per scan. In DOA tracking scenarios with crossing targets, this leads to track coalescence---distinct targets merge into a single track at crossing points.
 
-We propose a ``predict--identify--update'' pipeline that leverages the constant-velocity motion model~\eqref{eq:motion_model} to identify which measurement belongs to which track \emph{before} the Bayesian update. The key innovation is the \textbf{Hungarian assignment}~\cite{kuhn1955hungarian} on the cost matrix
+We propose a ``predict--identify--update'' pipeline (Algorithm~\ref{alg:phd_physics}) that leverages the motion model~\eqref{eq:motion_model} to identify which measurement belongs to which track \emph{before} the Bayesian update. The key innovation is the \textbf{Hungarian assignment}~\cite{kuhn1955hungarian} on the cost matrix
 \begin{equation}
 C_{jm} = |\hat{\theta}_j^{\mathrm{pred}} - z_m|, \quad
 \hat{\theta}_j^{\mathrm{pred}} = [\mat{F}\,\mat{m}_j]_1
@@ -463,9 +463,6 @@ The inertia-predicted positions separate by $\Delta v\,\Delta t$ while the diffe
 
 The front-end-spectrum birth weight~\eqref{eq:birth_weight} is used as an empirical detection score---stronger spectral peaks initialize tracks with higher weight---and is validated experimentally in Section~\ref{sec:experiments}; we do not claim formal Neyman--Pearson optimality for it.
 
-% ==========================================================================
-%  Focused experiments section (replaces the 12-experiment sprawl).
-% ==========================================================================
 \section{Experimental Results}
 \label{sec:experiments}
 
@@ -473,7 +470,7 @@ Unless noted, we use a ULA with $M=8$ sensors, $d=\lambda/2$, cumulant order
 $\rho=2$, a $0.1^\circ$ scan grid, and a track-oriented PHD back-end with the
 parameters of Section~\ref{sec:tracking}. All metrics are reported with $95\%$
 confidence intervals (CIs) over independent Monte-Carlo trials ($500$ for the
-headline underdetermined-detection experiment, $30$--$60$ for the ablation and
+headline underdetermined-detection experiment, $20$--$60$ for the ablation and
 sweep studies, as noted in each caption). We report detection rate $P_d$ (within $3^\circ$), the GOSPA
 metric~\cite{rahmathullah2017gospa} ($c=10^\circ$, $p=2$) with its
 localization/missed/false decomposition, the \emph{matched-pair} localization
@@ -531,8 +528,9 @@ Fig.~\ref{fig:robustness}(top) sweeps the end-to-end pipeline over
 $K\in\{2,\dots,12\}$ (SNR $12$~dB): for $K\le M{-}1$ all methods detect every
 source, but past $K{=}7$ MUSIC collapses toward its $(M{-}1)/K$ cap while
 COP---and, most strongly, the proposed gated loop---degrade gracefully up to COP's
-virtual-array limit $\rho(M{-}1)=14$ (at $K{=}10$, $P_d=97.8\%$ gated vs.\ $79.0\%$
-open COP vs.\ $25.5\%$ MUSIC). This sharp transition at $M{-}1$ is the structural
+virtual-array limit $\rho(M{-}1)=14$ (at $K{=}10$, $P_d=97.8\%$ gated, $79.0\%$
+open COP, $25.5\%$ MUSIC---the lower MUSIC value than Table~\ref{tab:underdet}
+reflecting this sweep's harsher $12$~dB, stationary setting). This sharp transition at $M{-}1$ is the structural
 signature of the extended aperture, not parameter tuning. Fig.~\ref{fig:robustness}(bottom) fixes $K=10>M{-}1$ and
 sweeps the source \emph{signal type}: the higher-order front-end sustains detection
 across structured non-Gaussian radar and communication waveforms (FM $79\%$, LFM
@@ -607,7 +605,7 @@ the same closed loop.
 \centering
 \includegraphics[width=0.8\linewidth]{figures/fig_snr_determined.png}
 \caption{Determined regime ($K=6<M{-}1$): localization RMSE vs.\ SNR for COP and
-MUSIC (open- and closed-loop) plus the deployed gated COP (GCL), which overlaps
+MUSIC (open- and closed-loop) plus the deployed gated closed loop (GCL), which overlaps
 the full closed loop ($30$ trials, $95\%$ CIs). The closed loop helps both
 front-ends---most at low SNR---and helps COP at every SNR because its higher-order
 variance keeps the prior informative.}
@@ -793,7 +791,7 @@ Crossing, $15$~dB & switches & $17.5$ & $27.8$ & $\mathbf{17.5}$ \\
 
 \begin{table}[t]
 \centering
-\caption{Tracking back-end ablation on the COP front-end ($K{=}4$ crossing, $40$ trials, $95\%$ CIs). All three labeled filters cut switches $\sim$20$\times$ vs.\ GM-PHD; $\delta$-GLMB gives the cleanest identity and sharpest localization, LMB the best aggregate GOSPA.}
+\caption{Tracking back-end ablation on the COP front-end ($K{=}4$ crossing, $40$ trials, $95\%$ CIs). All three labeled filters cut switches by an order of magnitude ($10$--$23\times$) vs.\ GM-PHD; $\delta$-GLMB gives the cleanest identity and sharpest localization, LMB the best aggregate GOSPA.}
 \label{tab:ablation}
 \small
 \resizebox{\columnwidth}{!}{%
@@ -836,7 +834,7 @@ The key contributions and findings are:
 \begin{enumerate}
 \item \textbf{Closed-loop posterior CRB}: Theorem~1 gives the first CRB for the complete coupled estimator--tracker and shows that the temporal prior strictly tightens the bound, restoring identifiability exactly in the underdetermined regime where the data-only bound diverges.
 \item \textbf{Provably minimum-variance refinement}: Theorem~2 recasts T-COP subspace refinement as a basis-invariant Grassmann inverse-variance fusion and proves it is minimum-variance under an explicit prior-accuracy condition; a validation gate enforces this condition, so the closed loop improves estimation when the prior is accurate and never degrades it otherwise.
-\item \textbf{Underdetermined capability, honestly bounded}: With Monte-Carlo evaluation (up to $500$ trials) and $95\%$ confidence intervals, and against MUSIC, closed-loop-MUSIC, labeled multi-Bernoulli (LMB), and full $\delta$-GLMB baselines, COP-RFS detects significantly more targets than a MUSIC--PHD cascade when $K>M{-}1$, while the track-oriented PHD back-end preserves identity through crossings; the closed loop is demonstrated to be both front-end- and back-end-agnostic. We explicitly delineate the operating regime---low SNR and slow target motion for the closed-loop estimation gain, $K>M{-}1$ for the detection gain---rather than claiming uniform superiority; SD-COP extends operation toward the super-underdetermined regime.
+\item \textbf{Underdetermined capability, honestly bounded}: With Monte-Carlo evaluation (up to $500$ trials) and $95\%$ confidence intervals, and against MUSIC, closed-loop-MUSIC, labeled multi-Bernoulli (LMB), and full $\delta$-GLMB baselines, COP-RFS detects significantly more targets than a MUSIC--PHD cascade when $K>M{-}1$, while the track-oriented PHD back-end preserves identity through crossings; the closed loop is demonstrated to be both front-end- and back-end-agnostic. We explicitly delineate the operating regime---low SNR and slow target motion for the closed-loop estimation gain, $K>M{-}1$ for the detection gain---rather than claiming uniform superiority; SD-COP is proposed to extend operation toward the super-underdetermined regime.
 \end{enumerate}
 
 The recommended deployed system---a gated closed-loop front-end (higher-order COP when underdetermined, covariance MUSIC when determined) driving a physics-based, interchangeable SOTA back-end (here $\delta$-GLMB)---is thus agnostic in both the estimator and the tracker, with the loop gated for safety and the motion model matched to the target dynamics. The proposed framework is particularly relevant to defense, speech enhancement, and communications applications where multiple targets must be simultaneously detected and tracked using compact sensor arrays.
