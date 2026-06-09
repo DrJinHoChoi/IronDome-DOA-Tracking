@@ -317,13 +317,13 @@ where each confirmed track uses \emph{only its matched measurement} $z_{m(j)}$, 
 \caption{Physics-Based TO-PHD: Predict--Identify--Update}
 \label{alg:phd_physics}
 \begin{algorithmic}[1]
-\REQUIRE COP measurements $\mathcal{Z}_n$, GM components $\{w_j, \mat{m}_j, \mat{P}_j\}$
-\STATE \textbf{Step 1: COP DOA Estimation}
-\STATE $\mathcal{Z}_n, P_{\mathrm{COP}} \leftarrow \mathrm{COP}(\mat{X}_n)$
+\REQUIRE snapshot $\mat{X}_n$, GM components $\{w_j, \mat{m}_j, \mat{P}_j\}$
+\STATE \textbf{Step 1: Subspace front-end estimation} (COP or MUSIC; closed-loop refined, Alg.~\ref{alg:gate})
+\STATE $\mathcal{Z}_n, P \leftarrow \mathrm{front\text{-}end}(\mat{X}_n)$
 \STATE \textbf{Step 2: Physics-Based Prediction}
 \FOR{each confirmed component $j$}
     \STATE $\mat{m}_{j}^{-} \leftarrow \mat{F}\,\mat{m}_j$, \quad $\mat{P}_j^{-} \leftarrow \mat{F}\mat{P}_j\mat{F}^T + \mat{Q}$
-    \STATE // Inertia: $\hat{\theta}_j^{\mathrm{pred}} = \theta_j + \dot{\theta}_j \cdot \Delta t$
+    \STATE // motion model $\mat{F}$: CV $\theta_j{+}\dot{\theta}_j\Delta t$, or physics CA $\,{+}\tfrac{1}{2}\ddot{\theta}_j\Delta t^2$
 \ENDFOR
 \STATE \textbf{Step 3: Measurement-to-Track Identification (Hungarian)}
 \STATE Compute cost matrix: $C_{jm} = |\hat{\theta}_j^{\mathrm{pred}} - z_m|$ for all $(j, m)$
@@ -331,7 +331,7 @@ where each confirmed track uses \emph{only its matched measurement} $z_{m(j)}$, 
 \STATE Identify unassociated measurements $\mathcal{Z}_{\mathrm{birth}}$
 \STATE \textbf{Step 4: Birth from Unassociated Measurements}
 \FOR{each $z_b \in \mathcal{Z}_{\mathrm{birth}}$}
-    \STATE Create birth component with weight $w_b \propto P_{\mathrm{COP}}(z_b)$
+    \STATE Create birth component with weight $w_b \propto P(z_b)$ \hfill // front-end spectrum height
 \ENDFOR
 \STATE \textbf{Step 5: Differentiated Update}
 \FOR{each confirmed track $j$ with matched measurement $z_{m(j)}$}
@@ -357,9 +357,9 @@ where each confirmed track uses \emph{only its matched measurement} $z_{m(j)}$, 
 \label{eq:vel_gated_merge}
 \end{equation}
 with $[\mat{P}_i]_{11}$ the position variance. Gating position and velocity \emph{separately}---rather than via a full-state Mahalanobis distance, which would \emph{double-count} the velocity already encoded in the state $\mat{m}=[\theta,\dot\theta]^T$---prevents track coalescence at crossings, where targets share a position but differ in velocity.
-\item \textbf{Birth from COP spectrum} (Step~4): Birth component weight is proportional to the COP spectrum height at the unassociated measurement:
+\item \textbf{Birth from the front-end spectrum} (Step~4): birth weight is proportional to the front-end pseudo-spectrum height $P$ (COP or MUSIC) at the unassociated measurement:
 \begin{equation}
-w_b = w_0 \cdot \frac{P_{\mathrm{COP}}(z_b)}{\max_\theta P_{\mathrm{COP}}(\theta)}
+w_b = w_0 \cdot \frac{P(z_b)}{\max_\theta P(\theta)}
 \label{eq:birth_weight}
 \end{equation}
 ensuring that strong spectral peaks receive higher initial weight for faster confirmation.
@@ -461,7 +461,7 @@ P_{\mathrm{TIPP}} = \big[\,1 - Q\!\left(\tfrac{\Delta v\,\Delta t}{\sqrt{2}\,\si
 \textbf{Proof sketch.}
 The inertia-predicted positions separate by $\Delta v\,\Delta t$ while the difference of assignment costs is $\mathcal{N}(0, 2\sigma_p^2)$, so the ordering is preserved with probability $1 - Q(\Delta v\,\Delta t/\sqrt{2}\sigma_p)$. The factor $p_D^2(1 - p_{\mathrm{fa}})$ accounts for both targets being detected and neither track being mis-associated to a clutter measurement; setting $p_D = 1$, $p_{\mathrm{fa}} = 0$ recovers the idealized (clutter-free, full-detection) bound. \hfill$\square$
 
-The COP-spectrum birth weight~\eqref{eq:birth_weight} is used as an empirical detection score---stronger spectral peaks initialize tracks with higher weight---and is validated experimentally in Section~\ref{sec:experiments}; we do not claim formal Neyman--Pearson optimality for it.
+The front-end-spectrum birth weight~\eqref{eq:birth_weight} is used as an empirical detection score---stronger spectral peaks initialize tracks with higher weight---and is validated experimentally in Section~\ref{sec:experiments}; we do not claim formal Neyman--Pearson optimality for it.
 
 % ==========================================================================
 %  Focused experiments section (replaces the 12-experiment sprawl).
