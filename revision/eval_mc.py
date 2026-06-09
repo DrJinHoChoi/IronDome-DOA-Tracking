@@ -98,12 +98,13 @@ SCENARIOS = {
         rates_deg=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         pipelines=["COP+GLMB", "COP-CL+GLMB", "COP-GCL+GLMB"],
     ),
-    "maneuver": dict(      # maneuvering (sinusoidal angular) targets: physics CA vs CV back-end
+    "maneuver": dict(      # maneuvering (sinusoidal) targets: physics CA vs CV across back-ends
         M=8, K=4, SNR_DB=6, T=256, N_SCANS=24, proc_noise_deg=0.5,
         base_deg=[-50, -20, 20, 50],
         rates_deg=[0.0, 0.0, 0.0, 0.0],
         turn_amp_deg=12.0, turn_omega=0.35,
-        pipelines=["COP+Physics", "COP+GLMB", "COP+GLMBphys"],
+        pipelines=["COP+Physics", "COP+PhysCA", "COP+LMB", "COP+LMBphys",
+                   "COP+GLMB", "COP+GLMBphys"],
     ),
     "k4move": dict(        # determined FAST crossing: gate-safety demo (stable tracks)
         M=8, K=4, SNR_DB=15, T=512, N_SCANS=30, proc_noise_deg=0.5,
@@ -231,9 +232,12 @@ def build_estimator(name, array, K):
     return MUSIC(array, num_sources=min(K, array.M - 1))   # MUSIC capped at M-1
 
 
-def build_phd(estimator, use_physics):
-    from iron_dome_sim.tracking import COPPHD, ConstantVelocity
-    model = ConstantVelocity(dt=1.0, process_noise_std=np.radians(0.5))
+def build_phd(estimator, use_physics, motion='cv'):
+    from iron_dome_sim.tracking import COPPHD, ConstantVelocity, ConstantAcceleration
+    if motion == 'ca':                                  # physics-based constant-acceleration
+        model = ConstantAcceleration(dt=1.0, process_noise_std=np.radians(0.5))
+    else:
+        model = ConstantVelocity(dt=1.0, process_noise_std=np.radians(0.5))
     return COPPHD(model, estimator, survival_prob=0.95, detection_prob=0.95,
                   birth_weight=0.5, clutter_rate=0.3, prune_threshold=1e-3,
                   merge_threshold=2.0, birth_pos_std_deg=3.0,
@@ -271,9 +275,11 @@ def run_trial(args):
         from lmb_tracker import LMBTracker
         from iron_dome_sim.tracking import ConstantVelocity
         model = ConstantVelocity(dt=1.0, process_noise_std=np.radians(0.5))
-        phd = LMBTracker(model, est)
-    else:
-        phd = build_phd(est, use_physics=use_physics)
+        motion = 'ca' if ('phys' in pipe.lower() or 'CA' in pipe) else 'cv'  # physics-based CA
+        phd = LMBTracker(model, est, motion=motion)
+    else:                                              # TO-PHD (GM-PHD predict-identify-update)
+        motion = 'ca' if 'CA' in pipe else 'cv'         # 'COP+PhysCA' -> physics-based CA
+        phd = build_phd(est, use_physics=use_physics, motion=motion)
     scan = np.linspace(-np.pi / 2, np.pi / 2, 1801)
     c_rad = np.radians(GOSPA_C_DEG)
 

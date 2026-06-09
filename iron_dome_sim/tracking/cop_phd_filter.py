@@ -84,6 +84,7 @@ class COPPHD:
                  birth_weight=0.1, prune_threshold=1e-5,
                  merge_threshold=4.0, max_components=100,
                  birth_pos_std_deg=2.0, birth_vel_std_deg=5.0,
+                 birth_acc_std_deg=2.0,
                  association_gate_deg=8.0,
                  use_physics=True):
 
@@ -104,6 +105,7 @@ class COPPHD:
         # Birth covariance parameters (degrees)
         self.birth_pos_std = np.radians(birth_pos_std_deg)
         self.birth_vel_std = np.radians(birth_vel_std_deg)
+        self.birth_acc_std = np.radians(birth_acc_std_deg)  # for CA (constant-acceleration) model
 
         # Association gate
         self.association_gate = np.radians(association_gate_deg)
@@ -528,6 +530,10 @@ class COPPHD:
                 P[2, 2] = self.birth_vel_std ** 2
             if dim > 3:
                 P[3, 3] = self.birth_vel_std ** 2
+            if dim > 4:                                    # CA: acceleration covariance
+                P[4, 4] = self.birth_acc_std ** 2
+            if dim > 5:
+                P[5, 5] = self.birth_acc_std ** 2
 
             label = self._next_label
             self._next_label += 1

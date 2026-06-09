@@ -23,22 +23,46 @@ def _cv_FQ(dt, sw2):
     return F, Q
 
 
+def _ca_FQ(dt, sw2):
+    """Physics-based constant-acceleration model: [theta, theta_dot, theta_ddot]."""
+    F = np.array([[1.0, dt, 0.5 * dt * dt],
+                  [0.0, 1.0, dt],
+                  [0.0, 0.0, 1.0]])
+    Q = sw2 * np.array([[dt**5 / 20.0, dt**4 / 8.0, dt**3 / 6.0],
+                        [dt**4 / 8.0,  dt**3 / 3.0, dt**2 / 2.0],
+                        [dt**3 / 6.0,  dt**2 / 2.0, dt]])
+    return F, Q
+
+
 class LMBTracker:
     def __init__(self, motion_model, estimator, p_S=0.95, p_D=0.95,
                  clutter_rate=0.3, r_birth=0.3, meas_std_deg=1.0,
                  birth_pos_std_deg=3.0, birth_vel_std_deg=5.0,
+                 birth_acc_std_deg=2.0, motion='cv',
                  assoc_gate_deg=10.0, prune_r=1e-3, extract_r=0.5,
                  max_tracks=40, n_gibbs=120, burn=20, fov_rad=np.pi):
         self.model = motion_model
         self.est = estimator
         self.dt = getattr(motion_model, "dt", 1.0)
         self.sw2 = getattr(motion_model, "process_noise_std", np.radians(0.5)) ** 2
+        self.motion = motion
+        if motion == 'ca':                           # physics: constant-acceleration
+            self.F, self.Q = _ca_FQ(self.dt, self.sw2)
+            self.H = np.array([[1.0, 0.0, 0.0]])
+            self.Pb = np.diag([np.radians(birth_pos_std_deg) ** 2,
+                               np.radians(birth_vel_std_deg) ** 2,
+                               np.radians(birth_acc_std_deg) ** 2])
+            self.dim = 3
+        else:
+            self.F, self.Q = _cv_FQ(self.dt, self.sw2)
+            self.H = np.array([[1.0, 0.0]])
+            self.Pb = np.diag([np.radians(birth_pos_std_deg) ** 2,
+                               np.radians(birth_vel_std_deg) ** 2])
+            self.dim = 2
         self.p_S, self.p_D = p_S, p_D
         self.kappa = clutter_rate / fov_rad          # clutter intensity (uniform)
         self.r_B = r_birth
         self.R = np.radians(meas_std_deg) ** 2
-        self.Pb = np.diag([np.radians(birth_pos_std_deg) ** 2,
-                           np.radians(birth_vel_std_deg) ** 2])
         self.gate2 = np.radians(assoc_gate_deg) ** 2
         self.prune_r, self.extract_r = prune_r, extract_r
         self.max_tracks, self.n_gibbs, self.burn = max_tracks, n_gibbs, burn
@@ -65,10 +89,18 @@ class LMBTracker:
         pdoas, pvels = [], []
         for t in self.tracks:
             if t["r"] >= self.extract_r:
-                pdoas.append(t["m"][0] + t["m"][1] * self.dt)
+                pd = t["m"][0] + t["m"][1] * self.dt
+                if self.dim >= 3:                  # CA: + 1/2 a dt^2
+                    pd += 0.5 * t["m"][2] * self.dt * self.dt
+                pdoas.append(pd)
                 pvels.append(t["m"][1])
         self.est.set_tracker_predictions(np.array(pdoas),
                                          predicted_vels=np.array(pvels))
+
+    def _birth_mean(self, z):
+        m = np.zeros(self.dim)
+        m[0] = z
+        return m
 
     def get_doa_estimates(self):
         return np.array([t["m"][0] for t in self.tracks if t["r"] >= self.extract_r])
@@ -82,7 +114,7 @@ class LMBTracker:
 
     # ---- predict ----
     def _predict(self):
-        F, Q = _cv_FQ(self.dt, self.sw2)
+        F, Q = self.F, self.Q
         for t in self.tracks:
             t["r"] = self.p_S * t["r"]
             t["m"] = F @ t["m"]
@@ -91,7 +123,7 @@ class LMBTracker:
     # ---- update ----
     def _update(self, Z):
         n, m = len(self.tracks), len(Z)
-        H = np.array([[1.0, 0.0]])
+        H = self.H
         if n > 0 and m > 0:
             A = np.zeros((n, m))      # detection weights (rel. to clutter)
             A0 = np.zeros(n)          # "missed or absent" weight
@@ -173,7 +205,7 @@ class LMBTracker:
             if assoc_mass[j] < 0.5:              # measurement not well explained
                 self.tracks.append(dict(
                     l=self.next_label, r=self.r_B * (1 - assoc_mass[j]),
-                    m=np.array([Z[j], 0.0]), P=self.Pb.copy()))
+                    m=self._birth_mean(Z[j]), P=self.Pb.copy()))
                 self.next_label += 1
 
     def _prune(self):

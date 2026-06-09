@@ -713,24 +713,28 @@ the closed-loop front-end can drive any RFS tracker, trading computation for
 identity accuracy. (This determined crossing stresses identity; the COP front-end's
 advantage lies in the underdetermined regime of \S\ref{sec:exp_underdet}.)
 
-\textbf{Physics-based motion makes the SOTA back-end best under maneuver.}
+\textbf{Physics-based motion improves \emph{every} back-end under maneuver.}
 Back-end agnosticism also exposes the \emph{motion model} as a design choice. For
 \emph{maneuvering} targets (angular tracks with non-zero curvature, typical of
 ballistic threats off-boresight), a physics-based constant-acceleration (CA) model
-decisively beats the constant-velocity (CV) default: on a $K=4$ sinusoidal-maneuver
-scenario (SNR $6$~dB, Table~\ref{tab:maneuver}) it cuts $\delta$-GLMB's
-localization error by $45\%$ ($1.21^\circ\!\to\!0.67^\circ$) and switches sevenfold
-($13.1\!\to\!1.8$). Tellingly, \emph{CV} $\delta$-GLMB trails even the CV TO-PHD
-here---its joint association misled by lagging predictions---so the physics model
-is what makes the SOTA back-end robust under maneuver. Our recommended deployed
-configuration is therefore the \emph{gated closed-loop higher-order front-end
-driving a physics-based, interchangeable SOTA back-end} (instantiated
-with $\delta$-GLMB): agnostic in both estimator and tracker, gated for safety, and
-matched to the target dynamics.
+decisively beats the constant-velocity (CV) default. On a $K=4$ sinusoidal-maneuver
+scenario (SNR $6$~dB, Table~\ref{tab:maneuver}), CA cuts localization error by
+$45$--$53\%$ for \emph{all three} back-ends---TO-PHD $1.41^\circ\!\to\!0.66^\circ$,
+LMB $1.36^\circ\!\to\!0.66^\circ$, $\delta$-GLMB $1.21^\circ\!\to\!0.67^\circ$---all
+converging to ${\approx}0.66^\circ$ as the matched motion model becomes the dominant
+factor. For the labeled-RFS trackers CA additionally collapses identity switches
+(LMB $3.9\!\to\!1.2$, $\delta$-GLMB $13.1\!\to\!1.8$), while the unlabeled TO-PHD's
+switches are statistically unchanged; tellingly, \emph{CV} $\delta$-GLMB trails even
+the CV TO-PHD, its joint association misled by lagging predictions. The physics
+benefit is thus genuinely \emph{back-end-agnostic}. Our recommended deployed
+configuration is therefore the \emph{gated closed-loop front-end driving a
+physics-based (CA) SOTA labeled-RFS back-end} (instantiated with $\delta$-GLMB):
+agnostic in both estimator and tracker, gated for safety, and matched to the
+target dynamics.
 
 \begin{table}[t]
 \centering
-\caption{Physics-based motion model for \emph{maneuvering} targets ($K=4$ sinusoidal maneuver, SNR $6$~dB, $30$ trials, $95\%$ CIs). The constant-acceleration (CA) physics makes the SOTA $\delta$-GLMB best-in-class on every metric; CV $\delta$-GLMB is misled by its lagging predictions and trails even the CV TO-PHD.}
+\caption{Physics-based CA motion for \emph{maneuvering} targets ($K=4$ sinusoidal maneuver, SNR $6$~dB, $30$ trials, $95\%$ CIs). CA halves localization error for \emph{every} back-end (all $\to\!\approx\!0.66^\circ$); the labeled-RFS trackers (LMB, $\delta$-GLMB) additionally cut identity switches, while the unlabeled TO-PHD's switches are statistically unchanged.}
 \label{tab:maneuver}
 \small
 \resizebox{\columnwidth}{!}{%
@@ -738,9 +742,12 @@ matched to the target dynamics.
 \toprule
 Back-end (motion) & $P_d$ (\%) & locRMSE ($^\circ$) & GOSPA ($^\circ$) & Switches \\
 \midrule
-TO-PHD (CV)                & $96.8\pm0.9$ & $1.41\pm0.03$ & $3.12\pm0.10$ & $6.7\pm2.9$ \\
-$\delta$-GLMB (CV)         & $85.9\pm1.1$ & $1.21\pm0.07$ & $4.28\pm0.17$ & $13.1\pm2.1$ \\
-$\delta$-GLMB (CA, physics) & $\mathbf{97.5\pm1.1}$ & $\mathbf{0.67\pm0.06}$ & $\mathbf{1.62\pm0.23}$ & $\mathbf{1.8\pm1.0}$ \\
+TO-PHD (CV)        & $96.8\pm0.9$ & $1.41\pm0.03$ & $3.12\pm0.10$ & $6.7\pm2.9$ \\
+TO-PHD (CA)        & $98.4\pm0.6$ & $\mathbf{0.66\pm0.04}$ & $\mathbf{1.45\pm0.12}$ & $8.2\pm4.0$ \\
+LMB (CV)           & $95.1\pm1.0$ & $1.36\pm0.04$ & $3.07\pm0.14$ & $3.9\pm1.7$ \\
+LMB (CA)           & $98.0\pm1.0$ & $\mathbf{0.66\pm0.06}$ & $\mathbf{1.45\pm0.16}$ & $\mathbf{1.2\pm1.2}$ \\
+$\delta$-GLMB (CV) & $85.9\pm1.1$ & $1.21\pm0.07$ & $4.28\pm0.17$ & $13.1\pm2.1$ \\
+$\delta$-GLMB (CA) & $97.5\pm1.1$ & $\mathbf{0.67\pm0.06}$ & $\mathbf{1.62\pm0.23}$ & $\mathbf{1.8\pm1.0}$ \\
 \bottomrule
 \end{tabular}}
 \end{table}
