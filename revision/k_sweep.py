@@ -95,29 +95,27 @@ def main():
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    plt.rcParams.update({"font.size": 9})
     sty = {"MUSIC-PHD": ("#d62728", "-s", "MUSIC--PHD"),
            "COP-RFS": ("#1f77b4", "-o", "COP-RFS (open-loop)"),
            "COP-RFS-GCL": ("#2ca02c", "-.^", "COP-RFS gated (proposed)")}
-    fig, ax = plt.subplots(1, 2, figsize=(8.4, 3.5))
+    # single column-native panel: detection P_d vs K (GOSPA-vs-K story is redundant)
+    fig, ax = plt.subplots(figsize=(3.45, 2.75))
     for p in PIPES:
         col, fmt, lab = sty[p]
         pdv = [ci(accpd[(K, p)])[0] for K in KVALS]
         pde = [ci(accpd[(K, p)])[1] for K in KVALS]
-        gv = [ci(accg[(K, p)])[0] for K in KVALS]
-        ge = [ci(accg[(K, p)])[1] for K in KVALS]
-        ax[0].errorbar(KVALS, pdv, yerr=pde, fmt=fmt, color=col, capsize=3, lw=2, label=lab)
-        ax[1].errorbar(KVALS, gv, yerr=ge, fmt=fmt, color=col, capsize=3, lw=2, label=lab)
-    for a in ax:
-        a.axvline(M - 1, ls=":", color="gray")
-        a.set_xlabel("number of sources $K$")
-        a.grid(alpha=0.3)
-    ax[0].set_ylabel("detection rate $P_d$ (%)")
-    ax[1].set_ylabel("GOSPA (deg)")
-    ax[0].text(M - 1 + 0.15, 30, "$M{-}1$", color="gray", fontsize=9)
-    ax[0].legend(fontsize=8, loc="lower left")
-    fig.tight_layout()
+        ax.errorbar(KVALS, pdv, yerr=pde, fmt=fmt, color=col, capsize=2.5,
+                    lw=1.6, ms=5, label=lab)
+    ax.axvline(M - 1, ls=":", color="gray")
+    ax.text(M - 1 + 0.12, 45, "$M{-}1$", color="gray", fontsize=8.5)
+    ax.set_xlabel("number of sources $K$")
+    ax.set_ylabel("detection rate $P_d$ (%)")
+    ax.grid(alpha=0.3)
+    ax.legend(fontsize=7.2, loc="lower left")
+    fig.tight_layout(pad=0.3)
     out = os.path.join(HERE, "fig_k_sweep.png")
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=200)
     plt.close(fig)
     print("saved", out)
 

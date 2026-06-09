@@ -53,7 +53,7 @@ def run_trial(args):
     pd_s, g_s = [], []
     for si in range(N_SCANS):
         true = np.clip(BASE + RATES * si, -np.pi / 2 + 0.05, np.pi / 2 - 0.05)
-        np.random.seed(40000 * (trial + 1) + hash(sig) % 9973 + si)
+        np.random.seed(40000 * (trial + 1) + SIGTYPES.index(sig) * 1009 + si)
         X, _, _ = generate_snapshots(array, true, SNR, T, sig)
         phd.process_scan(X, scan)
         ed = np.asarray(phd.get_doa_estimates()).ravel()
@@ -94,27 +94,29 @@ def main():
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    plt.rcParams.update({"font.size": 9})
+    short = {"non_stationary": "AM", "missile": "missile", "fm": "FM",
+             "chirp": "chirp", "psk": "PSK", "stationary": "Gauss"}
     x = np.arange(len(SIGTYPES))
     w = 0.38
-    fig, ax = plt.subplots(figsize=(7.6, 3.6))
+    fig, ax = plt.subplots(figsize=(3.45, 2.75))
     for i, p in enumerate(PIPES):
         vals = [ci(accpd[(s, p)])[0] for s in SIGTYPES]
         errs = [ci(accpd[(s, p)])[1] for s in SIGTYPES]
         col = "#1f77b4" if p == "COP-RFS" else "#d62728"
-        lab = "COP-RFS (4th-order)" if p == "COP-RFS" else "MUSIC--PHD (2nd-order)"
-        ax.bar(x + (i - 0.5) * w, vals, w, yerr=errs, capsize=3, color=col, label=lab)
+        lab = "COP-RFS (4th)" if p == "COP-RFS" else "MUSIC--PHD (2nd)"
+        ax.bar(x + (i - 0.5) * w, vals, w, yerr=errs, capsize=2.5, color=col, label=lab)
     ax.axhline(100.0 * (M - 1) / K, ls=":", color="gray")
-    ax.text(len(SIGTYPES) - 1.0, 100.0 * (M - 1) / K + 1.5,
-            "$(M{-}1)/K$ cap", color="gray", fontsize=8)
+    ax.text(-0.35, 100.0 * (M - 1) / K + 2.0,
+            "$(M{-}1)/K$ cap", color="gray", fontsize=7.3, ha="left")
     ax.set_xticks(x)
-    ax.set_xticklabels([LABELS[s] for s in SIGTYPES], fontsize=8)
+    ax.set_xticklabels([short[s] for s in SIGTYPES], fontsize=7.6)
     ax.set_ylabel("detection rate $P_d$ (%)")
-    ax.set_title(f"Underdetermined $K={K}>M{{-}}1={M-1}$: HOS holds for non-Gaussian sources")
-    ax.legend(fontsize=8, loc="upper right")
+    ax.legend(fontsize=7.2, loc="upper right")
     ax.grid(axis="y", alpha=0.3)
-    fig.tight_layout()
+    fig.tight_layout(pad=0.3)
     out = os.path.join(HERE, "fig_sigtype.png")
-    fig.savefig(out, dpi=150)
+    fig.savefig(out, dpi=200)
     plt.close(fig)
     print("saved", out)
 

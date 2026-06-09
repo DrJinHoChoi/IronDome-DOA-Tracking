@@ -84,25 +84,26 @@ def main():
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
+    plt.rcParams.update({"font.size": 9})
     sty = {"COP-RFS": ("#1f77b4", "-o", "COP open-loop"),
            "COP-RFS-CL": ("#1f77b4", "--o", "COP closed-loop (full)"),
            "COP-RFS-GCL": ("#2ca02c", "-.^", "COP gated (deployed)"),
            "MUSIC-PHD": ("#d62728", "-s", "MUSIC open-loop"),
            "MUSIC-PHD-CL": ("#d62728", "--s", "MUSIC closed-loop")}
-    fig, ax = plt.subplots(figsize=(6.6, 4.4))
+    fig, ax = plt.subplots(figsize=(3.45, 3.15))
     for p in PIPES:
         col, fmt, lab = sty[p]
         filled = "--" not in fmt
-        ax.errorbar(SNRS, curves[p], yerr=errs[p], fmt=fmt, color=col, capsize=3,
-                    lw=2, markerfacecolor=(col if filled else "white"), label=lab)
+        ax.errorbar(SNRS, curves[p], yerr=errs[p], fmt=fmt, color=col, capsize=2.5,
+                    lw=1.5, ms=4.5, markerfacecolor=(col if filled else "white"), label=lab)
     ax.set_yscale("log")
     ax.set_xlabel("SNR (dB)")
     ax.set_ylabel("localization RMSE (deg, log)")
-    ax.set_title(f"Determined regime $K={K}<M{{-}}1=7$: closed loop helps both")
-    ax.grid(True, which="both", alpha=0.3); ax.legend(fontsize=9)
-    fig.tight_layout()
+    ax.grid(True, which="both", alpha=0.3)
+    ax.legend(fontsize=6.6, loc="lower left", handlelength=2.2, labelspacing=0.3)
+    fig.tight_layout(pad=0.3)
     out = os.path.join(HERE, "fig_snr_determined.png")
-    fig.savefig(out, dpi=150); plt.close(fig)
+    fig.savefig(out, dpi=200); plt.close(fig)
     print("saved", out)
 
 
