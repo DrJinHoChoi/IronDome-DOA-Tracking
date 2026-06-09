@@ -257,7 +257,7 @@ SD-COP is a \emph{supporting} extension---not a central contribution---that push
 
 At each stage, the already-estimated sources are reconstructed by regularized least squares and subtracted from the \emph{original} received signal $\mat{X}$---always referencing the cumulative DOA set, so deflation never cascades error---after which COP is re-applied to the cumulant of the residual to discover further sources. Each stage respects the per-stage capacity $K_{\mathrm{batch}}\le\rho(M{-}1)$, and an optional leave-one-out pass re-estimates each DOA from the residual of all others. As a supporting extension, we omit the (straightforward sequential) pseudocode.
 
-\section{Physics-Based Track-Oriented PHD Filter for DOA Tracking}
+\section{RFS Multi-Target Tracking Back-End}
 \label{sec:tracking}
 
 \subsection{Random Finite Set Formulation}
@@ -293,11 +293,32 @@ where $\Delta t$ is the inter-scan interval and $\mat{w}_n \sim \mathcal{N}(\mat
 \end{equation}
 The measurement model is $z_n = \mat{H}\,\mat{x}_n + v_n$ with $\mat{H} = [1,\, 0]$ and $v_n \sim \mathcal{N}(0, \sigma_\theta^2)$. For \emph{maneuvering} targets (non-zero angular curvature) we use the constant-acceleration (CA) model, augmenting the state to $\mat{x}=[\theta,\dot{\theta},\ddot{\theta}]^T$ with $\mat{F}_{\mathrm{CA}}=[\,1,\Delta t,\tfrac12\Delta t^2;\,0,1,\Delta t;\,0,0,1\,]$, $\mat{H}=[1,0,0]$, and a white-noise-jerk $\mat{Q}$. Throughout, \emph{physics-based} denotes this kinematic (CV or CA) motion model---shared by the TO-PHD and the labeled-RFS back-ends---with CA preferred under maneuver (\S\ref{sec:exp_cross}).
 
-\subsection{Physics-Based Predict--Identify--Update Pipeline}
+\subsection{Recommended Back-End: Physics-Based $\delta$-GLMB}
 
-The standard GM-PHD filter processes measurements in a ``predict--update'' pipeline where every measurement updates every predicted component, creating $\mathcal{O}(J \cdot M)$ updated components per scan. In DOA tracking scenarios with crossing targets, this leads to track coalescence---distinct targets merge into a single track at crossing points.
+Because the closed loop is back-end-agnostic, any RFS filter that consumes the front-end DOAs and returns a predicted state may serve as the tracker. Our \emph{recommended} back-end is the labeled-RFS $\delta$-GLMB filter~\cite{vo2013glmb}---the state-of-the-art identity-aware tracker---realized with the efficient Gibbs joint predict--update truncation of~\cite{vo2017efficient} and the physics-based motion of Section~\ref{sec:tracking}. The posterior is a weighted set of global hypotheses, each a set of labeled tracks $(\ell,\mat{m},\mat{P})$ with cardinality distribution $\rho(n)=\sum_{|I|=n} w_h$. Algorithm~\ref{alg:glmb} summarizes one closed-loop scan: each parent hypothesis predicts its survivors by the CV/CA model and admits a measurement-driven birth per detection; a Gibbs sampler draws the high-weight joint association vectors (each measurement assigned exclusively to a track, a birth, or clutter), each spawning a child hypothesis whose weight is the product of per-track association costs. Hypotheses are merged by label set and pruned, a detection-based confirmation score rejects clutter while letting confirmed tracks coast through occasional front-end misses, and the cardinality-MAP hypothesis is extracted. The labeled hypotheses preserve identity through crossings and, with the CA motion, make this back-end best-in-class under maneuver (Section~\ref{sec:exp_cross}).
 
-We propose a ``predict--identify--update'' pipeline (Algorithm~\ref{alg:phd_physics}) that leverages the motion model~\eqref{eq:motion_model} to identify which measurement belongs to which track \emph{before} the Bayesian update. The key innovation is the \textbf{Hungarian assignment}~\cite{kuhn1955hungarian} on the cost matrix
+\begin{algorithm}[t]
+\caption{Physics-based $\delta$-GLMB back-end (one closed-loop scan)}
+\label{alg:glmb}
+\begin{algorithmic}[1]
+\REQUIRE hypotheses $\{(w_h,\{(\ell,\mat{m},\mat{P})\})\}$; snapshot $\mat{X}_n$; motion $(\mat{F},\mat{Q})$ (CV or CA)
+\STATE feed confirmed tracks' predictions $\mat{H}\mat{F}\mat{m}$ to the front-end; \ $\mathcal{Z}_n \leftarrow \mathrm{front\text{-}end}(\mat{X}_n)$ (gated, Alg.~\ref{alg:gate})
+\FOR{each parent hypothesis $h$ (top $H_p$ by weight)}
+    \STATE predict survivors $\mat{m}\!\leftarrow\!\mat{F}\mat{m}$, $\mat{P}\!\leftarrow\!\mat{F}\mat{P}\mat{F}^T\!+\!\mat{Q}$; add one birth per $z_j$
+    \STATE costs: detect $\propto p_S p_D\,\mathcal{N}(z_j;\mat{H}\mat{m},S)/\kappa$, miss $\propto p_S(1{-}p_D)$, death $\propto 1{-}p_S$
+    \STATE Gibbs-sample joint assignments $\gamma$ ($z_j$ exclusive); each spawns a child, $w\!\leftarrow\! w_h\!\prod_i \mathrm{cost}_i(\gamma_i)$
+\ENDFOR
+\STATE merge children by label set, normalize, prune to top $H$
+\STATE update confirmation scores (hit $+1$/miss $-1$, hysteresis)
+\RETURN cardinality-MAP hypothesis (confirmed labeled tracks)
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Lightweight Alternative: Track-Oriented PHD}
+
+For compute-constrained deployment the back-end can instead be a \emph{track-oriented PHD} (TO-PHD), a Gaussian-mixture PHD with a predict--identify--update pipeline that avoids hypothesis sampling. The standard GM-PHD processes measurements in a ``predict--update'' pipeline where every measurement updates every predicted component, creating $\mathcal{O}(J \cdot M)$ updated components per scan. In DOA tracking scenarios with crossing targets, this leads to track coalescence---distinct targets merge into a single track at crossing points.
+
+Its ``predict--identify--update'' pipeline leverages the motion model~\eqref{eq:motion_model} to identify which measurement belongs to which track \emph{before} the Bayesian update. The key innovation is the \textbf{Hungarian assignment}~\cite{kuhn1955hungarian} on the cost matrix
 \begin{equation}
 C_{jm} = |\hat{\theta}_j^{\mathrm{pred}} - z_m|, \quad
 \hat{\theta}_j^{\mathrm{pred}} = [\mat{F}\,\mat{m}_j]_1
@@ -312,42 +333,6 @@ where $[\cdot]_1$ denotes the first element (DOA). The matched track $j$ is then
 where each confirmed track uses \emph{only its matched measurement} $z_{m(j)}$, not all measurements as in the standard PHD update.
 
 \textbf{Relation to the PHD recursion.} The matched, single-measurement correction~\eqref{eq:kalman_gain}--\eqref{eq:kalman_cov} is \emph{not} the exact GM-PHD update, which sums each component over all measurements~\cite{vo2006gmphd}. It instead implements a \emph{track-oriented, marginal-association} approximation: the Hungarian step selects the maximum-a-posteriori measurement-to-track assignment, after which each confirmed track is corrected by its assigned measurement alone---the PHD analogue of track-oriented MHT and global-nearest-neighbour association~\cite{barshalom2011tracking}. This trades the exact first-moment recursion for explicit track identity, which is essential in the crossing scenarios of interest. We therefore call the back-end a \emph{track-oriented PHD} (TO-PHD) and reserve ``GM-PHD'' for the standard recursion used as a baseline; birth and tentative components still receive the standard multi-measurement PHD update, so the filter reduces to the GM-PHD when the association gate is fully opened.
-
-\begin{algorithm}[t]
-\caption{Physics-Based TO-PHD: Predict--Identify--Update}
-\label{alg:phd_physics}
-\begin{algorithmic}[1]
-\REQUIRE snapshot $\mat{X}_n$, GM components $\{w_j, \mat{m}_j, \mat{P}_j\}$
-\STATE \textbf{Step 1: Subspace front-end estimation} (COP or MUSIC; closed-loop refined, Alg.~\ref{alg:gate})
-\STATE $\mathcal{Z}_n, P \leftarrow \mathrm{front\text{-}end}(\mat{X}_n)$
-\STATE \textbf{Step 2: Physics-Based Prediction}
-\FOR{each confirmed component $j$}
-    \STATE $\mat{m}_{j}^{-} \leftarrow \mat{F}\,\mat{m}_j$, \quad $\mat{P}_j^{-} \leftarrow \mat{F}\mat{P}_j\mat{F}^T + \mat{Q}$
-    \STATE // motion model $\mat{F}$: CV $\theta_j{+}\dot{\theta}_j\Delta t$, or physics CA $\,{+}\tfrac{1}{2}\ddot{\theta}_j\Delta t^2$
-\ENDFOR
-\STATE \textbf{Step 3: Measurement-to-Track Identification (Hungarian)}
-\STATE Compute cost matrix: $C_{jm} = |\hat{\theta}_j^{\mathrm{pred}} - z_m|$ for all $(j, m)$
-\STATE $\{(j, m)\} \leftarrow \mathrm{Hungarian}(\mat{C})$ with gating threshold $\delta$
-\STATE Identify unassociated measurements $\mathcal{Z}_{\mathrm{birth}}$
-\STATE \textbf{Step 4: Birth from Unassociated Measurements}
-\FOR{each $z_b \in \mathcal{Z}_{\mathrm{birth}}$}
-    \STATE Create birth component with weight $w_b \propto P(z_b)$ \hfill // front-end spectrum height
-\ENDFOR
-\STATE \textbf{Step 5: Differentiated Update}
-\FOR{each confirmed track $j$ with matched measurement $z_{m(j)}$}
-    \STATE Kalman update with $z_{m(j)}$ only (not all measurements)
-    \STATE $q_j \leftarrow \mathcal{N}(z_{m(j)};\, \mat{H}\mat{m}_j^{-},\, \mat{H}\mat{P}_j^{-}\mat{H}^T + \sigma_\theta^2)$ \hfill // likelihood
-    \STATE $w_j \leftarrow p_D \cdot w_j \cdot q_j / (\kappa + p_D \cdot w_j \cdot q_j)$ \hfill // $\kappa$: clutter rate
-\ENDFOR
-\FOR{each confirmed track $j$ without match}
-    \STATE $w_j \leftarrow (1 - p_D) \cdot w_j$ \quad // Coast on inertia
-\ENDFOR
-\FOR{each birth/tentative component $j$}
-    \STATE Standard PHD update with ALL measurements
-\ENDFOR
-\STATE \textbf{Step 6: Prune, Merge (velocity-gated), Extract}
-\end{algorithmic}
-\end{algorithm}
 
 \textbf{Key design choices:}
 \begin{itemize}
