@@ -74,9 +74,9 @@ configuration}---the destination of this paper---is a gated closed-loop front-en
 SOTA back-end ($\delta$-GLMB), robust across source count, SNR, motion, and
 signal type. The principal contributions are:
 
-\begin{figure*}[t]
+\begin{figure}[t]
 \centering
-\includegraphics[width=0.99\textwidth]{figures/fig_system.png}
+\includegraphics[width=0.92\linewidth]{figures/fig_system.png}
 \caption{The proposed gated closed-loop subspace--RFS framework. A
 front-end-agnostic subspace estimator (COP or MUSIC) feeds a back-end-agnostic RFS
 tracker (TO-PHD, LMB, or $\delta$-GLMB with physics-based CV/CA motion); the
@@ -85,7 +85,7 @@ T-COP refinement (Theorems~1--2) that guarantees the loop never degrades the
 open-loop estimate. The recommended configuration is a gated
 front-end (COP or MUSIC by regime) driving a physics-based, interchangeable SOTA back-end (here $\delta$-GLMB).}
 \label{fig:system}
-\end{figure*}
+\end{figure}
 
 \textbf{Contribution 1 (Theory): A posterior CRB for the complete closed loop.}
 We derive the first Cram\'{e}r--Rao bound for the coupled higher-order-cumulant/RFS tracker (Theorem~1), via the posterior-CRB recursion. It proves that the temporal prior strictly tightens the bound in the L\"owner order and, crucially, that it \emph{restores identifiability}---keeping the bound finite---precisely in the underdetermined regime where the data-only bound diverges. It is an honest, closed-loop analysis rather than an unsupported ``exact'' static-cumulant CRLB.
