@@ -378,7 +378,7 @@ Under the stochastic signal model~\cite{stoica1989music}, the Fisher Information
 \end{equation}
 where $\mat{D} = [\frac{\partial\mat{a}}{\partial\theta_1}, \ldots, \frac{\partial\mat{a}}{\partial\theta_K}]$ is the steering derivative matrix, $\mat{P}_{\mat{A}}^\perp = \mat{I} - \mat{A}(\mat{A}^H\mat{A})^{-1}\mat{A}^H$ is the noise subspace projector, $\mat{R}_s$ is the source covariance, $\mat{R} = \mat{A}\mat{R}_s\mat{A}^H + \sigma^2\mat{I}$ is the data covariance, and $\odot$ denotes Hadamard product. The CRLB for the $k$th DOA is $\mathrm{CRB}(\theta_k) = [\mat{F}_{\mathrm{std}}^{-1}]_{kk}$.
 
-\subsection{Higher-Order (COP) CRLB}
+\subsection{Higher-Order (Cumulant) CRLB}
 
 For DOA estimation from the $2\rho$th-order cumulant matrix, the FIM uses the virtual array manifold:
 \begin{multline}
@@ -485,8 +485,9 @@ We first isolate the front-end. Fig.~\ref{fig:spectrum} shows that for $K=10$
 sources with $M=8$ ($K>M-1=7$), the COP-4th pseudo-spectrum~\eqref{eq:cop_spectrum}
 resolves all sources while MUSIC and Capon fail. On the full pipeline ($K=10$
 moving targets, $30$ scans, SNR$=15$~dB), Table~\ref{tab:underdet} shows that
-\emph{COP-RFS detects significantly more targets than the MUSIC--PHD cascade},
-$P_d=60.3\%\pm0.2$ vs.\ $51.9\%\pm0.1$ (non-overlapping CIs). MUSIC is structurally
+\emph{COP-RFS detects significantly more targets than the MUSIC--PHD cascade}
+(a MUSIC front-end driving the same TO-PHD back-end, so the comparison isolates
+the front-end), $P_d=60.3\%\pm0.2$ vs.\ $51.9\%\pm0.1$ (non-overlapping CIs). MUSIC is structurally
 capped: running at most $\min(K,M{-}1)=7$ sources, its detection cannot exceed
 $(M{-}1)/K=70\%$, and for $K>M{-}1$ the unmodeled excess sources contaminate the
 $M\times M$ subspaces, biasing several peaks beyond the $3^\circ$ gate so that it
