@@ -42,7 +42,7 @@
 \maketitle
 
 \begin{abstract}
-We present a closed-loop subspace--RFS framework that couples direction-of-arrival (DOA) estimation with random-finite-set (RFS) multi-target tracking and, unlike prior open-loop cascades, analyzes the coupling itself. The closed loop is \emph{front-end-agnostic}: the tracker's temporal prediction is fed back to refine the signal subspace of any subspace DOA estimator. We instantiate it with a higher-order-cumulant front-end (COP, which extends operation to the underdetermined regime $K>M{-}1$; the resulting tracker is COP-RFS) and a covariance front-end (MUSIC). Our central contributions are theoretical: (i)~a posterior Cram\'{e}r--Rao bound for the \emph{complete closed-loop} estimator--tracker, proving the temporal prior restores identifiability exactly where the data-only bound diverges; and (ii)~a recasting of the subspace refinement as minimum-variance inverse-variance fusion on the Grassmann manifold, with a validation gate guaranteeing the loop never degrades performance. The framework is also \emph{back-end-agnostic}, integrating track-oriented PHD, labeled multi-Bernoulli (LMB), and $\delta$-GLMB filters; a physics-based constant-acceleration model makes the $\delta$-GLMB back-end best for maneuvering targets, yielding our recommended configuration---a gated closed-loop COP front-end driving a physics-based, interchangeable SOTA back-end (here, $\delta$-GLMB). Monte-Carlo experiments (up to $500$ trials, $95\%$ confidence intervals) show that COP-RFS detects significantly more targets than a MUSIC--PHD baseline when $K>M{-}1$, and that the gated loop lowers low-SNR localization error by up to $56\%$ for both front-ends while cutting moving-target identity switches by $15\%$, matching the open-loop baseline otherwise. We delineate the operating regime in which the higher-order front-end is advantageous rather than claiming uniform superiority.
+We present a closed-loop subspace--RFS framework that couples direction-of-arrival (DOA) estimation with random-finite-set (RFS) multi-target tracking and, unlike prior open-loop cascades, analyzes the coupling itself. The closed loop is \emph{front-end-agnostic}: the tracker's temporal prediction is fed back to refine the signal subspace of any subspace DOA estimator. We instantiate it with a higher-order-cumulant front-end (COP, which extends operation to the underdetermined regime $K>M{-}1$; the resulting tracker is COP-RFS) and a covariance front-end (MUSIC). Our central contributions are theoretical: (i)~a posterior Cram\'{e}r--Rao bound for the \emph{complete closed-loop} estimator--tracker, proving the temporal prior restores identifiability exactly where the data-only bound diverges; and (ii)~a recasting of the subspace refinement as minimum-variance inverse-variance fusion on the Grassmann manifold, with a validation gate guaranteeing the loop never degrades performance. The framework is also \emph{back-end-agnostic}, integrating track-oriented PHD, labeled multi-Bernoulli (LMB), and $\delta$-GLMB filters; a physics-based constant-acceleration model makes the $\delta$-GLMB back-end best for maneuvering targets, yielding our recommended configuration---a gated closed-loop front-end (COP, or the lower-variance MUSIC when determined) driving a physics-based, interchangeable SOTA back-end (here, $\delta$-GLMB). Monte-Carlo experiments (up to $500$ trials, $95\%$ confidence intervals) show that COP-RFS detects significantly more targets than a MUSIC--PHD baseline when $K>M{-}1$, and that the gated loop lowers low-SNR localization error by up to $56\%$ for both front-ends while cutting moving-target identity switches by $15\%$, matching the open-loop baseline otherwise. We delineate the operating regime in which the higher-order front-end is advantageous rather than claiming uniform superiority.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -69,9 +69,9 @@ refinement---to sharpen the estimator. The framework is deliberately modular:
 \emph{front-end-agnostic} (higher-order-cumulant COP, yielding COP-RFS for the
 underdetermined regime $K>M{-}1$, or covariance MUSIC) and
 \emph{back-end-agnostic} (PHD, LMB, or $\delta$-GLMB). Its \emph{recommended
-configuration}---the destination of this paper---is a gated closed-loop COP
-front-end driving a \emph{physics-based}, interchangeable SOTA back-end
-($\delta$-GLMB), robust across source count, SNR, motion, and
+configuration}---the destination of this paper---is a gated closed-loop front-end
+(COP, or MUSIC when determined) driving a \emph{physics-based}, interchangeable
+SOTA back-end ($\delta$-GLMB), robust across source count, SNR, motion, and
 signal type. The principal contributions are:
 
 \begin{figure*}[t]
@@ -82,8 +82,8 @@ front-end-agnostic subspace estimator (COP or MUSIC) feeds a back-end-agnostic R
 tracker (TO-PHD, LMB, or $\delta$-GLMB with physics-based CV/CA motion); the
 tracker's prediction is fed back through a validation gate and a minimum-variance
 T-COP refinement (Theorems~1--2) that guarantees the loop never degrades the
-open-loop estimate. The recommended configuration is a gated COP
-front-end driving a physics-based, interchangeable SOTA back-end (here $\delta$-GLMB).}
+open-loop estimate. The recommended configuration is a gated
+front-end (COP or MUSIC by regime) driving a physics-based, interchangeable SOTA back-end (here $\delta$-GLMB).}
 \label{fig:system}
 \end{figure*}
 
@@ -597,7 +597,11 @@ subspace is noisy ($\kappa$ large). COP benefits more at all SNR because its
 fourth-order variance keeps $\kappa$ large. Hence the closed loop helps \emph{even
 where MUSIC is applicable}, and the \emph{deployed} gated variant (GCL) matches the
 full loop throughout (its velocity gate engages for these slow targets), so the
-practical system attains the gain.
+practical system attains the gain. MUSIC is therefore a first-class front-end of
+the proposed gated loop---indeed the \emph{preferred} one in the determined regime,
+where its lower variance makes it more accurate than COP---so the recommended
+system selects the front-end by regime (COP when $K>M{-}1$, MUSIC otherwise) within
+the same closed loop.
 
 \begin{figure}[t]
 \centering
@@ -835,7 +839,7 @@ The key contributions and findings are:
 \item \textbf{Underdetermined capability, honestly bounded}: With Monte-Carlo evaluation (up to $500$ trials) and $95\%$ confidence intervals, and against MUSIC, closed-loop-MUSIC, labeled multi-Bernoulli (LMB), and full $\delta$-GLMB baselines, COP-RFS detects significantly more targets than a MUSIC--PHD cascade when $K>M{-}1$, while the track-oriented PHD back-end preserves identity through crossings; the closed loop is demonstrated to be both front-end- and back-end-agnostic. We explicitly delineate the operating regime---low SNR and slow target motion for the closed-loop estimation gain, $K>M{-}1$ for the detection gain---rather than claiming uniform superiority; SD-COP extends operation toward the super-underdetermined regime.
 \end{enumerate}
 
-The recommended deployed system---a gated closed-loop higher-order front-end driving a physics-based, interchangeable SOTA back-end (here $\delta$-GLMB)---is thus agnostic in both the estimator and the tracker, with the loop gated for safety and the motion model matched to the target dynamics. The proposed framework is particularly relevant to defense, speech enhancement, and communications applications where multiple targets must be simultaneously detected and tracked using compact sensor arrays.
+The recommended deployed system---a gated closed-loop front-end (higher-order COP when underdetermined, covariance MUSIC when determined) driving a physics-based, interchangeable SOTA back-end (here $\delta$-GLMB)---is thus agnostic in both the estimator and the tracker, with the loop gated for safety and the motion model matched to the target dynamics. The proposed framework is particularly relevant to defense, speech enhancement, and communications applications where multiple targets must be simultaneously detected and tracked using compact sensor arrays.
 
 Future directions include: (i)~extension to 2-D (azimuth--elevation) DOA with uniform rectangular arrays for full spatial tracking; (ii)~environment-adaptive motion models accounting for altitude-dependent atmospheric density and drag coefficients in defense scenarios; and (iii)~real-time embedded implementation with operational radar hardware.
 
