@@ -62,23 +62,20 @@ The GM-PHD filter~\cite{vo2006gmphd} provides an efficient approximation for RFS
 
 This paper proposes a \emph{gated closed-loop subspace--RFS framework}
 (Fig.~\ref{fig:system}) that, unlike prior open-loop cascades, makes the
-estimator--tracker \emph{coupling} the object of design and analysis. A subspace
+estimator--tracker \emph{coupling} the object of design and analysis: a subspace
 DOA front-end feeds a random-finite-set (RFS) tracker whose temporal prediction is
-fed back---through a two-stage validation gate and a Temporal-COP (T-COP) subspace
-refinement---to sharpen the estimator, closing the loop. The framework is
-deliberately \emph{modular}: it is \emph{front-end-agnostic} (instantiated with the
-higher-order-cumulant COP front-end, yielding COP-RFS for the underdetermined
-regime $K>M{-}1$, and with a covariance MUSIC front-end) and
-\emph{back-end-agnostic} (PHD, LMB, or $\delta$-GLMB trackers). Its
-\emph{recommended deployed configuration}---the destination of this paper---is a
-gated closed-loop COP front-end driving a \emph{physics-based} $\delta$-GLMB
-back-end, which we show is robust across source count, SNR, target motion, and
-signal type. The remainder develops and validates each component of this system;
-the principal contributions are:
+fed back---through a two-stage validation gate and a Temporal-COP (T-COP)
+refinement---to sharpen the estimator. The framework is deliberately modular:
+\emph{front-end-agnostic} (higher-order-cumulant COP, yielding COP-RFS for the
+underdetermined regime $K>M{-}1$, or covariance MUSIC) and
+\emph{back-end-agnostic} (PHD, LMB, or $\delta$-GLMB). Its \emph{recommended
+configuration}---the destination of this paper---is a gated closed-loop COP
+front-end driving a \emph{physics-based} $\delta$-GLMB back-end, robust across
+source count, SNR, motion, and signal type. The principal contributions are:
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/fig_system.png}
+\includegraphics[width=0.99\textwidth]{figures/fig_system.png}
 \caption{The proposed gated closed-loop subspace--RFS framework. A
 front-end-agnostic subspace estimator (COP or MUSIC) feeds a back-end-agnostic RFS
 tracker (TO-PHD, LMB, or $\delta$-GLMB with physics-based CV/CA motion); the
@@ -87,7 +84,7 @@ T-COP refinement (Theorems~1--2) that guarantees the loop never degrades the
 open-loop estimate. The recommended deployed configuration is a gated COP
 front-end driving a physics-based $\delta$-GLMB back-end.}
 \label{fig:system}
-\end{figure}
+\end{figure*}
 
 \textbf{Contribution 1 (Theory): A posterior CRB for the complete closed loop.}
 We derive the first Cram\'{e}r--Rao bound for the coupled higher-order-cumulant/RFS tracker (Theorem~1), via the posterior-CRB recursion. It proves that the temporal prior strictly tightens the bound in the L\"owner order and, crucially, that it \emph{restores identifiability}---keeping the bound finite---precisely in the underdetermined regime where the data-only bound diverges. This replaces the unsupported ``exact'' static cumulant CRLB of the conference version with an honest, closed-loop analysis.
@@ -98,7 +95,7 @@ We recast tracker-aided T-COP subspace refinement as a basis-invariant inverse-v
 \textbf{Contribution 3 (Practice): Underdetermined capability and honest evaluation.}
 A physics-based track-oriented PHD (TO-PHD) back-end preserves track identity through crossings via predict--identify--update association. Through Monte-Carlo experiments (up to $500$ trials) with $95\%$ confidence intervals, and against MUSIC and closed-loop-MUSIC baselines, we show that COP-RFS detects significantly more targets than the cascade baseline when $K>M{-}1$, and we \emph{delineate the operating regime} in which the higher-order front-end is advantageous rather than claiming uniform superiority. A $2\times2$ (front-end $\times$ loop) study confirms that the closed-loop refinement improves \emph{both} the COP and MUSIC front-ends, establishing it as a front-end-agnostic principle rather than a COP-specific trick. A tracking back-end ablation (standard GM-PHD, our TO-PHD, the labeled multi-Bernoulli (LMB) filter, and the full $\delta$-GLMB filter) further shows the framework is \emph{back-end-agnostic}: all three labeled trackers cut identity switches by an order of magnitude over GM-PHD, with the full $\delta$-GLMB giving the cleanest identity, LMB the best aggregate accuracy, and TO-PHD a lightweight alternative. Endowing the $\delta$-GLMB with a physics-based constant-acceleration model makes it best-in-class for \emph{maneuvering} targets, yielding our recommended deployed configuration: a gated closed-loop front-end driving a physics-based $\delta$-GLMB back-end. Sequential-deflation COP (SD-COP) is included as a supporting mechanism for the super-underdetermined regime.
 
-The remainder of this paper is organized as follows. Section~\ref{sec:signal_model} presents the signal model and higher-order cumulants. Section~\ref{sec:cop} reviews COP and develops the closed-loop T-COP refinement (with SD-COP as a supporting extension). Section~\ref{sec:tracking} describes the track-oriented PHD back-end. Section~\ref{sec:crlb} gives the static CRLB, and Section~\ref{sec:theory} develops the two central theorems---the closed-loop posterior CRB and the T-COP refinement bound---together with the crossing-identity result. Section~\ref{sec:experiments} reports the Monte-Carlo evaluation, and Section~\ref{sec:conclusion} concludes.
+The remainder develops each component of this system: the signal/cumulant model (\S\ref{sec:signal_model}) and closed-loop T-COP front-end (\S\ref{sec:cop}); the track-oriented PHD back-end (\S\ref{sec:tracking}); the CRLB (\S\ref{sec:crlb}) and the two central theorems (\S\ref{sec:theory}); and the Monte-Carlo evaluation (\S\ref{sec:experiments}).
 
 \section{Signal Model and Higher-Order Cumulants}
 \label{sec:signal_model}

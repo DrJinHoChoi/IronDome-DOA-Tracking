@@ -1,9 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 System overview figure (Fig. 1): the proposed gated closed-loop subspace--RFS
-framework. Front-end-agnostic estimator -> RFS tracker (back-end-agnostic, physics
-motion) -> tracks; the tracker prediction is fed back through a validation gate and
-a T-COP subspace refinement, closing the loop. Output: fig_system.png.
+framework.  Rendered for a DOUBLE-COLUMN (figure*) placement so the text stays
+large and uncropped.  Output: fig_system.png.
 """
 import os
 import matplotlib
@@ -12,57 +11,62 @@ import matplotlib.pyplot as plt
 from matplotlib.patches import FancyBboxPatch, FancyArrowPatch
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-BLUE, GREEN, RED, GRAY = "#1f77b4", "#2ca02c", "#d62728", "#555555"
+BLUE, GREEN, RED, GRAY = "#1f77b4", "#2ca02c", "#d62728", "#444444"
 
 
-def box(ax, x, y, w, h, text, ec, fc="white", fs=9):
-    ax.add_patch(FancyBboxPatch((x, y), w, h, boxstyle="round,pad=0.012,rounding_size=0.02",
-                                linewidth=1.6, edgecolor=ec, facecolor=fc, zorder=2))
-    ax.text(x + w / 2, y + h / 2, text, ha="center", va="center", fontsize=fs, zorder=3)
+def box(ax, x, y, w, h, text, ec, fc="white", fs=12):
+    ax.add_patch(FancyBboxPatch((x, y), w, h,
+                                boxstyle="round,pad=0.010,rounding_size=0.015",
+                                linewidth=2.0, edgecolor=ec, facecolor=fc, zorder=2))
+    ax.text(x + w / 2, y + h / 2, text, ha="center", va="center",
+            fontsize=fs, zorder=3, clip_on=False)
 
 
-def arrow(ax, p0, p1, color=GRAY, lw=1.8, style="-|>", rad=0.0, ls="-"):
-    ax.add_patch(FancyArrowPatch(p0, p1, arrowstyle=style, mutation_scale=14,
-                                 linewidth=lw, color=color, zorder=1,
-                                 connectionstyle=f"arc3,rad={rad}", linestyle=ls))
+def arrow(ax, p0, p1, color=GRAY, lw=2.2):
+    ax.add_patch(FancyArrowPatch(p0, p1, arrowstyle="-|>", mutation_scale=20,
+                                 linewidth=lw, color=color, zorder=1))
 
 
-fig, ax = plt.subplots(figsize=(7.2, 2.9))
-ax.set_xlim(0, 1); ax.set_ylim(0, 1); ax.axis("off")
+def tag(ax, x, y, text, color, fs=11):
+    ax.text(x, y, text, ha="center", va="top", fontsize=fs, color=color,
+            style="italic", clip_on=False)
 
-yt = 0.60  # main row
-h = 0.26
+
+fig, ax = plt.subplots(figsize=(7.4, 2.15))
+ax.set_xlim(0, 1)
+ax.set_ylim(0, 1)
+ax.axis("off")
+
+yt, h = 0.58, 0.30        # main row
 # --- main pipeline (left -> right) ---
-box(ax, 0.015, yt, 0.135, h, "Array\nsnapshots\n$\\mathbf{X}_n$", GRAY)
-box(ax, 0.205, yt, 0.255, h,
-    "Subspace front-end\nCOP (4th-order) /\nMUSIC (2nd-order)", BLUE, fc="#eaf2fb")
-box(ax, 0.545, yt, 0.275, h,
-    "RFS tracker\nTO-PHD / LMB / $\\delta$-GLMB\nphysics CV/CA motion", GREEN, fc="#eafaef")
-box(ax, 0.865, yt, 0.125, h, "Labeled\ntracks", GRAY)
+box(ax, 0.005, yt, 0.135, h, "Array\nsnapshots $\\mathbf{X}_n$", GRAY, fs=12)
+box(ax, 0.190, yt, 0.255, h,
+    "Subspace front-end\nCOP (4th-order)  /\nMUSIC (2nd-order)", BLUE, fc="#eaf2fb", fs=12)
+box(ax, 0.525, yt, 0.285, h,
+    "RFS tracker\nTO-PHD / LMB / $\\delta$-GLMB\nphysics CV/CA motion", GREEN, fc="#eafaef", fs=12)
+box(ax, 0.875, yt, 0.120, h, "Labeled\ntracks", GRAY, fs=12)
 
-arrow(ax, (0.150, yt + h / 2), (0.205, yt + h / 2))
-arrow(ax, (0.460, yt + h / 2), (0.545, yt + h / 2))
-ax.text(0.5025, yt + h / 2 + 0.075, "DOA est.\n$\\hat{\\theta}$", ha="center", va="bottom", fontsize=8, color=GRAY)
-arrow(ax, (0.820, yt + h / 2), (0.865, yt + h / 2))
+arrow(ax, (0.140, yt + h / 2), (0.190, yt + h / 2))
+arrow(ax, (0.445, yt + h / 2), (0.525, yt + h / 2))
+ax.text(0.485, yt + h / 2 + 0.085, "DOA est.\n$\\hat{\\theta}$",
+        ha="center", va="bottom", fontsize=11, color=GRAY, clip_on=False)
+arrow(ax, (0.810, yt + h / 2), (0.875, yt + h / 2))
 
-# --- agnostic tags ---
-ax.text(0.3325, yt - 0.055, "front-end-agnostic", ha="center", va="top", fontsize=8, color=BLUE, style="italic")
-ax.text(0.6825, yt - 0.055, "back-end-agnostic", ha="center", va="top", fontsize=8, color=GREEN, style="italic")
+tag(ax, 0.3175, yt - 0.035, "front-end-agnostic", BLUE)
+tag(ax, 0.6675, yt - 0.035, "back-end-agnostic", GREEN)
 
 # --- feedback path (tracker -> gate/refinement -> front-end) ---
-yb = 0.10
-box(ax, 0.235, yb, 0.50, 0.20,
-    "Gated T-COP refinement:  CV/CA prediction $\\mathbf{F}\\mathbf{m}$\n"
-    "$\\to$ velocity and subspace-bias gate $\\to$ Grassmann fusion", RED, fc="#fdeaea", fs=8.5)
-# tracker down into feedback box
-arrow(ax, (0.6825, yt), (0.6825, yb + 0.20), color=RED, rad=0.0)
-# feedback box up into front-end (close the loop)
-arrow(ax, (0.30, yb + 0.20), (0.30, yt), color=RED, rad=0.0)
-ax.text(0.485, yb - 0.045, "closed loop (Theorems 1, 2; no-harm gate)",
-        ha="center", va="top", fontsize=8, color=RED, style="italic")
+yb, hb = 0.06, 0.22
+box(ax, 0.165, yb, 0.555, hb,
+    "Gated T-COP feedback (closed loop)\n"
+    "prediction $\\mathbf{F}\\mathbf{m}$ $\\to$ velocity + subspace-bias gate "
+    "$\\to$ Grassmann fusion", RED, fc="#fdeaea", fs=11.5)
+arrow(ax, (0.6675, yt), (0.6675, yb + hb), color=RED)      # tracker -> down
+arrow(ax, (0.3175, yb + hb), (0.3175, yt), color=RED)      # up -> front-end
+tag(ax, 0.4425, yb - 0.02, "Theorems 1, 2  (minimum-variance, no-harm gate)", RED, fs=11)
 
-fig.tight_layout(pad=0.3)
+fig.subplots_adjust(left=0.01, right=0.99, top=0.99, bottom=0.06)
 out = os.path.join(HERE, "fig_system.png")
-fig.savefig(out, dpi=160, bbox_inches="tight")
+fig.savefig(out, dpi=200, bbox_inches="tight", pad_inches=0.05)
 plt.close(fig)
 print("saved", out)
