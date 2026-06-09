@@ -56,6 +56,13 @@ while a validation gate and a motion-compensated prior guarantee it
   baselines; explicit regime delineation.
 \item \textbf{Back-end renamed} to track-oriented PHD (TO-PHD) with an honest
   statement of its relation to the exact GM-PHD recursion.
+\item \textbf{Back-end-agnostic with physics-based motion, plus robustness
+  sweeps}: the framework drives LMB and full $\delta$-GLMB back-ends, and a
+  physics-based constant-acceleration $\delta$-GLMB is best for maneuvering
+  targets (our recommended deployed configuration). New sweeps confirm the gains
+  hold across source count $K$ (the determined$\to$underdetermined transition at
+  $M{-}1$) and across non-Gaussian source signal types, with the expected
+  higher-order-statistics limit for purely Gaussian sources.
 \end{enumerate}
 
 \hrule

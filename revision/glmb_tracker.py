@@ -34,22 +34,47 @@ def _cv_FQ(dt, sw2):
     return F, Q
 
 
+def _ca_FQ(dt, sw2):
+    """Physics-based constant-acceleration model: state [theta, theta_dot, theta_ddot].
+    Continuous white-noise-jerk process covariance (the CA analogue of _cv_FQ)."""
+    F = np.array([[1.0, dt, 0.5 * dt * dt],
+                  [0.0, 1.0, dt],
+                  [0.0, 0.0, 1.0]])
+    Q = sw2 * np.array([[dt**5 / 20.0, dt**4 / 8.0, dt**3 / 6.0],
+                        [dt**4 / 8.0,  dt**3 / 3.0, dt**2 / 2.0],
+                        [dt**3 / 6.0,  dt**2 / 2.0, dt]])
+    return F, Q
+
+
 class GLMBTracker:
     def __init__(self, motion_model, estimator, p_S=0.98, p_D=0.95,
                  clutter_rate=0.3, r_birth=0.3, meas_std_deg=1.0,
                  birth_pos_std_deg=3.0, birth_vel_std_deg=5.0,
+                 birth_acc_std_deg=2.0, motion='cv',
                  assoc_gate_deg=10.0, max_hyp=30, max_parent=15,
                  n_gibbs=80, burn=10, extract_r=0.5, min_age=2, fov_rad=np.pi):
         self.model = motion_model
         self.est = estimator
         self.dt = getattr(motion_model, "dt", 1.0)
         self.sw2 = getattr(motion_model, "process_noise_std", np.radians(0.5)) ** 2
+        self.motion = motion
+        if motion == 'ca':                         # physics-based: constant-acceleration
+            self.F, self.Q = _ca_FQ(self.dt, self.sw2)
+            self.H = np.array([[1.0, 0.0, 0.0]])
+            self.Pb = np.diag([np.radians(birth_pos_std_deg) ** 2,
+                               np.radians(birth_vel_std_deg) ** 2,
+                               np.radians(birth_acc_std_deg) ** 2])
+            self.dim = 3
+        else:                                      # constant-velocity
+            self.F, self.Q = _cv_FQ(self.dt, self.sw2)
+            self.H = np.array([[1.0, 0.0]])
+            self.Pb = np.diag([np.radians(birth_pos_std_deg) ** 2,
+                               np.radians(birth_vel_std_deg) ** 2])
+            self.dim = 2
         self.p_S, self.p_D = p_S, p_D
         self.kappa = clutter_rate / fov_rad        # uniform clutter intensity
         self.r_B = r_birth
         self.R = np.radians(meas_std_deg) ** 2
-        self.Pb = np.diag([np.radians(birth_pos_std_deg) ** 2,
-                           np.radians(birth_vel_std_deg) ** 2])
         self.gate2 = np.radians(assoc_gate_deg) ** 2
         self.max_hyp, self.max_parent = max_hyp, max_parent
         self.n_gibbs, self.burn = n_gibbs, burn
@@ -79,10 +104,19 @@ class GLMBTracker:
         if h is not None:
             for t in h["tracks"]:
                 if self.age.get(t["l"], 0) >= self.min_age:
-                    pdoas.append(t["m"][0] + t["m"][1] * self.dt)
+                    pd = t["m"][0] + t["m"][1] * self.dt
+                    if self.dim >= 3:                 # CA: motion-comp incl. 1/2 a dt^2
+                        pd += 0.5 * t["m"][2] * self.dt * self.dt
+                    pdoas.append(pd)
                     pvels.append(t["m"][1])
         self.est.set_tracker_predictions(np.array(pdoas),
                                          predicted_vels=np.array(pvels))
+
+    def _birth_mean(self, z):
+        """Birth state mean: position z, zero velocity/acceleration (dim-aware)."""
+        m = np.zeros(self.dim)
+        m[0] = z
+        return m
 
     def _marginals(self):
         """label -> marginal existence prob q(l) = sum_{h ni l} w_h."""
@@ -128,8 +162,7 @@ class GLMBTracker:
     # ---- joint predict-update ----
     def _predict_update(self, Z):
         m = len(Z)
-        H = np.array([[1.0, 0.0]])
-        F, Q = _cv_FQ(self.dt, self.sw2)
+        H, F, Q = self.H, self.F, self.Q
         birth_labels = [self.next_label + j for j in range(m)]   # shared this scan
         self.next_label += m
 
@@ -142,7 +175,7 @@ class GLMBTracker:
             for t in h["tracks"]:
                 surv.append(dict(l=t["l"], m=F @ t["m"], P=F @ t["P"] @ F.T + Q))
             n_s = len(surv)
-            births = [dict(l=birth_labels[j], m=np.array([Z[j], 0.0]),
+            births = [dict(l=birth_labels[j], m=self._birth_mean(Z[j]),
                            P=self.Pb.copy(), src=j) for j in range(m)]
             tracks_all = surv + births
             n_all = len(tracks_all)

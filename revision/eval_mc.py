@@ -98,6 +98,13 @@ SCENARIOS = {
         rates_deg=[0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         pipelines=["COP+GLMB", "COP-CL+GLMB", "COP-GCL+GLMB"],
     ),
+    "maneuver": dict(      # maneuvering (sinusoidal angular) targets: physics CA vs CV back-end
+        M=8, K=4, SNR_DB=6, T=256, N_SCANS=24, proc_noise_deg=0.5,
+        base_deg=[-50, -20, 20, 50],
+        rates_deg=[0.0, 0.0, 0.0, 0.0],
+        turn_amp_deg=12.0, turn_omega=0.35,
+        pipelines=["COP+Physics", "COP+GLMB", "COP+GLMBphys"],
+    ),
     "k4move": dict(        # determined FAST crossing: gate-safety demo (stable tracks)
         M=8, K=4, SNR_DB=15, T=512, N_SCANS=30, proc_noise_deg=0.5,
         base_deg=[-40, 40, -20, 20],
@@ -246,6 +253,10 @@ def run_trial(args):
     snr = float(os.environ.get("EVAL_SNR") or sc["SNR_DB"])
     base = np.radians(sc["base_deg"])
     rates = np.radians(sc["rates_deg"])
+    accel = np.radians(sc.get("accel_deg", np.zeros(len(base))))  # angular accel (maneuver)
+    turn_amp = np.radians(sc.get("turn_amp_deg", 0.0))           # sinusoidal maneuver amplitude
+    turn_omega = sc.get("turn_omega", 0.0)                       # maneuver angular freq (rad/scan)
+    turn_phase = np.array(sc.get("turn_phase", np.arange(len(base)) * np.pi / 2))
     use_physics = not pipe.endswith("Standard")     # 'Standard' only in k4
 
     array = UniformLinearArray(M=M, d=0.5)
@@ -254,7 +265,8 @@ def run_trial(args):
         from glmb_tracker import GLMBTracker            # NB: check before LMB ("LMB" in "GLMB")
         from iron_dome_sim.tracking import ConstantVelocity
         model = ConstantVelocity(dt=1.0, process_noise_std=np.radians(0.5))
-        phd = GLMBTracker(model, est)
+        motion = 'ca' if ('phys' in pipe.lower() or 'CA' in pipe) else 'cv'  # physics-based CA
+        phd = GLMBTracker(model, est, motion=motion)
     elif "LMB" in pipe:                                 # 라벨드 멀티-베르누이 트래커
         from lmb_tracker import LMBTracker
         from iron_dome_sim.tracking import ConstantVelocity
@@ -268,7 +280,9 @@ def run_trial(args):
     label_hist = []
     pd_s, loc_s, g_s, gl_s, gm_s, gf_s = [], [], [], [], [], []
     for si in range(N):
-        true = np.clip(base + rates * si, -np.pi / 2 + 0.05, np.pi / 2 - 0.05)
+        true = np.clip(base + rates * si + 0.5 * accel * si * si
+                       + turn_amp * np.sin(turn_omega * si + turn_phase),
+                       -np.pi / 2 + 0.05, np.pi / 2 - 0.05)
         # 독립 시드: trial 마다 다른 잡음 실현
         np.random.seed(100000 * (trial + 1) + 42 + si)
         X, _, _ = generate_snapshots(array, true, snr, T, "non_stationary")

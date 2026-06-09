@@ -1,0 +1,8 @@
+=== K-sweep (M=8, M-1=7): Pd(%) / GOSPA(deg) / switches ===
+K= 2: MUSIC-PHD Pd=100.0 G= 0.05 sw= 0.0 | COP-RFS Pd=100.0 G= 0.45 sw= 0.0 | COP-RFS-GCL Pd=100.0 G= 0.30 sw= 0.0
+K= 4: MUSIC-PHD Pd=100.0 G= 0.07 sw= 0.0 | COP-RFS Pd=100.0 G= 0.61 sw= 0.0 | COP-RFS-GCL Pd=100.0 G= 0.48 sw= 0.0
+K= 6: MUSIC-PHD Pd=100.0 G= 0.09 sw= 0.0 | COP-RFS Pd=99.3 G= 1.56 sw= 2.4 | COP-RFS-GCL Pd=100.0 G= 0.80 sw= 0.1
+K= 8: MUSIC-PHD Pd=50.3 G=14.94 sw=42.0 | COP-RFS Pd=95.8 G= 3.71 sw=13.5 | COP-RFS-GCL Pd=98.9 G= 1.79 sw= 0.8
+K=10: MUSIC-PHD Pd=25.5 G=16.71 sw=43.5 | COP-RFS Pd=79.0 G= 9.01 sw=79.7 | COP-RFS-GCL Pd=97.8 G= 3.63 sw=27.4
+K=12: MUSIC-PHD Pd=30.8 G=18.36 sw=32.3 | COP-RFS Pd=57.6 G=14.07 sw=84.8 | COP-RFS-GCL Pd=76.6 G=10.27 sw=52.1
+saved C:\Users\jinho\IronDome-DOA-Tracking\revision\fig_k_sweep.png
