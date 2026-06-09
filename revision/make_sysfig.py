@@ -43,7 +43,7 @@ box(ax, 0.005, yt, 0.135, h, "Array\nsnapshots $\\mathbf{X}_n$", GRAY, fs=10)
 box(ax, 0.190, yt, 0.255, h,
     "Subspace front-end\nCOP (4th-order)  /\nMUSIC (2nd-order)", BLUE, fc="#eaf2fb", fs=10)
 box(ax, 0.525, yt, 0.285, h,
-    "RFS tracker\nTO-PHD / LMB / $\\delta$-GLMB\nphysics CV/CA motion", GREEN, fc="#eafaef", fs=10)
+    "Interchangeable RFS tracker\nSOTA: TO-PHD / LMB / $\\delta$-GLMB\nphysics CV/CA motion", GREEN, fc="#eafaef", fs=10)
 box(ax, 0.875, yt, 0.120, h, "Labeled\ntracks", GRAY, fs=10)
 
 arrow(ax, (0.140, yt + h / 2), (0.190, yt + h / 2))
