@@ -42,7 +42,7 @@
 \maketitle
 
 \begin{abstract}
-We present a closed-loop subspace--RFS framework that couples direction-of-arrival (DOA) estimation with random-finite-set (RFS) multi-target tracking and, unlike prior open-loop cascades, analyzes the coupling itself. The closed loop is \emph{front-end-agnostic}: the tracker's temporal prediction is fed back to refine the signal subspace of any subspace DOA estimator. We instantiate it with a higher-order-cumulant front-end (COP, which extends operation to the underdetermined regime $K>M{-}1$; the resulting tracker is COP-RFS) and a covariance front-end (MUSIC). Our central contributions are theoretical: (i)~a posterior Cram\'{e}r--Rao bound for the \emph{complete closed-loop} estimator--tracker, proving the temporal prior restores identifiability exactly where the data-only bound diverges; and (ii)~a recasting of the subspace refinement as minimum-variance inverse-variance fusion on the Grassmann manifold, with a validation gate guaranteeing the loop never degrades performance. The framework is also \emph{back-end-agnostic}, integrating track-oriented PHD, labeled multi-Bernoulli (LMB), and $\delta$-GLMB filters; a physics-based constant-acceleration model makes the $\delta$-GLMB back-end best for maneuvering targets, yielding our recommended configuration---a gated closed-loop front-end (COP, or the lower-variance MUSIC when determined) driving a physics-based, interchangeable SOTA back-end (here, $\delta$-GLMB). Monte-Carlo experiments (up to $500$ trials, $95\%$ confidence intervals) show that COP-RFS detects significantly more targets than a MUSIC--PHD baseline when $K>M{-}1$, and that the gated loop lowers low-SNR localization error by up to $56\%$ (COP) and $44\%$ (MUSIC) while cutting moving-target identity switches by $15\%$, matching the open-loop baseline otherwise. We delineate the operating regime in which the higher-order front-end is advantageous rather than claiming uniform superiority.
+We present a closed-loop subspace--RFS framework that couples direction-of-arrival (DOA) estimation with random-finite-set (RFS) multi-target tracking and, unlike prior open-loop cascades, analyzes the coupling itself. The loop is \emph{front-end-agnostic}---the tracker's temporal prediction is fed back to refine the signal subspace of any subspace DOA estimator---and we instantiate it with a higher-order-cumulant front-end (COP, which reaches the underdetermined regime $K>M{-}1$; the resulting tracker is COP-RFS) and a covariance front-end (MUSIC). Our central contributions are theoretical: (i)~a posterior Cram\'{e}r--Rao bound for the \emph{complete closed-loop} estimator--tracker, proving the temporal prior restores identifiability exactly where the data-only bound diverges; and (ii)~a recasting of the subspace refinement as minimum-variance Grassmann fusion, with a validation gate guaranteeing the loop never degrades performance. The framework is also \emph{back-end-agnostic} (track-oriented PHD, LMB, $\delta$-GLMB); a physics-based constant-acceleration model makes $\delta$-GLMB best under maneuver, giving our recommended configuration: a gated closed-loop front-end (COP, or lower-variance MUSIC when determined) driving a physics-based, interchangeable SOTA back-end ($\delta$-GLMB). In Monte-Carlo experiments (up to $500$ trials, $95\%$ CIs), COP-RFS detects significantly more targets than a MUSIC--PHD baseline when $K>M{-}1$, and the gated loop lowers low-SNR localization error by up to $56\%$ (COP) and $44\%$ (MUSIC) and cuts moving-target identity switches by $15\%$, matching the open-loop baseline otherwise---gains we delineate by operating regime rather than claiming uniform superiority.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -615,20 +615,22 @@ no-harm when it does not---is the practical case for closing the loop.
 
 \begin{table}[t]
 \centering
-\caption{Closed-loop efficacy: quantified gain over the open-loop cascade. Each
-entry is substantiated, with $95\%$ CIs, in the cited theorem/section.}
+\caption{Operating guide: the best front-end and the closed loop's (gated) effect
+by regime, consolidating the efficacy and regime summaries. Quantified gains carry
+$95\%$ CIs and are substantiated in the cited theorem/section; the gate guarantees
+no degradation where the prior is uninformative.}
 \label{tab:cl_efficacy}
 \small
 \resizebox{\columnwidth}{!}{%
-\begin{tabular}{@{}llcc@{}}
+\begin{tabular}{@{}lll@{}}
 \toprule
-Benefit (where) & Metric & Open-loop & Closed-loop \\
+Regime & Best front-end & Closed-loop (gated) effect \\
 \midrule
-Identifiability, $K\!\to\!M_v{-}1$ (Thm~1) & PCRB & diverges & \textbf{finite} \\
-Localization, COP @ $5$~dB (\S\ref{sec:exp_loop}) & locRMSE & $0.71^\circ$ & $\mathbf{0.31^\circ}$ \,($-56\%$) \\
-Localization, MUSIC @ $5$~dB (\S\ref{sec:exp_loop}) & locRMSE & $0.09^\circ$ & $\mathbf{0.05^\circ}$ \,($-44\%$) \\
-Track continuity, moving $K{=}10$ (\S\ref{sec:exp_gate}) & switches & $214$ & $\mathbf{181}$ \,($-15\%$) \\
-Fast motion, safety (\S\ref{sec:exp_gate}) & $P_d$ & baseline & \textbf{no loss} \\
+Underdet.\ $K{>}M{-}1$ & COP (higher-order) & identifiability: PCRB diverges$\,\to\,$\textbf{finite} (Thm~1) \\
+Determined $K{\le}M{-}1$ & MUSIC (2nd-order) & helps if prior accurate \\
+Low SNR, slow & either & strong: locRMSE $\mathbf{-56\%}$ COP, $\mathbf{-44\%}$ MUSIC \\
+Moving, $K{=}10$ & COP & track continuity: switches $\mathbf{-15\%}$ \\
+Fast motion & open-loop (gated off) & \textbf{no harm} vs.\ baseline \\
 \bottomrule
 \end{tabular}}
 \end{table}
@@ -722,8 +724,8 @@ front-end and the tracker's association amplify each other's errors. The gate
 (Algorithm~\ref{alg:gate}) resolves this---engaging only when the prior is
 reliable---so the gated system gains where the prior helps and falls back
 \emph{exactly} to open-loop under motion (last column), extending Theorem~2's
-no-harm guarantee from the front-end to the \emph{complete system}. A summary of
-the operating regimes is given in Table~\ref{tab:regime}.
+no-harm guarantee from the front-end to the \emph{complete system}. The operating
+regimes are consolidated in Table~\ref{tab:cl_efficacy}.
 
 \begin{table}[t]
 \centering
@@ -741,57 +743,23 @@ Crossing, $15$~dB & switches & $17.5$ & $27.8$ & $\mathbf{17.5}$ \\
 \end{tabular}
 \end{table}
 
-\begin{table}[t]
-\centering
-\caption{Operating-regime summary: where each ingredient helps.}
-\label{tab:regime}
-\small
-\resizebox{\columnwidth}{!}{%
-\begin{tabular}{@{}lll@{}}
-\toprule
-Regime & Best front-end & Closed loop \\
-\midrule
-Determined ($K\le M{-}1$) & MUSIC (2nd-order) & helps (if prior accurate) \\
-Underdetermined ($K>M{-}1$) & COP (higher-order) & helps; gate if fast \\
-Low SNR, slow/stationary & either & strongly helps \\
-Fast motion & open-loop & gated off (no harm) \\
-\bottomrule
-\end{tabular}}
-\end{table}
-
 \subsection{Validation of the Theory}
 \label{sec:exp_theory}
 
-\textbf{Closed-loop posterior CRB (Theorem~1).}
-Fig.~\ref{fig:pcrb} plots the worst-case angle bound versus source count: the
-open-loop (data-only) bound diverges as $K$ approaches the virtual-array limit
-$M_v{-}1$, whereas the closed-loop PCRB~\eqref{eq:pcrb} stays bounded by the prior
-information $1/\lambda_{\min}(\mat{J}_{k|k-1})$, confirming that the temporal prior
-restores identifiability; in the well-determined regime the two bounds coincide.
+Fig.~\ref{fig:theory} validates both theorems. \textbf{(a)~Closed-loop posterior CRB (Theorem~1):} the open-loop (data-only) bound diverges as $K$ approaches the virtual-array limit $M_v{-}1$, whereas the closed-loop PCRB~\eqref{eq:pcrb} stays bounded by the prior information $1/\lambda_{\min}(\mat{J}_{k|k-1})$---confirming that the temporal prior restores identifiability---while the two coincide in the well-determined regime. \textbf{(b,c)~Minimum-variance refinement (Theorem~2):} the fused subspace MSE matches the predicted factor $1/(1{+}\kappa)$ for an unbiased prior~(b), and the biased-case break-even lands exactly at $\|\mat{b}\|^2=D(\sigma_e^2+\sigma_p^2)$~(c), where the validation gate keeps the fused MSE at or below the data-only MSE.
 
-\begin{figure}[t]
+\begin{figure*}[t]
 \centering
-\includegraphics[width=\linewidth]{figures/fig_pcrb_validation.png}
-\caption{Validation of Theorem~1: the open-loop bound diverges at the
-virtual-array limit $K{=}M_v{-}1$ while the closed-loop PCRB stays finite, bounded
-by the prior information; near-parity in the well-determined regime.}
-\label{fig:pcrb}
-\end{figure}
-
-\textbf{Minimum-variance refinement (Theorem~2).}
-Fig.~\ref{fig:tcopmse} validates~\eqref{eq:tcopB}--\eqref{eq:tcop_bias}: the fused
-subspace MSE matches the predicted factor $1/(1+\kappa)$ for an unbiased prior, and
-the biased-case break-even lands at $\|\mat{b}\|^2=D(\sigma_e^2+\sigma_p^2)$, with
-the validation gate keeping the fused MSE at or below the data-only MSE.
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=\linewidth]{figures/fig_tcop_mse_validation.png}
-\caption{Validation of Theorem~2: (top) unbiased-prior MSE follows $1/(1+\kappa)$;
-(bottom) biased-prior break-even at $\|\mat{b}\|^2=D(\sigma_e^2+\sigma_p^2)$, where
-the gated estimator clamps to and never exceeds the data-only MSE.}
-\label{fig:tcopmse}
-\end{figure}
+\includegraphics[width=\linewidth]{figures/fig_theory_validation.png}
+\caption{Validation of the two central theorems. (a)~Theorem~1: the open-loop
+bound diverges at the virtual-array limit $K{=}M_v{-}1$ while the closed-loop PCRB
+stays finite, bounded by the prior information (near-parity when well-determined).
+(b)~Theorem~2, unbiased prior: the fused subspace MSE follows $1/(1+\kappa)$.
+(c)~Theorem~2, biased prior: the break-even is exactly
+$\|\mat{b}\|^2=D(\sigma_e^2+\sigma_p^2)$, where the gated estimator clamps to and
+never exceeds the data-only MSE.}
+\label{fig:theory}
+\end{figure*}
 
 \section{Conclusion}
 \label{sec:conclusion}
