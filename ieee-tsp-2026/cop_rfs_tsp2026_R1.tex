@@ -525,33 +525,15 @@ MUSIC-PHD & $51.9\pm0.1$ & $\mathbf{2.61\pm0.01}$ & $\mathbf{15.39\pm0.01}$ & $\
 \end{tabular}}
 \end{table}
 
-Fig.~\ref{fig:pdk} sweeps the \emph{front-end} detection rate over $K$ (no
-tracker): the two methods are indistinguishable for $K\le M{-}1=7$, but at $K=8$
-MUSIC collapses ($100\%\!\to\!49\%$) toward its $(M{-}1)/K$ ceiling while COP
-degrades only gradually toward the virtual-array limit $\rho(M{-}1)=14$---the
-structural signature of the extended aperture, not parameter tuning. (The raw
-front-end MUSIC rate at $K=10$, ${\sim}25\%$, is below the $52\%$ end-to-end of
-Table~\ref{tab:underdet}: the tracker recovers some detections by temporal
-integration but cannot resolve structurally-lost sources.)
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.8\linewidth]{figures/fig_pd_vs_k.png}
-\caption{Front-end detection rate vs.\ source count $K$ ($M=8$, SNR$=15$~dB,
-$T=512$, $60$ trials, $95\%$ CIs). MUSIC collapses for $K>M{-}1=7$ toward its
-$(M{-}1)/K$ capacity, while COP-4th sustains detection up to the virtual-array
-limit $\rho(M{-}1)=14$.}
-\label{fig:pdk}
-\end{figure}
-
 \textbf{Robustness across source count and signal type.} The advantage is tied
 neither to a particular $K$ nor to a particular signal model.
 Fig.~\ref{fig:robustness}(top) sweeps the end-to-end pipeline over
-$K\in\{2,\dots,12\}$: in the determined regime ($K\le M{-}1$) all methods detect
-every source, but past $K{=}7$ MUSIC's detection collapses toward its $(M{-}1)/K$
-cap while COP---and, most strongly, the proposed gated closed loop---degrade
-gracefully (at $K{=}10$, $P_d=97.8\%$ for the gated loop vs.\ $79.0\%$ open-loop
-COP vs.\ $25.5\%$ MUSIC). Fig.~\ref{fig:robustness}(bottom) fixes $K=10>M{-}1$ and
+$K\in\{2,\dots,12\}$ (SNR $12$~dB): for $K\le M{-}1$ all methods detect every
+source, but past $K{=}7$ MUSIC collapses toward its $(M{-}1)/K$ cap while
+COP---and, most strongly, the proposed gated loop---degrade gracefully up to COP's
+virtual-array limit $\rho(M{-}1)=14$ (at $K{=}10$, $P_d=97.8\%$ gated vs.\ $79.0\%$
+open COP vs.\ $25.5\%$ MUSIC). This sharp transition at $M{-}1$ is the structural
+signature of the extended aperture, not parameter tuning. Fig.~\ref{fig:robustness}(bottom) fixes $K=10>M{-}1$ and
 sweeps the source \emph{signal type}: the higher-order front-end sustains detection
 across structured non-Gaussian radar and communication waveforms (FM $79\%$, LFM
 chirp $77\%$, AM $69\%$, PSK $63\%$) and---exactly as the cumulant theory
@@ -580,8 +562,8 @@ severely fluctuating Swerling returns.}
 
 We next isolate the closed loop via a $2\times2$ (front-end $\times$ loop) study
 in the regime where Theorem~2's prior-accuracy condition holds: low SNR ($5$~dB),
-slowly varying targets ($K=6$). Fig.~\ref{fig:loop2x2} and Table~\ref{tab:loop2x2}
-show the tracker-aided refinement \emph{lowers the localization error of both
+slowly varying targets ($K=6$). Table~\ref{tab:loop2x2}
+shows the tracker-aided refinement \emph{lowers the localization error of both
 front-ends}---COP $0.71^\circ\!\to\!0.31^\circ$ ($-56\%$), MUSIC
 $0.09^\circ\!\to\!0.05^\circ$ ($-44\%$)---confirming the closed loop as a
 front-end-agnostic principle, exactly as Theorem~2 predicts, not a COP-specific
@@ -591,15 +573,6 @@ aperture and Gaussian-noise immunity at a variance approaching second-order
 MUSIC's---the synergy of HOS made practical \emph{within} a closed loop that is the
 paper's central message. (In this determined regime the lower-variance MUSIC is the
 more accurate front-end, consistent with \S\ref{sec:exp_underdet}.)
-
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.76\linewidth]{figures/fig_loop_2x2.png}
-\caption{Closed-loop refinement improves both the cumulant (COP) and covariance
-(MUSIC) front-ends (stationary, SNR$=5$~dB, $K=6$). Bars: matched-pair
-localization RMSE; error bars are $95\%$ CIs.}
-\label{fig:loop2x2}
-\end{figure}
 
 \begin{table}[t]
 \centering
