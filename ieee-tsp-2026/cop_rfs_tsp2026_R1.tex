@@ -42,7 +42,7 @@
 \maketitle
 
 \begin{abstract}
-We present a closed-loop subspace--RFS framework that couples direction-of-arrival (DOA) estimation with random-finite-set (RFS) multi-target tracking and, unlike prior open-loop cascades, analyzes the coupling itself. The closed loop is \emph{front-end-agnostic}: the tracker's temporal prediction is fed back to refine the signal subspace of any subspace DOA estimator. We instantiate it with a higher-order-cumulant front-end (COP, which extends operation to the underdetermined regime $K>M{-}1$; the resulting tracker is COP-RFS) and a covariance front-end (MUSIC). Our central contributions are theoretical: (i)~a posterior Cram\'{e}r--Rao bound for the \emph{complete closed-loop} estimator--tracker, proving the temporal prior restores identifiability exactly where the data-only bound diverges; and (ii)~a recasting of the subspace refinement as minimum-variance inverse-variance fusion on the Grassmann manifold, with a validation gate guaranteeing the loop never degrades performance. The framework is also \emph{back-end-agnostic}, integrating track-oriented PHD, labeled multi-Bernoulli (LMB), and $\delta$-GLMB filters; a physics-based constant-acceleration model makes the $\delta$-GLMB back-end best for maneuvering targets. Monte-Carlo experiments (up to $500$ trials, $95\%$ confidence intervals) show that COP-RFS detects significantly more targets than a MUSIC--PHD baseline when $K>M{-}1$, and that the gated loop lowers low-SNR localization error by up to $56\%$ for both front-ends while cutting moving-target identity switches by $15\%$, matching the open-loop baseline otherwise. We delineate the operating regime in which the higher-order front-end is advantageous rather than claiming uniform superiority.
+We present a closed-loop subspace--RFS framework that couples direction-of-arrival (DOA) estimation with random-finite-set (RFS) multi-target tracking and, unlike prior open-loop cascades, analyzes the coupling itself. The closed loop is \emph{front-end-agnostic}: the tracker's temporal prediction is fed back to refine the signal subspace of any subspace DOA estimator. We instantiate it with a higher-order-cumulant front-end (COP, which extends operation to the underdetermined regime $K>M{-}1$; the resulting tracker is COP-RFS) and a covariance front-end (MUSIC). Our central contributions are theoretical: (i)~a posterior Cram\'{e}r--Rao bound for the \emph{complete closed-loop} estimator--tracker, proving the temporal prior restores identifiability exactly where the data-only bound diverges; and (ii)~a recasting of the subspace refinement as minimum-variance inverse-variance fusion on the Grassmann manifold, with a validation gate guaranteeing the loop never degrades performance. The framework is also \emph{back-end-agnostic}, integrating track-oriented PHD, labeled multi-Bernoulli (LMB), and $\delta$-GLMB filters; a physics-based constant-acceleration model makes the $\delta$-GLMB back-end best for maneuvering targets, yielding our recommended configuration---a gated closed-loop COP front-end driving a physics-based $\delta$-GLMB back-end. Monte-Carlo experiments (up to $500$ trials, $95\%$ confidence intervals) show that COP-RFS detects significantly more targets than a MUSIC--PHD baseline when $K>M{-}1$, and that the gated loop lowers low-SNR localization error by up to $56\%$ for both front-ends while cutting moving-target identity switches by $15\%$, matching the open-loop baseline otherwise. We delineate the operating regime in which the higher-order front-end is advantageous rather than claiming uniform superiority.
 \end{abstract}
 
 \begin{IEEEkeywords}
@@ -60,7 +60,34 @@ While the COP algorithm addresses the static underdetermined DOA problem, practi
 
 The GM-PHD filter~\cite{vo2006gmphd} provides an efficient approximation for RFS-based multi-target tracking, but the standard predict--update formulation does not maintain explicit track identity. Several extensions have addressed this limitation: Panta et~al.~\cite{panta2009gmphd} introduced data association schemes for the GM-PHD filter, Clark and Vo~\cite{clark2006gmphd_track} analyzed convergence properties, and Georgescu and Willett~\cite{georgescu2012phd_doa} applied the GM-PHD to phased array DOA tracking. More fundamentally, the labeled multi-Bernoulli (LMB) and $\delta$-GLMB filters~\cite{vo2013glmb,vo2014lmb} solve the track identity problem within the RFS-theoretic framework itself. However, none of these works exploit higher-order cumulant structure for the DOA estimation front-end, nor do they establish a closed-loop feedback between tracker predictions and the estimation subspace.
 
-This paper extends the COP algorithm of~\cite{choi2015underdetermined}---which addressed only static DOA estimation---into a closed-loop estimation-and-tracking framework, COP-RFS, and, distinct from prior open-loop cascades, makes the \emph{coupling} the object of analysis. Existing DOA-tracking pipelines chain an estimator and a tracker in open loop; we instead feed the tracker's temporal prediction back into the subspace estimator and characterize, in theory and simulation, exactly when this helps. The mechanism is \emph{front-end-agnostic}: we instantiate it with both the higher-order-cumulant COP front-end---yielding COP-RFS, which uniquely operates in the underdetermined regime---and a covariance (MUSIC) front-end, and show the closed loop benefits both. The principal contributions are:
+This paper proposes a \emph{gated closed-loop subspace--RFS framework}
+(Fig.~\ref{fig:system}) that, unlike prior open-loop cascades, makes the
+estimator--tracker \emph{coupling} the object of design and analysis. A subspace
+DOA front-end feeds a random-finite-set (RFS) tracker whose temporal prediction is
+fed back---through a two-stage validation gate and a Temporal-COP (T-COP) subspace
+refinement---to sharpen the estimator, closing the loop. The framework is
+deliberately \emph{modular}: it is \emph{front-end-agnostic} (instantiated with the
+higher-order-cumulant COP front-end, yielding COP-RFS for the underdetermined
+regime $K>M{-}1$, and with a covariance MUSIC front-end) and
+\emph{back-end-agnostic} (PHD, LMB, or $\delta$-GLMB trackers). Its
+\emph{recommended deployed configuration}---the destination of this paper---is a
+gated closed-loop COP front-end driving a \emph{physics-based} $\delta$-GLMB
+back-end, which we show is robust across source count, SNR, target motion, and
+signal type. The remainder develops and validates each component of this system;
+the principal contributions are:
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_system.png}
+\caption{The proposed gated closed-loop subspace--RFS framework. A
+front-end-agnostic subspace estimator (COP or MUSIC) feeds a back-end-agnostic RFS
+tracker (TO-PHD, LMB, or $\delta$-GLMB with physics-based CV/CA motion); the
+tracker's prediction is fed back through a validation gate and a minimum-variance
+T-COP refinement (Theorems~1--2) that guarantees the loop never degrades the
+open-loop estimate. The recommended deployed configuration is a gated COP
+front-end driving a physics-based $\delta$-GLMB back-end.}
+\label{fig:system}
+\end{figure}
 
 \textbf{Contribution 1 (Theory): A posterior CRB for the complete closed loop.}
 We derive the first Cram\'{e}r--Rao bound for the coupled higher-order-cumulant/RFS tracker (Theorem~1), via the posterior-CRB recursion. It proves that the temporal prior strictly tightens the bound in the L\"owner order and, crucially, that it \emph{restores identifiability}---keeping the bound finite---precisely in the underdetermined regime where the data-only bound diverges. This replaces the unsupported ``exact'' static cumulant CRLB of the conference version with an honest, closed-loop analysis.
@@ -851,7 +878,7 @@ Fast motion & open-loop & gated off (no harm) \\
 \section{Conclusion}
 \label{sec:conclusion}
 
-This paper presented COP-RFS, a closed-loop framework that couples higher-order-cumulant DOA estimation with RFS-based multi-target tracking and, unlike prior open-loop cascades, analyzes the coupling itself. The central message is that the tracker's temporal prediction is information the open-loop pipeline discards, and that feeding it back is provably beneficial \emph{in a characterized regime} rather than uniformly. Concretely (Table~\ref{tab:cl_efficacy}), the closed loop restores identifiability where the data-only bound diverges (Theorem~1), halves COP's low-SNR localization error ($-56\%$), and cuts moving-target identity switches by $15\%$, while a validation gate and a motion-compensated prior guarantee it never degrades the open-loop baseline.
+This paper proposed a \emph{gated closed-loop subspace--RFS framework} (Fig.~\ref{fig:system}) that couples subspace DOA estimation with RFS-based multi-target tracking and, unlike prior open-loop cascades, makes the coupling itself the object of design and analysis. The central message is that the tracker's temporal prediction is information the open-loop pipeline discards, and that feeding it back is provably beneficial \emph{in a characterized regime} rather than uniformly. Concretely (Table~\ref{tab:cl_efficacy}), the closed loop restores identifiability where the data-only bound diverges (Theorem~1), halves COP's low-SNR localization error ($-56\%$), and cuts moving-target identity switches by $15\%$, while a validation gate and a motion-compensated prior guarantee it never degrades the open-loop baseline.
 
 The key contributions and findings are:
 \begin{enumerate}
