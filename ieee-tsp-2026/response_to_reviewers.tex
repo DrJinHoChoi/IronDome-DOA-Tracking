@@ -72,7 +72,7 @@ while a validation gate and a motion-compensated prior guarantee it
 the manuscript does not clearly separate what is fundamentally new.}
 \reply We agree this was the core weakness. We have reframed the paper so the
 contribution is the \emph{closed-loop coupling}, now backed by two theorems
-(Sec.~V) that did not exist in the prior version. We further show the closed loop
+(Sec.~VI) that did not exist in the prior version. We further show the closed loop
 is front-end-agnostic (it improves both COP and MUSIC), which establishes it as a
 general principle rather than a specific combination. Contributions are now
 stated as two theory results plus one practical capability.
@@ -82,7 +82,7 @@ merging) appear heuristic or only lightly justified; present derivations/proofs
 more completely.}
 \reply T-COP is now derived as the BLUE on the Grassmann tangent space with a
 proof of minimum variance and an explicit benefit condition (Theorem~2). The
-velocity-gated merge is corrected (Eq.~25) and its role is tied to Theorem~2's
+velocity-gated merge is corrected (Sec.~IV-D) and its role is tied to Theorem~2's
 gate. The COP-spectrum birth is \emph{downgraded to an empirical detection
 score}; we no longer claim Neyman--Pearson optimality. SD-COP is explicitly
 labeled a \emph{supporting} extension (Sec.~III-C).
@@ -90,14 +90,14 @@ labeled a \emph{supporting} extension (Sec.~III-C).
 \rc{R1.3 The CRLB section does not develop a new CRLB for the complete
 closed-loop COP-RFS tracking framework.}
 \reply Addressed directly by Theorem~1, the posterior CRB for the coupled
-estimator--tracker, validated against Monte-Carlo simulation (Sec.~VI).
+estimator--tracker, validated against Monte-Carlo simulation (Sec.~VII).
 
 \rc{R1.4 Compare different state-of-the-art tracking approaches.}
 \reply We added a \emph{closed-loop MUSIC} baseline, a $2\times2$ (front-end
 $\times$ loop) ablation, and a \emph{tracking back-end ablation against the
 labeled multi-Bernoulli (LMB) and full $\delta$-GLMB filters}---state-of-the-art
 identity-aware RFS trackers---in addition to MUSIC, Capon, ESPRIT, and the
-MUSIC--PHD cascade (Sec.~VI). All three labeled trackers (our TO-PHD, LMB, and
+MUSIC--PHD cascade (Sec.~VII). All three labeled trackers (our TO-PHD, LMB, and
 $\delta$-GLMB) cut identity switches by an order of magnitude over the standard
 GM-PHD, with the full $\delta$-GLMB and LMB the most accurate, which both
 fairly benchmarks our back-end and shows the framework is back-end-agnostic.
@@ -111,10 +111,13 @@ labeled-RFS/$\delta$-GLMB (Vo--Vo 2013), and Grassmann geometry
 
 \rc{R1.6 Significantly overlength; more suitable as a focused letter, or a good
 TSP paper with strengthened theory and novelty positioning.}
-\reply We chose the latter. The paper is reorganized around the two theorems and
-the underdetermined capability; lightly-justified mechanisms and redundant
-experiments were compressed, and the novelty positioning is rewritten
-(Abstract, Sec.~I). The manuscript is now $\sim$10 pages (two-column IEEE format).
+\reply We chose the latter---a full-length TSP paper with strengthened theory. The paper
+is reorganized around the two theorems and the underdetermined capability;
+lightly-justified mechanisms and redundant experiments were compressed and the
+novelty positioning rewritten (Abstract, Sec.~I), while the two new theorems, the
+SOTA labeled-RFS ($\delta$-GLMB/LMB) baselines, and the expanded Monte-Carlo
+evaluation account for the length. The result is a focused $12$-page paper
+(two-column IEEE format), within the regular-paper length for the Transactions.
 
 \hrule
 \section*{Reviewer 2}
@@ -159,7 +162,7 @@ to a $50\times$ increase over the prior $10$). \emph{Both} requested identity-aw
 trackers are now implemented and compared: we benchmark the proposed
 track-oriented PHD against the standard GM-PHD, the \emph{labeled multi-Bernoulli
 (LMB) filter}, and the \emph{full $\delta$-GLMB filter} (Vo--Vo 2013; Gibbs
-implementation of Vo--Vo--Hoang 2017) (Sec.~VI back-end ablation, Table on
+implementation of Vo--Vo--Hoang 2017) (Sec.~VII back-end ablation, Table on
 crossing targets): all three labeled trackers reduce identity switches by an order
 of magnitude over the GM-PHD, with the full $\delta$-GLMB giving the cleanest
 identity (fewest switches) and sharpest localization, LMB the best aggregate
@@ -213,7 +216,7 @@ that it reduces to the GM-PHD when the gate is fully opened.
 gates velocity separately, double-counting velocity.}
 \reply Corrected: we use the position sub-block $(\theta_i-\theta_j)^2/
 [\mathbf P_i]_{11}$ and gate velocity separately, with an explicit note that a
-full-state Mahalanobis term would double-count the velocity (Eq.~25).
+full-state Mahalanobis term would double-count the velocity (Sec.~IV-D).
 
 \rc{R3.7 The ``exact'' higher-order CRLB substitutes a virtual steering matrix
 into a covariance-based form; cumulant-domain noise is not white
@@ -235,7 +238,7 @@ contraction-to-PCRB-floor statement implied by Theorems~1--2.
 \rc{R3.9 Very few Monte-Carlo trials (e.g., 10); ``tracks all'' vs.\ $\sim60\%$
 detection is internally inconsistent.}
 \reply All key results now use $\geq500$ trials with $95\%$ CIs, and the
-inconsistency is removed (Sec.~VI).
+inconsistency is removed (Sec.~VII).
 
 \rc{R3.10 Several components are inherited or used heuristically; the closed-loop
 theoretical contribution is not convincingly established.}
