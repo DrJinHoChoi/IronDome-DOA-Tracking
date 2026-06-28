@@ -451,8 +451,10 @@ moving targets, $30$ scans, SNR$=15$~dB), Table~\ref{tab:underdet} shows that
 \emph{COP-RFS detects significantly more targets than the MUSIC--PHD cascade}
 (a MUSIC front-end driving the same TO-PHD back-end, so the comparison isolates
 the front-end), $P_d=60.3\%\pm0.2$ vs.\ $51.9\%\pm0.1$ (non-overlapping CIs). MUSIC is structurally
-capped: running at most $\min(K,M{-}1)=7$ sources, its detection cannot exceed
-$(M{-}1)/K=70\%$, and for $K>M{-}1$ the unmodeled excess sources contaminate the
+capped: running at most $\min(K,M{-}1)=7$ sources (an $M$-element array spans only
+$M$ eigenvectors, so requesting $K>M{-}1$ DOAs leaves no noise subspace and is
+ill-posed---$M{-}1$ is the maximal well-defined model order), its detection cannot
+exceed $(M{-}1)/K=70\%$, and for $K>M{-}1$ the unmodeled excess sources contaminate the
 $M\times M$ subspaces, biasing several peaks beyond the $3^\circ$ gate so that it
 reaches only $52\%$. COP removes this cap through the size-$M_v{=}15$ virtual
 aperture (up to $14$ DOF); its $60\%$ is limited only by finite-snapshot
