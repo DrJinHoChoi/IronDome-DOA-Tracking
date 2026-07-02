@@ -212,6 +212,9 @@ def count_switches(label_hist, l2s, K):
 # ===================================================================== #
 def build_estimator(name, array, K):
     from iron_dome_sim.doa import SubspaceCOP, MUSIC
+    if name.startswith("SBL"):                            # multisnapshot Sparse Bayesian Learning front-end (open-loop baseline)
+        from iron_dome_sim.doa.sbl import SBL
+        return SBL(array, num_sources=K, grid_deg=1.0, n_iter=60)
     if "-MC" in name:                                     # 운동보상 T-COP (예측 prior, 누적 없음); 결합 pipe "COP-MC+GLMB" 포함
         from gated_tcop import MotionCompTCOP
         return MotionCompTCOP(array, rho=2, num_sources=K,
