@@ -1,0 +1,65 @@
+\documentclass[11pt]{letter}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\signature{Jin Ho Choi}
+\address{SmartEAR AI \\ Daegu, South Korea \\ jinhochoi@smartear.co.kr}
+\begin{document}
+\begin{letter}{Dr.\ Ahmet M.\ Elbir \\ Associate Editor \\ IEEE Transactions on Signal Processing}
+\opening{Dear Dr.\ Elbir,}
+
+We submit a new manuscript, ``A Closed-Loop Subspace--RFS Framework for
+Multi-Target DOA Tracking,'' which is a substantially revised version of our earlier submission
+T-SP-35123-2026 (``\ldots via COP-RFS''). In accordance with IEEE SPS Policy
+6.16 on the handling of rejected papers, we wish to make clear that this is a
+\emph{substantially different} manuscript: it has a new central thesis, two new
+theoretical results that were absent from the prior version, corrected
+derivations, and a completely re-run experimental evaluation. A detailed
+point-by-point response to all prior reviewer comments accompanies this
+submission.
+
+The prior reviews converged on one central concern: the work read as an
+\emph{integration} of established components (the authors' COP front-end and a
+GM-PHD tracker) rather than a fundamentally new contribution. We have addressed
+this at the root by changing what the paper is \emph{about}:
+
+\begin{itemize}
+\item \textbf{The contribution is now the closed-loop coupling itself,
+  established as a front-end-agnostic principle.} We prove (i) a posterior
+  Cram\'er--Rao bound for the complete closed-loop estimator--tracker
+  (Theorem~1), showing the temporal prior restores identifiability exactly in
+  the underdetermined regime where the data-only bound diverges; and (ii) that
+  the tracker-aided subspace refinement is minimum-variance on the Grassmann
+  manifold under an explicit, gate-enforced condition (Theorem~2). These are new
+  results, not present in the rejected version.
+\item \textbf{We demonstrate the principle on two different front-ends} (the
+  higher-order-cumulant COP and the covariance-based MUSIC), showing the closed
+  loop benefits both---lowering localization error by $56\%$ (COP) and $44\%$
+  (MUSIC) at low SNR---evidence that the contribution is general rather than a
+  specific algorithm pairing.
+\item \textbf{Every flagged derivation has been corrected}: the effective sample
+  size (Kish), the basis-invariant subspace refinement (replacing the
+  gauge-dependent interpolation), the velocity gate (removing double-counting),
+  the cumulant-model assumptions, and the cumulant-noise covariance. The
+  unsupported ``exact'' CRLB and the heuristic convergence bound have been
+  removed; the back-end is renamed a track-oriented PHD with an honest statement
+  of its relation to the exact recursion.
+\item \textbf{The experiments are re-run with up to $500$ Monte-Carlo trials and
+  $95\%$ confidence intervals}, with a closed-loop-MUSIC baseline, a
+  $2\times2$ (front-end $\times$ loop) ablation, and a tracking back-end ablation
+  against the LMB and $\delta$-GLMB labeled-RFS filters. We now explicitly \emph{delineate the operating regime}
+  in which the higher-order front-end is advantageous, and we have removed all
+  overclaims (``tracks all,'' ``substantially outperforms'').
+\end{itemize}
+
+Crucially, the revised paper now \emph{quantifies} the value of closing the
+loop---a concrete gain in every regime where the temporal prior is informative
+(restored identifiability, $-56\%$ low-SNR localization error, $-15\%$ identity
+switches under target motion), with a provable no-harm guarantee elsewhere.
+We believe these changes squarely address the reviewers' concerns about novelty
+positioning, theoretical rigor, and experimental support, and that the resulting
+paper makes a clear theoretical contribution appropriate for the Transactions.
+Thank you for considering our work.
+
+\closing{Sincerely,}
+\end{letter}
+\end{document}

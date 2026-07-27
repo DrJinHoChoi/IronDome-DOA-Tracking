@@ -84,6 +84,7 @@ class COPPHD:
                  birth_weight=0.1, prune_threshold=1e-5,
                  merge_threshold=4.0, max_components=100,
                  birth_pos_std_deg=2.0, birth_vel_std_deg=5.0,
+                 birth_acc_std_deg=2.0,
                  association_gate_deg=8.0,
                  use_physics=True):
 
@@ -104,6 +105,7 @@ class COPPHD:
         # Birth covariance parameters (degrees)
         self.birth_pos_std = np.radians(birth_pos_std_deg)
         self.birth_vel_std = np.radians(birth_vel_std_deg)
+        self.birth_acc_std = np.radians(birth_acc_std_deg)  # for CA (constant-acceleration) model
 
         # Association gate
         self.association_gate = np.radians(association_gate_deg)
@@ -528,6 +530,10 @@ class COPPHD:
                 P[2, 2] = self.birth_vel_std ** 2
             if dim > 3:
                 P[3, 3] = self.birth_vel_std ** 2
+            if dim > 4:                                    # CA: acceleration covariance
+                P[4, 4] = self.birth_acc_std ** 2
+            if dim > 5:
+                P[5, 5] = self.birth_acc_std ** 2
 
             label = self._next_label
             self._next_label += 1
@@ -658,20 +664,31 @@ class COPPHD:
         return estimates
 
     def _feedback_to_cop(self, estimates):
-        """Feed tracked DOAs back to T-COP for temporal prior."""
-        from ..doa.temporal_cop import TemporalCOP
+        """Feed tracked DOAs back to a closed-loop estimator (T-COP / T-MUSIC).
 
-        if not isinstance(self.cop_estimator, TemporalCOP):
+        Duck-typed: any estimator exposing ``set_tracker_predictions`` receives
+        the feedback, so the closed loop applies equally to the COP and MUSIC
+        front-ends (enabling a fair 2x2 front-end x loop comparison).
+        """
+        if not hasattr(self.cop_estimator, "set_tracker_predictions"):
             return
 
         if len(estimates) == 0:
             return
 
-        predicted_doas = np.array([est[0][0] for est in estimates])
+        dt = getattr(self.model, "dt", 1.0)
+        cur_doas = np.array([est[0][0] for est in estimates])
+        predicted_vels = np.array([est[0][1] if len(est[0]) > 1 else 0.0
+                                   for est in estimates])
+        # Motion-compensated prior: predict each track forward by one scan
+        # (constant-velocity), so the prior matches the *current* position even
+        # for moving targets (removes the one-scan lag bias of Theorem 2).
+        predicted_doas = cur_doas + predicted_vels * dt
         n_confirmed = len(estimates)
 
         self.cop_estimator.set_tracker_predictions(
-            predicted_doas, n_confirmed=n_confirmed)
+            predicted_doas, n_confirmed=n_confirmed,
+            predicted_vels=predicted_vels)
 
     def get_target_count(self):
         """Expected number of targets (sum of GM weights)."""

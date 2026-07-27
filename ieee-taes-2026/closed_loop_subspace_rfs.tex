@@ -1,0 +1,785 @@
+% A Closed-Loop Subspace-RFS Framework for Multi-Target DOA Tracking -- IEEE TAES 2026
+\documentclass[journal]{IEEEtran}
+
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{algorithm}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{cite}
+\usepackage{bm}
+\usepackage{multirow}
+\usepackage{booktabs}
+\usepackage{subfig}
+\usepackage{hyperref}
+% \usepackage{placeins} % Removed: FloatBarrier causes excessive whitespace
+
+% Custom commands
+\newcommand{\vect}[1]{\boldsymbol{#1}}
+\newcommand{\mat}[1]{\mathbf{#1}}
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\C}{\mathbb{C}}
+\newcommand{\Tr}{\mathrm{Tr}}
+\newcommand{\diag}{\mathrm{diag}}
+\newcommand{\Real}{\mathrm{Re}}
+\newcommand{\Imag}{\mathrm{Im}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+
+\begin{document}
+
+\title{A Closed-Loop Subspace--RFS Framework for\\Multi-Target DOA Tracking}
+
+\author{Jin~Ho~Choi,~\IEEEmembership{Member,~IEEE}
+\thanks{J.~H.~Choi is with SmartEAR AI, Daegu, South Korea (e-mail: jinhochoi@smartear.co.kr).}
+\thanks{Manuscript received XXXX XX, 2026; revised XXXX XX, 2026.}}
+
+\markboth{IEEE TRANSACTIONS ON AEROSPACE AND ELECTRONIC SYSTEMS, VOL.~XX, NO.~XX, 2026}
+{Choi: A Closed-Loop Subspace--RFS Framework for Multi-Target DOA Tracking}
+
+\maketitle
+
+\begin{abstract}
+We present a closed-loop subspace--RFS framework that couples direction-of-arrival (DOA) estimation with random-finite-set (RFS) multi-target tracking, replacing the open-loop estimator-to-tracker cascade of conventional DOA trackers: the tracker's temporal prediction is fed back---through a two-stage validation gate---to refine the estimator's signal subspace. The framework is \emph{front-end-agnostic}: a higher-order-cumulant front-end (COP) extends operation to the underdetermined regime $K>M{-}1$, letting a compact array track more targets than it can nominally resolve (the resulting tracker is COP-RFS), while a covariance front-end (MUSIC) serves the determined regime. It is likewise \emph{back-end-agnostic} (track-oriented PHD, LMB, $\delta$-GLMB), and a physics-based constant-acceleration model makes the $\delta$-GLMB back-end best under maneuver---yielding the recommended configuration: a gated closed-loop front-end driving a physics-based, interchangeable SOTA back-end. In Monte-Carlo experiments (up to $500$ trials, $95\%$ confidence intervals), COP-RFS detects significantly more targets than a MUSIC--PHD baseline when $K>M{-}1$, and the gated loop lowers low-SNR localization error by up to $56\%$ (COP) and $44\%$ (MUSIC) and cuts moving-target identity switches by $15\%$, matching the open-loop baseline otherwise. Supporting theory underpins the design: a posterior Cram\'{e}r--Rao bound for the complete closed loop proves the temporal prior restores identifiability exactly where the data-only bound diverges, and a minimum-variance Grassmann-fusion guarantee with the validation gate ensures the loop never degrades performance. We delineate the operating regime of each ingredient rather than claiming uniform superiority.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Multi-target tracking, direction-of-arrival (DOA) estimation, random finite sets, $\delta$-GLMB, labeled multi-Bernoulli, probability hypothesis density filter, higher-order cumulants, underdetermined arrays, radar signal processing.
+\end{IEEEkeywords}
+
+\section{Introduction}
+\label{sec:intro}
+
+High-resolution direction-of-arrival (DOA) estimation is a fundamental problem in array signal processing with critical applications in radar, sonar, communications, and defense systems~\cite{barshalom2011tracking,neri2018defense}. Classical high-resolution subspace methods such as MUSIC~\cite{schmidt1986music}, ESPRIT~\cite{roy1989esprit}, and Capon's MVDR beamformer~\cite{capon1969mvdr} achieve super-resolution beyond the Rayleigh limit but are restricted to the \emph{overdetermined} case where the number of sources $K$ does not exceed $M-1$, the number of sensors minus one. This constraint poses a significant challenge in modern defense scenarios where a sensor array may face more incoming threats than its aperture can nominally resolve.
+
+Higher-order statistics (HOS) offer a principled approach to overcome this limitation~\cite{porat1991doa,chevalier2006hos}. By exploiting the $2\rho$th-order cumulant structure of received signals, Choi and Yoo~\cite{choi2015underdetermined} proposed a high-resolution Subspace Constrained Optimization of the Pseudo-spectrum (COP) algorithm, which extends the effective array aperture through a \emph{virtual array} of size $M_v = \rho(M-1)+1$, thereby resolving up to $\rho(M-1)$ sources---far exceeding the classical $M-1$ limit. Alternative approaches to the underdetermined DOA problem include sparse array designs such as nested arrays~\cite{pal2010nested} and coprime arrays~\cite{vaidyanathan2011coprime,liu2018superresolution,zhou2018deformed}, as well as sparsity-based and sparse-Bayesian-learning methods~\cite{malioutov2005l1svd,wipf2004sbl,gerstoft2016sbl}. However, these approaches either require specialized array geometries or assume signal sparsity, whereas COP operates on standard ULAs and exploits higher-order cumulant structure. A key advantage of higher-order cumulants is the automatic suppression of Gaussian noise, since all cumulants of order greater than two vanish for Gaussian processes~\cite{mendel1991tutorial}---a robustness that holds even for spatially-colored, unknown noise. These strengths come at the cost of higher estimation variance; a central premise of this work is that embedding HOS \emph{within a closed loop} turns that liability into a net gain, as the tracker's temporal prior supplies exactly the variance reduction that HOS lacks.
+
+While the COP algorithm addresses the static underdetermined DOA problem, practical defense applications require \emph{multi-target tracking}: maintaining continuous trajectories across successive radar scans even as targets maneuver, appear, or cross. Existing DOA-tracking pipelines typically chain a covariance-based estimator (MUSIC, ESPRIT) with a Bayesian tracker (Kalman, PHD) in an \emph{open-loop} fashion, where the tracker consumes DOA estimates but provides no feedback to the estimator. This design has two weaknesses: (i) the estimator cannot resolve $K > M-1$ sources, and (ii) the tracker receives no help from higher-order signal structure.
+
+The GM-PHD filter~\cite{vo2006gmphd} provides an efficient approximation for RFS-based multi-target tracking, but the standard predict--update formulation does not maintain explicit track identity. Several extensions have addressed this limitation: Panta et~al.~\cite{panta2009gmphd} introduced data association schemes for the GM-PHD filter, Clark and Vo~\cite{clark2006gmphd_track} analyzed convergence properties, and Georgescu and Willett~\cite{georgescu2012phd_doa} applied the GM-PHD to phased array DOA tracking. More fundamentally, the labeled multi-Bernoulli (LMB) and $\delta$-GLMB filters~\cite{vo2013glmb,vo2014lmb} solve the track identity problem within the RFS-theoretic framework itself. However, none of these works exploit higher-order cumulant structure for the DOA estimation front-end, nor do they establish a closed-loop feedback between tracker predictions and the estimation subspace.
+
+This paper proposes a \emph{gated closed-loop subspace--RFS framework}
+(Fig.~\ref{fig:system}) that, unlike prior open-loop cascades, makes the
+estimator--tracker \emph{coupling} the object of design and analysis: a subspace
+DOA front-end feeds a random-finite-set (RFS) tracker whose temporal prediction is
+fed back---through a two-stage validation gate and a Temporal-COP (T-COP)
+refinement---to sharpen the estimator. The framework is deliberately modular:
+\emph{front-end-agnostic} (higher-order-cumulant COP, yielding COP-RFS for the
+underdetermined regime $K>M{-}1$, or covariance MUSIC) and
+\emph{back-end-agnostic} (PHD, LMB, or $\delta$-GLMB). Its \emph{recommended
+configuration}---the destination of this paper---is a gated closed-loop front-end
+(COP, or MUSIC when determined) driving a \emph{physics-based}, interchangeable
+SOTA back-end ($\delta$-GLMB), robust across source count, SNR, motion, and
+signal type. The principal contributions are:
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.92\linewidth]{figures/fig_system.png}
+\caption{The proposed gated closed-loop subspace--RFS framework. A
+front-end-agnostic subspace estimator (COP or MUSIC) feeds a back-end-agnostic RFS
+tracker (TO-PHD, LMB, or $\delta$-GLMB with physics-based CV/CA motion); the
+tracker's prediction is fed back through a validation gate and a minimum-variance
+T-COP refinement (Theorems~1--2) that guarantees the loop never degrades the
+open-loop estimate. The recommended configuration is a gated
+front-end (COP or MUSIC by regime) driving a physics-based, interchangeable SOTA back-end (here $\delta$-GLMB).}
+\label{fig:system}
+\end{figure}
+
+\textbf{Contribution 1 (System): A gated closed-loop subspace--RFS architecture.}
+We replace the open-loop estimator-to-tracker cascade with a closed loop in which the tracker's motion-compensated prediction is fed back---through a two-stage validation gate (velocity and subspace bias; Algorithm~\ref{alg:gate})---to refine the estimator's signal subspace. The loop is \emph{front-end-agnostic}: a $2\times2$ (front-end~$\times$~loop) study shows it improves \emph{both} COP and MUSIC, lowering low-SNR localization error by $56\%$ and $44\%$ respectively, and under target motion the gate falls back \emph{exactly} to the open-loop estimate---the deployed system never underperforms the cascade it replaces.
+
+\textbf{Contribution 2 (Capability): Underdetermined tracking with interchangeable SOTA back-ends.}
+Through Monte-Carlo experiments (up to $500$ trials, $95\%$ CIs) against MUSIC, closed-loop MUSIC, LMB, and $\delta$-GLMB baselines, we show COP-RFS detects significantly more targets than the MUSIC--PHD cascade when $K>M{-}1$---a compact array tracking more targets than its aperture nominally resolves---and we \emph{delineate the operating regime} in which the higher-order front-end is advantageous rather than claiming uniform superiority. The framework is \emph{back-end-agnostic}: in a tracking ablation the labeled TO-PHD, LMB, and $\delta$-GLMB trackers each cut identity switches by an order of magnitude over the unlabeled GM-PHD, with $\delta$-GLMB giving the cleanest identity and TO-PHD a lightweight alternative. A physics-based constant-acceleration (CA) motion model sharpens \emph{every} back-end under maneuver ($\delta$-GLMB best-in-class), completing the recommended configuration. Sequential-deflation COP (SD-COP) is a supporting mechanism for the super-underdetermined regime.
+
+\textbf{Contribution 3 (Supporting theory): Guarantees for the closed loop.}
+Two results underpin the architecture. Theorem~1 gives a posterior Cram\'{e}r--Rao bound for the complete coupled estimator--tracker: the recursion itself is classical~\cite{tichavsky1998posterior}, and the new content is the \emph{identifiability phase transition} it exposes in the underdetermined cumulant regime---as the cumulant information turns rank-deficient the data-only bound \emph{diverges} while the closed-loop bound stays \emph{finite}, capped by the temporal prior---a statement no static or data-only CRLB can make. Theorem~2 proves the tracker-aided T-COP refinement is a minimum-variance fusion on the Grassmann manifold: inverse-variance fusion is classical, but here it is made \emph{gauge-invariant} (Procrustes alignment, reported through the projector $\mat{P}_s$, curing the basis-dependence of naive subspace interpolation) and paired with an \emph{explicit, checkable} benefit condition $\|\mat{b}\|^2<D(\sigma_e^2+\sigma_p^2)$ that the validation gate \emph{enforces online}---so the loop strictly improves estimation when the prior is accurate and never degrades it otherwise.
+
+The remainder develops each component of this system: the signal/cumulant model (\S\ref{sec:signal_model}) and closed-loop T-COP front-end (\S\ref{sec:cop}); the track-oriented PHD back-end (\S\ref{sec:tracking}); the CRLB (\S\ref{sec:crlb}) and the two central theorems (\S\ref{sec:theory}); and the Monte-Carlo evaluation (\S\ref{sec:experiments}).
+
+\section{Signal Model and Higher-Order Cumulants}
+\label{sec:signal_model}
+
+\subsection{Array Signal Model}
+
+Consider a ULA with $M$ sensors and inter-element spacing $d = \lambda/2$, where $\lambda$ is the wavelength. In the presence of $K$ narrowband far-field sources impinging from directions $\{\theta_k\}_{k=1}^K$, the received signal vector at snapshot $t$ is
+\begin{equation}
+\mat{x}(t) = \mat{A}(\vect{\theta})\,\mat{s}(t) + \mat{n}(t), \quad t = 1, \ldots, T
+\label{eq:signal_model}
+\end{equation}
+where $\mat{A}(\vect{\theta}) = [\mat{a}(\theta_1), \ldots, \mat{a}(\theta_K)] \in \C^{M \times K}$ is the steering matrix with
+\begin{equation}
+\mat{a}(\theta) = \begin{bmatrix} 1 & e^{j2\pi d\sin\theta} & \cdots & e^{j2\pi(M-1)d\sin\theta} \end{bmatrix}^T,
+\end{equation}
+$\mat{s}(t) \in \C^K$ contains the source signals, and $\mat{n}(t) \sim \mathcal{CN}(\mat{0}, \sigma^2\mat{I}_M)$ is additive white Gaussian noise. When $K > M-1$, the system~\eqref{eq:signal_model} is \emph{underdetermined}, and classical subspace methods based on the second-order covariance matrix $\mat{R} = \E[\mat{x}\mat{x}^H]$ cannot resolve all sources.
+
+\subsection{Higher-Order Cumulant Matrix}
+
+The $2\rho$th-order cumulant of the received signal exploits the non-Gaussian structure of source signals to extend the effective aperture~\cite{choi2015underdetermined,dogan1995cumulant}. For $\rho = 2$ (fourth-order), the cumulant element is defined as
+\begin{equation}
+c_4(i_1, i_2, i_3, i_4) = \mathrm{cum}(x_{i_1}, x_{i_2}, x^*_{i_3}, x^*_{i_4})
+\end{equation}
+where $\mathrm{cum}(\cdot)$ denotes the joint cumulant. Using the sum co-array structure, the lag index $\tau = (i_1 + i_2) - (i_3 + i_4)$ ranges over $[0, 2(M-1)]$, yielding a virtual array of size
+\begin{equation}
+M_v = \rho(M-1) + 1.
+\label{eq:virtual_array}
+\end{equation}
+
+The cumulant matrix $\mat{C}_{2\rho} \in \C^{M_v \times M_v}$ has the Hermitian Toeplitz structure
+\begin{equation}
+\mat{C}_{2\rho} = \mat{A}_v(\vect{\theta})\,\mat{\Gamma}_s\,\mat{A}_v^H(\vect{\theta})
+\label{eq:cumulant_matrix}
+\end{equation}
+where $\mat{A}_v(\vect{\theta}) \in \C^{M_v \times K}$ is the \emph{virtual} steering matrix with extended aperture, and $\mat{\Gamma}_s = \diag(\gamma_1, \ldots, \gamma_K)$ contains the source cumulant powers. The diagonal structure of $\mat{\Gamma}_s$ in~\eqref{eq:cumulant_matrix}---and hence the rank-$K$ virtual-array model---holds under the standard higher-order-statistics assumptions~\cite{dogan1995cumulant,porat1991doa,chevalier2006hos}: the $K$ source signals are (A1)~mutually statistically independent, (A2)~non-Gaussian, and (A3)~possess nonzero $2\rho$th-order autocumulants $\gamma_k\neq0$. Under (A1)--(A3) all cross-cumulants between distinct sources vanish, so that the $2\rho$th-order cumulant tensor, reindexed by the sum-co-array lag $\tau=(i_1{+}i_2)-(i_3{+}i_4)$, collapses to the Hermitian Toeplitz matrix~\eqref{eq:cumulant_matrix} with $\mat{A}_v$ of full column rank $K\le M_v-1$; the detailed tensor-to-matrix reduction is given in~\cite{choi2015underdetermined,dogan1995cumulant}. For Gaussian or vanishing-cumulant sources the higher-order gain degenerates and the classical $M-1$ limit is recovered. Crucially, \emph{Gaussian noise does not contribute to \eqref{eq:cumulant_matrix}} since all cumulants of order $> 2$ vanish for Gaussian processes~\cite{mendel1991tutorial}. This provides two key advantages:
+\begin{enumerate}
+\item \textbf{Extended degrees of freedom}: The virtual array $M_v = \rho(M-1)+1$ resolves up to $K_{\max} = \rho(M-1)$ sources---a factor-$\rho$ improvement over the classical $M-1$ limit, and the basis of the underdetermined capability.
+\item \textbf{Gaussian-noise immunity}: Because all cumulants of order $>2$ vanish for Gaussian processes, the cumulant domain is insensitive to additive Gaussian noise of \emph{arbitrary} covariance---including spatially-colored, unknown noise---whereas covariance-based methods require a known or white noise model. The effective cumulant-domain SNR scales as $p_s^{\rho}/\sigma_c^2\propto\mathrm{SNR}^{\rho}$.
+\end{enumerate}
+
+The price of these advantages is a higher \emph{estimation variance}: for a given snapshot count, fourth-order cumulants are noisier than the second-order covariance. A central theme of this paper is that the \emph{closed loop offsets exactly this penalty}---the tracker-aided refinement of Section~\ref{sec:tcop} (Theorem~2) provably reduces the cumulant-subspace error by a factor $1/(1{+}\kappa)$, so the higher-order aperture and Gaussian-noise immunity are obtained at a near-second-order variance. HOS and the temporal feedback are thus \emph{complementary}: HOS supplies the degrees of freedom the loop cannot, the loop the variance reduction HOS needs.
+
+For $M = 8$ sensors and $\rho = 2$, this yields $M_v = 15$ virtual elements capable of resolving up to $K_{\max} = 14$ sources---double the classical limit of $7$.
+
+\textbf{Remark (Dual-pathway construction).}
+The same virtual array~\eqref{eq:virtual_array} also arises by combining $\rho$ second-order covariance matrices of \emph{non-stationary} sources~\cite{choi2015underdetermined}, attaining the extended aperture $M_v=\rho(M{-}1){+}1$ at second-order estimation variance---substantially lower than direct cumulant estimation. We use direct fourth-order cumulants here for generality; the lower-variance pathway is the natural choice for non-stationary sources and narrows COP's variance gap relative to second-order methods.
+
+\section{COP Algorithm Family}
+\label{sec:cop}
+
+\subsection{Subspace COP (Base Algorithm)}
+
+The COP algorithm~\cite{choi2015underdetermined} performs DOA estimation by jointly optimizing over the signal and noise subspaces of the virtual cumulant matrix. The number of sources $K$ is assumed known or estimated via information-theoretic criteria such as MDL~\cite{wax1985mdl}. Given the eigendecomposition
+\begin{equation}
+\mat{C}_{2\rho} = \mat{U}_s \mat{\Lambda}_s \mat{U}_s^H + \mat{U}_n \mat{\Lambda}_n \mat{U}_n^H
+\end{equation}
+where $\mat{U}_s \in \C^{M_v \times K}$ and $\mat{U}_n \in \C^{M_v \times (M_v - K)}$ span the signal and noise subspaces, respectively, the COP pseudo-spectrum is
+\begin{equation}
+P_{\mathrm{COP}}(\theta) = \frac{\mat{a}_v^H(\theta)\,\mat{U}_s\mat{U}_s^H\,\mat{a}_v(\theta)}{\mat{a}_v^H(\theta)\,\mat{U}_n\mat{U}_n^H\,\mat{a}_v(\theta)}
+\label{eq:cop_spectrum}
+\end{equation}
+which simultaneously maximizes the signal subspace projection (numerator) and minimizes the noise subspace projection (denominator).
+
+\textbf{Peak detection.}
+The DOA estimates are extracted from $P_{\mathrm{COP}}(\theta)$ via local maximum finding with minimum-separation gating. Specifically, a scan angle $\theta_i$ is identified as a \emph{local peak} if
+\begin{equation}
+P_{\mathrm{COP}}(\theta_i) > P_{\mathrm{COP}}(\theta_{i-1}) \;\;\text{and}\;\; P_{\mathrm{COP}}(\theta_i) > P_{\mathrm{COP}}(\theta_{i+1}).
+\label{eq:local_peak}
+\end{equation}
+All local peaks are ranked by descending amplitude, and the top $K$ peaks are selected subject to a minimum angular separation constraint $|\hat{\theta}_j - \hat{\theta}_k| > \delta_{\min}$ for all previously selected estimates, where $\delta_{\min} = 1^\circ$ prevents multiple detections from the same mainlobe. The resulting DOA estimates $\{\hat{\theta}_k\}_{k=1}^K$ are sorted in ascending order.
+
+\subsection{Temporal COP (T-COP)}
+\label{sec:tcop}
+
+For non-stationary scenarios where source DOAs change between radar scans, batch cumulant estimation becomes suboptimal~\cite{tufts1982estimation}. T-COP introduces temporal accumulation with exponential forgetting:
+\begin{equation}
+\hat{\mat{C}}_{2\rho}^{(n)} = \alpha\,\hat{\mat{C}}_{2\rho}^{(n-1)} + (1-\alpha)\,\mat{C}_{2\rho}^{(n)}
+\label{eq:tcop_accumulation}
+\end{equation}
+where $\hat{\mat{C}}_{2\rho}^{(n)}$ is the accumulated cumulant estimate at scan $n$, $\mat{C}_{2\rho}^{(n)}$ is the instantaneous cumulant from the current scan, and $\alpha \in (0, 1)$ is the forgetting factor. With per-scan weights $w_i = (1-\alpha)\alpha^{i}$, the effective number of snapshots after $n$ scans is the \emph{Kish effective sample size}---the squared sum of the weights divided by the sum of their squares---scaled by the per-scan snapshot count $T$:
+\begin{equation}
+\begin{split}
+T_{\mathrm{eff}}^{(n)} &= T\,\frac{\big(\sum_{i=0}^{n-1} w_i\big)^2}{\sum_{i=0}^{n-1} w_i^2}\\
+&= T\,\frac{(1-\alpha^{n})^2(1+\alpha)}{(1-\alpha)(1-\alpha^{2n})}
+\;\xrightarrow[n\to\infty]{}\; T\,\frac{1+\alpha}{1-\alpha},
+\end{split}
+\label{eq:tcop_teff}
+\end{equation}
+which grows monotonically to a finite steady state. We emphasize that the naive geometric weight sum $T(1-\alpha^{n})/(1-\alpha)$ is \emph{not} the effective sample size, since it ignores the unequal squared contributions of the exponential weights; \eqref{eq:tcop_teff} follows directly from $\mathrm{Var}(\hat{\mat{C}}_{2\rho}^{(n)}) \propto \sum_i w_i^2$ for the weighted estimator. The T-COP pseudo-spectrum at scan $n$ is computed as
+\begin{equation}
+P_{\mathrm{T\text{-}COP}}^{(n)}(\theta) = \frac{\mat{a}_v^H(\theta)\,\hat{\mat{U}}_s^{(n)}\hat{\mat{U}}_s^{(n)H}\,\mat{a}_v(\theta)}{\mat{a}_v^H(\theta)\,\hat{\mat{U}}_n^{(n)}\hat{\mat{U}}_n^{(n)H}\,\mat{a}_v(\theta)}
+\label{eq:tcop_spectrum}
+\end{equation}
+where $\hat{\mat{U}}_s^{(n)}$ and $\hat{\mat{U}}_n^{(n)}$ are the signal and noise subspaces of $\hat{\mat{C}}_{2\rho}^{(n)}$.
+
+\textbf{Tracker-aided subspace refinement.}
+When a multi-target tracker provides predicted DOAs $\{\hat{\theta}_k^{\mathrm{pred}}\}_{k=1}^{\hat{K}}$---the constant-velocity \emph{prediction} $\hat{\theta}_k^{\mathrm{pred}}=\theta_k+\dot{\theta}_k\,\Delta t$ propagated to the current scan, so that the prior stays unbiased even for moving targets---T-COP incorporates this prior information. The prior signal subspace is constructed from the predicted steering vectors:
+\begin{equation}
+\mat{U}_s^{\mathrm{prior}} = \mathrm{orth}\!\left(\mat{A}_v(\hat{\vect{\theta}}^{\mathrm{pred}})\right) \in \C^{M_v \times \hat{K}}
+\label{eq:tcop_prior_subspace}
+\end{equation}
+and the refined subspace is obtained by an inverse-variance (BLUE) fusion on the Grassmann tangent space~\cite{edelman1998geometry}. Unlike the gauge-dependent linear interpolation $\mathrm{orth}\!\left((1{-}w_p)\mat{U}_s + w_p\mat{U}_s^{\mathrm{prior}}\right)$---which is \emph{not} a well-defined subspace operation, since $\mat{U}_s\!\mapsto\!\mat{U}_s\mat{Q}$ for any $\mat{Q}\in\mathcal{U}(K)$ represents the same subspace yet changes the interpolant---the proposed refinement is invariant to the basis gauge. We first align the prior basis to the estimate by the orthogonal Procrustes rotation
+\begin{equation}
+\mat{Q}^\star=\mat{V}\mat{W}^H,\qquad \mat{U}_s^H\mat{U}_s^{\mathrm{prior}}=\mat{W}\mat{\Sigma}\mat{V}^H\ (\text{SVD}),
+\label{eq:tcop_procrustes}
+\end{equation}
+then combine the estimate and the aligned prior in the normal (tangent) coordinates $\mat{H}_{\mathrm{est}},\mat{H}_{\mathrm{pri}}$ of the Grassmannian, reporting the result through the gauge-invariant projector $\mat{P}_s=\mat{U}_s\mat{U}_s^H$:
+\begin{equation}
+\begin{split}
+\hat{\mat{H}}&=\big(\mat{\Sigma}_{\mathrm{est}}^{-1}+\mat{\Sigma}_{\mathrm{pri}}^{-1}\big)^{-1}\big(\mat{\Sigma}_{\mathrm{est}}^{-1}\mat{H}_{\mathrm{est}}+\mat{\Sigma}_{\mathrm{pri}}^{-1}\mat{H}_{\mathrm{pri}}\big),\\
+\mat{P}_s^{\mathrm{refined}}&=\mathrm{retr}(\hat{\mat{H}}),
+\end{split}
+\label{eq:tcop_prior}
+\end{equation}
+where $\mat{\Sigma}_{\mathrm{est}},\mat{\Sigma}_{\mathrm{pri}}$ are the tangent-space error covariances of the data estimate and the aligned prior, and $\mathrm{retr}(\cdot)$ denotes the Grassmann retraction. The prior covariance is induced from the tracker's predicted-DOA covariance $\mat{C}_\theta$ through the steering Jacobian, $\mat{\Sigma}_{\mathrm{pri}}=\mat{G}\mat{C}_\theta\mat{G}^H$ with columns $\mat{G}_k\propto\mat{P}_{\mat{A}_v}^\perp\dot{\mat{a}}_v(\theta_k)$; in the isotropic special case $\mat{\Sigma}_{\mathrm{est}}=\sigma_e^2\mat{I},\,\mat{\Sigma}_{\mathrm{pri}}=\sigma_p^2\mat{I}$ this recovers a scalar weight $w_p=\sigma_e^2/(\sigma_e^2+\sigma_p^2)$. The refinement~\eqref{eq:tcop_prior} provably reduces the subspace MSE under an explicit, checkable prior-accuracy condition (Theorem~2, Section~\ref{sec:theory}), creating a principled feedback loop in which accurate tracking lowers estimation error and improved estimation in turn sharpens tracking.
+
+\textbf{Gated operation.} In deployment the refinement~\eqref{eq:tcop_prior} is guarded by two gates (Algorithm~\ref{alg:gate}), both of which must pass to engage the loop. A \emph{velocity} gate resets the accumulator when the tracker's mean predicted DOA-rate exceeds $\tau_v$ and---absent a reliable velocity estimate (e.g.\ at track initiation)---defaults conservatively to open-loop, so an early accumulation never smears moving sources. A \emph{subspace-bias} gate $d^2\le\delta_g$ then operationalizes Theorem~2's prior-accuracy condition, with $d^2=\tfrac{1}{2\hat K}\|\mat{U}_s\mat{U}_s^H-\mat{U}^{\mathrm{prior}}\mat{U}^{\mathrm{prior}H}\|_F^2$ the normalized chordal distance between the data and prior subspaces---a checkable surrogate for $\|\mat{b}\|^2<D(\sigma_e^2+\sigma_p^2)$. When either fails the estimator returns \emph{exactly} the open-loop COP estimate, guaranteeing no degradation (deployed $\tau_v=0.4^\circ$/scan, $\delta_g=0.3$, $\alpha=0.85$).
+
+\begin{algorithm}[t]
+\caption{Gated T-COP refinement (single scan $n$)}
+\label{alg:gate}
+\begin{algorithmic}[1]
+\REQUIRE snapshot $\mat{X}_n$; predictions $\hat{\vect{\theta}}^{\mathrm{pred}},\dot{\vect{\theta}}^{\mathrm{pred}}$ ($\varnothing$ if unavailable); thresholds $\tau_v,\delta_g$; forgetting $\alpha$
+\STATE $\hat{\mat{C}} \leftarrow \mathrm{cum}_{2\rho}(\mat{X}_n)$, \quad $\hat{K} \leftarrow$ source count
+\STATE // \textbf{Gate 1 (velocity):} accumulation valid only for slow sources
+\IF{$\hat{\vect{\theta}}^{\mathrm{pred}} \neq \varnothing$}
+    \STATE $m \leftarrow \mathrm{mean}_k\, |\dot{\theta}_k^{\mathrm{pred}}|$
+\ELSE
+    \STATE $m \leftarrow \infty$ \hfill // no estimate $\Rightarrow$ assume moving
+\ENDIF
+\STATE $\mathrm{slow} \leftarrow (\hat{\vect{\theta}}^{\mathrm{pred}} \neq \varnothing) \wedge (m < \tau_v)$
+\IF{$\mathrm{slow}$}
+    \STATE $\hat{\mat{C}}_{\mathrm{acc}} \leftarrow \alpha\,\hat{\mat{C}}_{\mathrm{acc}} + (1-\alpha)\,\hat{\mat{C}}$ \hfill // accumulate
+\ELSE
+    \STATE $\hat{\mat{C}}_{\mathrm{acc}} \leftarrow \hat{\mat{C}}$ \hfill // reset (current scan only)
+\ENDIF
+\STATE // \textbf{Gate 2 (subspace bias):} enforces Theorem~2 prior-accuracy
+\STATE $\mathrm{prior\_ok} \leftarrow \mathrm{false}$
+\IF{$\mathrm{slow} \wedge (\hat{\vect{\theta}}^{\mathrm{pred}} \neq \varnothing)$}
+    \STATE $\mat{U}_s \leftarrow$ signal subspace of $\hat{\mat{C}}_{\mathrm{acc}}$; \ $\mat{U}^{\mathrm{prior}} \leftarrow \mathrm{orth}(\mat{A}_v(\hat{\vect{\theta}}^{\mathrm{pred}}))$
+    \STATE $d^2 \leftarrow \tfrac{1}{2\hat{K}}\| \mat{U}_s\mat{U}_s^H - \mat{U}^{\mathrm{prior}}\mat{U}^{\mathrm{prior}H} \|_F^2$
+    \STATE $\mathrm{prior\_ok} \leftarrow (d^2 \leq \delta_g)$
+\ENDIF
+\IF{$\mathrm{prior\_ok}$}
+    \STATE $P \leftarrow$ prior-refined T-COP spectrum via~\eqref{eq:tcop_prior}
+    \STATE $\hat{\vect{\theta}} \leftarrow$ prior-guided peaks of $P$ \hfill // engage loop
+\ELSE
+    \STATE $P \leftarrow$ open-loop COP spectrum of $\hat{\mat{C}}_{\mathrm{acc}}$; \ $\hat{\vect{\theta}} \leftarrow$ peaks of $P$ \hfill // fall back
+\ENDIF
+\RETURN $\hat{\vect{\theta}}$ (and $P$ for tracker likelihoods)
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Sequential Deflation COP (SD-COP)}
+\label{sec:sdcop}
+
+SD-COP is a \emph{supporting} extension---not a central contribution---that pushes operation into the super-underdetermined regime $K>\rho(M{-}1)$; it complements the closed-loop guarantee of Theorem~1, whose corollary shows that sources beyond the static virtual-array limit remain identifiable once the temporal prior makes $\mat{J}_{k|k-1}\succ0$ on the data-unresolved subspace. When $K$ approaches the COP capacity $\rho(M-1)$, batch estimation accuracy degrades due to exhaustion of virtual degrees of freedom. SD-COP addresses this through iterative signal-domain deflation, analogous to successive interference cancellation (SIC) in communications~\cite{andrews2005sic}. Rather than deflating in the cumulant domain---which requires accurate estimation of source cumulant powers and is prone to error accumulation---SD-COP operates on the original received signal $\mat{X}$ and recomputes the cumulant at each stage from the deflated signal residual.
+
+At each stage, the already-estimated sources are reconstructed by regularized least squares and subtracted from the \emph{original} received signal $\mat{X}$---always referencing the cumulative DOA set, so deflation never cascades error---after which COP is re-applied to the cumulant of the residual to discover further sources. Each stage respects the per-stage capacity $K_{\mathrm{batch}}\le\rho(M{-}1)$, and an optional leave-one-out pass re-estimates each DOA from the residual of all others. As a supporting extension, we omit the (straightforward sequential) pseudocode.
+
+\section{RFS Multi-Target Tracking Back-End}
+\label{sec:tracking}
+
+\subsection{Random Finite Set Formulation}
+
+The multi-target DOA tracking problem is naturally modeled using random finite sets (RFS)~\cite{mahler2003phd,mahler2007statistical}. Extensions such as the cardinalized PHD~\cite{vo2007cphd}, labeled multi-Bernoulli filter~\cite{vo2014lmb}, and data association schemes~\cite{panta2009gmphd,georgescu2012phd_doa} have been proposed. The present work differs by embedding the tracker in a \emph{closed loop} with an interchangeable subspace front-end (COP or MUSIC); the higher-order COP additionally enables underdetermined DOA estimation, and front-end-spectrum-informed birth---capabilities absent from all prior PHD-based DOA tracking pipelines. At scan $n$, the multi-target state is the RFS
+\begin{equation}
+\mathcal{X}_n = \{\mat{x}_{n,1}, \ldots, \mat{x}_{n,K_n}\}
+\end{equation}
+where $K_n$ is the (unknown, time-varying) number of targets and each $\mat{x}_{n,k} = [\theta_k, \dot{\theta}_k]^T$ contains the DOA and DOA rate. The measurement set from the subspace front-end (COP or MUSIC) is
+\begin{equation}
+\mathcal{Z}_n = \{z_{n,1}, \ldots, z_{n,M_n}\}
+\end{equation}
+where $M_n$ measurements include both target-generated and clutter-generated DOAs.
+
+The GM-PHD filter~\cite{vo2006gmphd} propagates the first-order moment (intensity function) of the multi-target posterior density, represented as a Gaussian mixture:
+\begin{equation}
+v_{n|n}(\mat{x}) = \sum_{j=1}^{J_{n|n}} w_{n|n}^{(j)}\,\mathcal{N}(\mat{x};\, \mat{m}_{n|n}^{(j)},\, \mat{P}_{n|n}^{(j)}).
+\label{eq:phd_gm}
+\end{equation}
+
+\subsection{Physics-Based Motion Model (CV / CA)}
+
+Each target state $\mat{x} = [\theta, \dot{\theta}]^T$ evolves according to the constant-velocity (CV) model~\cite{simon2006optimal}:
+\begin{equation}
+\mat{x}_{n+1} = \mat{F}\,\mat{x}_n + \mat{w}_n, \quad
+\mat{F} = \begin{bmatrix} 1 & \Delta t \\ 0 & 1 \end{bmatrix}
+\label{eq:motion_model}
+\end{equation}
+where $\Delta t$ is the inter-scan interval and $\mat{w}_n \sim \mathcal{N}(\mat{0}, \mat{Q})$ is the process noise with
+\begin{equation}
+\mat{Q} = \sigma_w^2 \begin{bmatrix} \Delta t^3/3 & \Delta t^2/2 \\ \Delta t^2/2 & \Delta t \end{bmatrix}.
+\label{eq:process_noise}
+\end{equation}
+The measurement model is $z_n = \mat{H}\,\mat{x}_n + v_n$ with $\mat{H} = [1,\, 0]$ and $v_n \sim \mathcal{N}(0, \sigma_\theta^2)$. For \emph{maneuvering} targets (non-zero angular curvature) we use the constant-acceleration (CA) model, augmenting the state to $\mat{x}=[\theta,\dot{\theta},\ddot{\theta}]^T$ with $\mat{F}_{\mathrm{CA}}=[\,1,\Delta t,\tfrac12\Delta t^2;\,0,1,\Delta t;\,0,0,1\,]$, $\mat{H}=[1,0,0]$, and a white-noise-jerk $\mat{Q}$. Throughout, \emph{physics-based} denotes this kinematic (CV or CA) motion model---shared by the TO-PHD and the labeled-RFS back-ends---with CA preferred under maneuver (\S\ref{sec:exp_ca}).
+
+\subsection{Recommended Back-End: Physics-Based $\delta$-GLMB}
+
+Because the closed loop is back-end-agnostic, any RFS filter that consumes the front-end DOAs and returns a predicted state may serve as the tracker. Our \emph{recommended} back-end is the labeled-RFS $\delta$-GLMB filter~\cite{vo2013glmb}---the state-of-the-art identity-aware tracker---realized with the efficient Gibbs joint predict--update truncation of~\cite{vo2017efficient} and the physics-based motion of Section~\ref{sec:tracking}. The posterior is a weighted set of global hypotheses, each a set of labeled tracks $(\ell,\mat{m},\mat{P})$ with cardinality distribution $\rho(n)=\sum_{|I|=n} w_h$. Algorithm~\ref{alg:glmb} summarizes one closed-loop scan: each parent hypothesis predicts its survivors by the CV/CA model and admits a measurement-driven birth per detection; a Gibbs sampler draws the high-weight joint association vectors (each measurement assigned exclusively to a track, a birth, or clutter), each spawning a child hypothesis whose weight is the product of per-track association costs. Hypotheses are merged by label set and pruned, a detection-based confirmation score rejects clutter while letting confirmed tracks coast through occasional front-end misses, and the cardinality-MAP hypothesis is extracted. The labeled hypotheses preserve identity through crossings and, with the CA motion, make this back-end best-in-class under maneuver (Section~\ref{sec:exp_ca}).
+
+\begin{algorithm}[t]
+\caption{Physics-based $\delta$-GLMB back-end (one closed-loop scan)}
+\label{alg:glmb}
+\begin{algorithmic}[1]
+\REQUIRE hypotheses $\{(w_h,\{(\ell,\mat{m},\mat{P})\})\}$; snapshot $\mat{X}_n$; motion $(\mat{F},\mat{Q})$ (CV or CA)
+\STATE feed confirmed tracks' predictions $\mat{H}\mat{F}\mat{m}$ to the front-end; \ $\mathcal{Z}_n \leftarrow \mathrm{front\text{-}end}(\mat{X}_n)$ (gated, Alg.~\ref{alg:gate})
+\FOR{each parent hypothesis $h$ (top $H_p$ by weight)}
+    \STATE predict survivors $\mat{m}\!\leftarrow\!\mat{F}\mat{m}$, $\mat{P}\!\leftarrow\!\mat{F}\mat{P}\mat{F}^T\!+\!\mat{Q}$; add one birth per $z_j$
+    \STATE costs: detect $\propto p_S p_D\,\mathcal{N}(z_j;\mat{H}\mat{m},S)/\kappa$, miss $\propto p_S(1{-}p_D)$, death $\propto 1{-}p_S$
+    \STATE Gibbs-sample joint assignments $\gamma$ ($z_j$ exclusive); each spawns a child, $w\!\leftarrow\! w_h\!\prod_i \mathrm{cost}_i(\gamma_i)$
+\ENDFOR
+\STATE merge children by label set, normalize, prune to top $H$
+\STATE update confirmation scores (hit $+1$/miss $-1$, hysteresis)
+\RETURN cardinality-MAP hypothesis (confirmed labeled tracks)
+\end{algorithmic}
+\end{algorithm}
+
+\subsection{Lightweight Alternative: Track-Oriented PHD}
+
+For compute-constrained deployment the back-end can instead be a \emph{track-oriented PHD} (TO-PHD): a Gaussian-mixture PHD with a predict--identify--update pipeline that avoids hypothesis sampling. Whereas the standard GM-PHD updates every predicted component with every measurement---coalescing distinct targets into a single track at crossings---the TO-PHD first identifies which measurement belongs to which track via a \textbf{Hungarian assignment}~\cite{kuhn1955hungarian} on the cost matrix
+\begin{equation}
+C_{jm} = |\hat{\theta}_j^{\mathrm{pred}} - z_m|, \quad
+\hat{\theta}_j^{\mathrm{pred}} = [\mat{F}\,\mat{m}_j]_1
+\label{eq:hungarian_cost}
+\end{equation}
+($[\cdot]_1$ the DOA component), then corrects each confirmed track by a standard Kalman update using \emph{only} its matched measurement. This is not the exact GM-PHD first-moment update (which sums each component over all measurements~\cite{vo2006gmphd}) but a track-oriented, marginal-association approximation---the PHD analogue of track-oriented MHT and global-nearest-neighbour association~\cite{barshalom2011tracking}---trading the exact recursion for explicit track identity, essential at crossings. We reserve ``GM-PHD'' for the standard recursion used as a baseline; birth and tentative components keep the standard multi-measurement update, so the filter reduces to GM-PHD when the gate is fully opened. Two choices matter at crossings: components merge only when their position \emph{and} velocity discrepancies \emph{separately} fall within gates (a full-state Mahalanobis distance would double-count the velocity already in $\mat{m}=[\theta,\dot\theta]^T$ and force coalescence), and unassociated measurements are born with weight proportional to the front-end pseudo-spectrum height,
+\begin{equation}
+w_b = w_0 \cdot \frac{P(z_b)}{\max_\theta P(\theta)},
+\label{eq:birth_weight}
+\end{equation}
+so strong spectral peaks confirm faster.
+
+\section{Cram\'{e}r--Rao Lower Bound}
+\label{sec:crlb}
+
+\subsection{Standard (Covariance-Based) CRLB}
+
+Under the stochastic signal model~\cite{stoica1989music}, the Fisher Information Matrix (FIM) for DOA estimation from the covariance matrix is
+\begin{equation}
+\mat{F}_{\mathrm{std}} = 2T\,\Real\!\left\{(\mat{D}^H\mat{P}_{\mat{A}}^\perp\mat{D}) \odot (\mat{R}_s\mat{A}^H\mat{R}^{-1}\mat{A}\mat{R}_s)^T\right\}
+\label{eq:fim_std}
+\end{equation}
+where $\mat{D} = [\frac{\partial\mat{a}}{\partial\theta_1}, \ldots, \frac{\partial\mat{a}}{\partial\theta_K}]$ is the steering derivative matrix, $\mat{P}_{\mat{A}}^\perp = \mat{I} - \mat{A}(\mat{A}^H\mat{A})^{-1}\mat{A}^H$ is the noise subspace projector, $\mat{R}_s$ is the source covariance, $\mat{R} = \mat{A}\mat{R}_s\mat{A}^H + \sigma^2\mat{I}$ is the data covariance, and $\odot$ denotes Hadamard product. The CRLB for the $k$th DOA is $\mathrm{CRB}(\theta_k) = [\mat{F}_{\mathrm{std}}^{-1}]_{kk}$.
+
+\subsection{Higher-Order (Cumulant) CRLB}
+
+For DOA estimation from the $2\rho$th-order cumulant matrix, the FIM uses the virtual array manifold:
+\begin{multline}
+\mat{F}_{\mathrm{COP}} = 2T_{\mathrm{eff}}\,\Real\!\big\{(\mat{D}_v^H\mat{P}_{\mat{A}_v}^\perp\mat{D}_v) \\
+\odot\, (\mat{R}_s^{(v)}\mat{A}_v^H\mat{R}_c^{-1}\mat{A}_v\mat{R}_s^{(v)})^T\big\}
+\label{eq:fim_cop}
+\end{multline}
+where $\mat{A}_v$ and $\mat{D}_v$ are the virtual steering and derivative matrices of size $M_v \times K$, $\mat{R}_s^{(v)} = \diag(p_s^\rho, \ldots, p_s^\rho)$ reflects the $\rho$th-power signal cumulant, and $\mat{R}_c = \mat{A}_v\mat{R}_s^{(v)}\mat{A}_v^H + \sigma_c^2\mat{I}_{M_v}$ is the cumulant-domain data ``covariance'' with effective noise $\sigma_c^2 \approx C_\rho / T$ (where $C_\rho$ is the cumulant estimation variance factor; $C_2 = 6$ for fourth-order). We stress that~\eqref{eq:fim_cop} is an \emph{approximate} (white-surrogate) bound: the covariance of the estimated cumulants is in general non-white, $\mathrm{Cov}(\mathrm{vec}\,\hat{\mat{C}}_{2\rho})=\mat{\Sigma}_c\neq\sigma_c^2\mat{I}$, depending on moments up to order $4\rho$~\cite{mendel1991tutorial,dogan1995cumulant}; setting $\mat{\Sigma}_c=\sigma_c^2\mat{I}$ gives~\eqref{eq:fim_cop} as a first-order surrogate, not an exact bound. The exact static bound uses the Slepian--Bangs form with the full $\mat{\Sigma}_c$, and the bound relevant to the \emph{closed-loop} tracker is the posterior CRB of Theorem~1 (Section~\ref{sec:theory}).
+
+The COP CRLB is lower than the standard CRLB due to two factors:
+\begin{enumerate}
+\item \textbf{Extended aperture}: $M_v > M$ provides more virtual elements, sharpening the effective beamwidth.
+\item \textbf{Gaussian noise elimination}: The effective ``SNR'' in the cumulant domain scales as $p_s^\rho / \sigma_c^2 \propto \mathrm{SNR}^\rho \cdot T$, providing faster improvement with SNR.
+\end{enumerate}
+
+\section{Theoretical Analysis}
+\label{sec:theory}
+
+The closed-loop architecture rests on two theoretical pillars: a posterior Cram\'{e}r--Rao bound for the \emph{coupled} estimator--tracker (Theorem~1) and a minimum-variance guarantee for the T-COP subspace refinement (Theorem~2). Each \emph{builds on} classical machinery---the Tichavsk\'{y}--Muravchik--Nehorai posterior-CRB recursion and best-linear-unbiased estimation, respectively---but the contribution is precisely what that machinery \emph{cannot express in isolation}: Theorem~1 establishes an \emph{identifiability phase transition} (the bound diverges open-loop yet stays finite closed-loop) specific to the underdetermined cumulant regime, and Theorem~2 a \emph{gauge-invariant} minimum-variance subspace fusion equipped with an explicit, gate-enforceable benefit condition. Jointly they characterize \emph{when and why} closing the loop helps---a guarantee that neither a static CRB nor a heuristic closed loop can provide. A supporting result (Proposition~1) justifies the velocity-gated association at crossings.
+
+\subsection{Closed-Loop Posterior CRB}
+\label{sec:pcrb}
+
+Let the per-target state $\mat{x}_k = [\theta_k, \dot{\theta}_k]^T$ evolve under the linear-Gaussian model~\eqref{eq:motion_model}, and let the scan-$k$ measurement be the estimated cumulant vector $\hat{\mat{c}}_k = \mathrm{vec}(\hat{\mat{C}}_{2\rho}^{(k)})$ with mean $\mat{c}_k(\vect{\theta}_k) = (\mat{A}_v^* \otimes \mat{A}_v)\vect{\gamma}_s$ and covariance $\mat{\Sigma}_c$. The cumulant-domain measurement information about $\vect{\theta}_k$ is the Slepian--Bangs matrix
+\begin{equation}
+[\mat{J}_k^Z]_{ij} = 2\,\Real\!\Big[\tfrac{\partial \mat{c}_k^H}{\partial\theta_i}\,\mat{\Sigma}_c^{-1}\,\tfrac{\partial \mat{c}_k}{\partial\theta_j}\Big],
+\label{eq:meas_fim}
+\end{equation}
+which reduces to~\eqref{eq:fim_cop} only in the white surrogate $\mat{\Sigma}_c = \sigma_c^2\mat{I}$.
+
+\textbf{Theorem 1 (Closed-loop posterior CRB).}
+\emph{For the coupled system~\eqref{eq:motion_model},~\eqref{eq:meas_fim}, the posterior information matrix obeys the Tichavsk\'{y}--Muravchik--Nehorai recursion}~\cite{tichavsky1998posterior}
+\begin{equation}
+\mat{J}_k = \underbrace{\big(\mat{F}\mat{J}_{k-1}^{-1}\mat{F}^T + \mat{Q}\big)^{-1}}_{\mat{J}_{k|k-1}\ (\mathrm{prior})} + \ \bar{\mat{J}}_k^{Z}, \qquad \bar{\mat{J}}_k^{Z} = \E[\mat{J}_k^Z],
+\label{eq:pcrb}
+\end{equation}
+\emph{and the closed-loop bound $\mathrm{PCRB}_k = \mat{J}_k^{-1}$ dominates the open-loop (per-scan, data-only) bound in the L\"owner order,}
+\begin{equation}
+\mat{J}_k^{-1} = (\mat{J}_{k|k-1} + \bar{\mat{J}}_k^{Z})^{-1} \preceq (\bar{\mat{J}}_k^{Z})^{-1},
+\label{eq:pcrb_dom}
+\end{equation}
+\emph{strictly whenever $\mat{J}_{k|k-1} \succ 0$. Moreover, in the underdetermined regime where the data-only information becomes rank-deficient ($\lambda_{\min}(\bar{\mat{J}}_k^Z) \to 0$), the open-loop bound diverges while the closed-loop bound stays finite, $\lambda_{\max}(\mathrm{PCRB}_k) \le 1/\lambda_{\min}(\mat{J}_{k|k-1})$.}
+
+\textbf{Proof sketch.}
+Information additivity~\eqref{eq:pcrb} is the linear-Gaussian specialization of the recursion in~\cite{tichavsky1998posterior}. Since $\mat{J}_{k|k-1} \succeq 0$, we have $\mat{J}_{k|k-1} + \bar{\mat{J}}_k^Z \succeq \bar{\mat{J}}_k^Z$, and matrix inversion reverses the order, giving~\eqref{eq:pcrb_dom}; when $\bar{\mat{J}}_k^Z$ is singular the right-hand side is unbounded while the left remains bounded by the prior information. \hfill$\square$
+
+To our knowledge,~\eqref{eq:pcrb} is the first CRB for the complete closed-loop higher-order-cumulant/RFS tracker. It makes precise \emph{why} the temporal prior restores identifiability beyond the static virtual-array limit, and is validated against Monte-Carlo simulation in Section~\ref{sec:experiments}. As a corollary, $K$ sources with $\rho(M{-}1) < K$ remain trackable provided $\mat{J}_{k|k-1} \succ 0$ on the data-unresolved subspace---the regime exploited by SD-COP (Section~\ref{sec:sdcop}). The recursion~\eqref{eq:pcrb} applies verbatim to a covariance front-end (MUSIC) upon replacing the cumulant measurement information $\mat{J}_k^Z$~\eqref{eq:meas_fim} with its covariance-domain counterpart; in the determined regime both front-ends give finite bounds and the lower-variance second-order statistics dominate, consistent with the experiments of Section~\ref{sec:experiments}.
+
+\subsection{Optimality of T-COP Subspace Refinement}
+\label{sec:tcop_theory}
+
+\textbf{Theorem 2 (T-COP refinement dominance).}
+\emph{Let the data and Procrustes-aligned prior subspace estimates have unbiased tangent-space errors with covariances $\mat{\Sigma}_{\mathrm{est}} \succ 0$ and $\mat{\Sigma}_{\mathrm{pri}} \succ 0$. Then the refined estimate~\eqref{eq:tcop_prior} is the best linear unbiased estimate on the Grassmann tangent space and satisfies}
+\begin{equation}
+\mathrm{Cov}(\hat{\mat{H}}) = \big(\mat{\Sigma}_{\mathrm{est}}^{-1} + \mat{\Sigma}_{\mathrm{pri}}^{-1}\big)^{-1} \preceq \mat{\Sigma}_{\mathrm{est}},
+\label{eq:tcopB}
+\end{equation}
+\emph{with strict improvement whenever $\mat{\Sigma}_{\mathrm{pri}}^{-1} \neq 0$; equivalently $\E\|\mat{P}_s^{\mathrm{refined}} - \mat{P}_0\|_F^2 \le \E\|\mat{U}_s\mat{U}_s^H - \mat{P}_0\|_F^2$, with isotropic improvement factor $1/(1+\kappa)$, $\kappa = \sigma_e^2/\sigma_p^2$. If the prior is biased by $\mat{b}$, the refinement still reduces MSE if and only if}
+\begin{equation}
+\|\mat{b}\|^2 < D\,(\sigma_e^2 + \sigma_p^2), \qquad D = K(M_v - K).
+\label{eq:tcop_bias}
+\end{equation}
+
+\textbf{Proof sketch.}
+On the tangent space at the true subspace, both inputs are linear-Gaussian observations of the same point; \eqref{eq:tcop_prior} is their BLUE, whose covariance is the parallel sum~\eqref{eq:tcopB}, dominated by $\mat{\Sigma}_{\mathrm{est}}$ because $\mat{\Sigma}_{\mathrm{pri}}^{-1} \succeq 0$. The chordal identity $\|\mat{P} - \mat{P}_0\|_F^2 = 2\|\mat{H}\|_F^2$ converts the covariance bound to subspace MSE; the biased case adds $\|(\mat{\Sigma}_{\mathrm{est}}^{-1} + \mat{\Sigma}_{\mathrm{pri}}^{-1})^{-1}\mat{\Sigma}_{\mathrm{pri}}^{-1}\mat{b}\|^2$, yielding~\eqref{eq:tcop_bias}. \hfill$\square$
+
+Condition~\eqref{eq:tcop_bias} is exactly what the velocity-gated validation of Section~\ref{sec:tracking} enforces: predicted priors whose discrepancy exceeds the gate are rejected, so the refinement is guaranteed beneficial in operation. Together, Theorems~1--2 give a \emph{closed-loop guarantee}---the prior supplies information the data alone lacks (Theorem~1) and the refinement injects it without inflating variance (Theorem~2)---so the per-scan estimation error contracts monotonically toward the posterior-CRB floor~\eqref{eq:pcrb}. This replaces a heuristic geometric-rate argument with a bound grounded in the estimator covariance.
+
+\subsection{Crossing Identity Preservation}
+\label{sec:tipp}
+
+\textbf{Proposition 1 (Identity preservation at a crossing).}
+\emph{Consider two targets momentarily sharing a DOA, with velocity difference $\Delta v = |\dot{\theta}_i - \dot{\theta}_j|$ and combined prediction-plus-measurement standard deviation $\sigma_p$. Conditioned on both targets being detected and on clutter-free association, the probability that the Hungarian assignment~\eqref{eq:hungarian_cost} preserves track identity across the crossing is}
+\begin{equation}
+P_{\mathrm{TIPP}} = \big[\,1 - Q\!\left(\tfrac{\Delta v\,\Delta t}{\sqrt{2}\,\sigma_p}\right)\big]\,p_D^2\,(1 - p_{\mathrm{fa}}),
+\label{eq:tipp}
+\end{equation}
+\emph{where $Q(\cdot)$ is the Gaussian Q-function, $\Delta t$ the inter-scan interval, $p_D$ the detection probability, and $p_{\mathrm{fa}}$ the per-gate false-association probability.}
+
+\textbf{Proof sketch.}
+The inertia-predicted positions separate by $\Delta v\,\Delta t$ while the difference of assignment costs is $\mathcal{N}(0, 2\sigma_p^2)$, so the ordering is preserved with probability $1 - Q(\Delta v\,\Delta t/\sqrt{2}\sigma_p)$. The factor $p_D^2(1 - p_{\mathrm{fa}})$ accounts for both targets being detected and neither track being mis-associated to a clutter measurement; setting $p_D = 1$, $p_{\mathrm{fa}} = 0$ recovers the idealized (clutter-free, full-detection) bound. \hfill$\square$
+
+The front-end-spectrum birth weight~\eqref{eq:birth_weight} is used as an empirical detection score---stronger spectral peaks initialize tracks with higher weight---and is validated experimentally in Section~\ref{sec:experiments}; we do not claim formal Neyman--Pearson optimality for it.
+
+\section{Experimental Results}
+\label{sec:experiments}
+
+Unless noted, we use a ULA with $M=8$ sensors, $d=\lambda/2$, cumulant order
+$\rho=2$, a $0.1^\circ$ scan grid, and a track-oriented PHD back-end with the
+parameters of Section~\ref{sec:tracking}. All metrics are reported with $95\%$
+confidence intervals (CIs) over independent Monte-Carlo trials ($500$ for the
+headline underdetermined-detection experiment, $20$--$60$ for the ablation and
+sweep studies, as noted in each caption). We report detection rate $P_d$ (within $3^\circ$), the GOSPA
+metric~\cite{rahmathullah2017gospa} ($c=10^\circ$, $p=2$) with its
+localization/missed/false decomposition, the \emph{matched-pair} localization
+RMSE (over GOSPA assignments within the cutoff, which---unlike a naive RMSE that
+charges a $90^\circ$ penalty per miss---is a stable localization measure), and
+the number of label switches.
+
+\subsection{Underdetermined Detection Capability}
+\label{sec:exp_underdet}
+
+We first isolate the front-end. Fig.~\ref{fig:spectrum} shows that for $K=10$
+sources with $M=8$ ($K>M-1=7$), the COP-4th pseudo-spectrum~\eqref{eq:cop_spectrum}
+resolves all sources while MUSIC and Capon fail. On the full pipeline ($K=10$
+moving targets, $30$ scans, SNR$=15$~dB), Table~\ref{tab:underdet} shows that
+\emph{COP-RFS detects significantly more targets than the MUSIC--PHD cascade}
+(a MUSIC front-end driving the same TO-PHD back-end, so the comparison isolates
+the front-end), $P_d=60.3\%\pm0.2$ vs.\ $51.9\%\pm0.1$ (non-overlapping CIs). MUSIC is structurally
+capped: running at most $\min(K,M{-}1)=7$ sources (an $M$-element array spans only
+$M$ eigenvectors, so requesting $K>M{-}1$ DOAs leaves no noise subspace and is
+ill-posed---$M{-}1$ is the maximal well-defined model order), its detection cannot
+exceed $(M{-}1)/K=70\%$, and for $K>M{-}1$ the unmodeled excess sources contaminate the
+$M\times M$ subspaces, biasing several peaks beyond the $3^\circ$ gate so that it
+reaches only $52\%$. COP removes this cap through the size-$M_v{=}15$ virtual
+aperture (up to $14$ DOF); its $60\%$ is limited only by finite-snapshot
+fourth-order variance and approaches $100\%$ as SNR and $T$ grow. Localization is
+comparable ($3.0^\circ$ vs.\ $2.6^\circ$) and the overall GOSPA close---honestly,
+COP's gain is in \emph{detection}, not localization---making this the one regime
+where the higher-order front-end is decisively advantageous.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.8\linewidth]{figures/fig0_spatial_spectrum.png}
+\caption{Spatial spectrum for $K=10$ sources, $M=8$ ($K>M{-}1=7$): COP-4th
+resolves all sources via the virtual aperture, while MUSIC and Capon fail.
+(Top) pseudo-spectra; (bottom) COP peak detection.}
+\label{fig:spectrum}
+\end{figure}
+
+\begin{table}[t]
+\centering
+\caption{Underdetermined end-to-end ($K{=}10>M{-}1{=}7$, $500$ trials).}
+\label{tab:underdet}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Pipeline & $P_d$ (\%) & locRMSE ($^\circ$) & GOSPA ($^\circ$) & Switches \\
+\midrule
+COP-RFS   & $\mathbf{60.3\pm0.2}$ & $3.00\pm0.02$ & $16.69\pm0.04$ & $187\pm3$ \\
+MUSIC-PHD & $51.9\pm0.1$ & $\mathbf{2.61\pm0.01}$ & $\mathbf{15.39\pm0.01}$ & $\mathbf{66\pm2}$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\textbf{Robustness across source count and signal type.} The advantage is tied
+neither to a particular $K$ nor to a particular signal model.
+Fig.~\ref{fig:robustness}(top) sweeps the end-to-end pipeline over
+$K\in\{2,\dots,12\}$ (SNR $12$~dB): for $K\le M{-}1$ all methods detect every
+source, but past $K{=}7$ MUSIC collapses toward its $(M{-}1)/K$ cap while
+COP---and, most strongly, the proposed gated loop---degrade gracefully up to COP's
+virtual-array limit $\rho(M{-}1)=14$ (at $K{=}10$, $P_d=97.8\%$ gated, $79.0\%$
+open COP, $25.5\%$ MUSIC---the lower MUSIC value than Table~\ref{tab:underdet}
+reflecting this sweep's harsher $12$~dB, stationary setting). This sharp transition at $M{-}1$ is the structural
+signature of the extended aperture, not parameter tuning. Fig.~\ref{fig:robustness}(bottom) fixes $K=10>M{-}1$ and
+sweeps the source \emph{signal type}: the higher-order front-end sustains detection
+across structured non-Gaussian radar and communication waveforms (FM $78\%$, LFM
+chirp $78\%$, AM $68\%$, PSK $61\%$) and---exactly as the cumulant theory
+predicts---degrades for purely \emph{Gaussian} sources ($31\%$, whose fourth-order
+cumulant vanishes) and for severely amplitude-fluctuating Swerling returns
+($31\%$), while always exceeding the second-order MUSIC, which cannot surpass its
+$M{-}1$ ceiling underdetermined. The HOS front-end is thus broadly applicable to
+non-Gaussian sources, its Gaussian-source limit an explicit and expected boundary.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_k_sweep.png}\\[3pt]
+\includegraphics[width=\linewidth]{figures/fig_sigtype.png}
+\caption{Robustness sweeps ($20$ trials, $95\%$ CIs). \emph{Top:} end-to-end
+detection $P_d$ vs.\ source count $K$ ($M=8$, near-stationary)---MUSIC
+collapses past $M{-}1{=}7$ while COP and the proposed gated loop degrade
+gracefully. \emph{Bottom:} $P_d$ vs.\ source signal type at $K=10>M{-}1$---the
+higher-order front-end holds for structured non-Gaussian radar/comm waveforms and
+degrades, as predicted, for purely Gaussian sources (vanishing $4$th cumulant) and
+severely fluctuating Swerling returns.}
+\label{fig:robustness}
+\end{figure}
+
+\subsection{The Closed Loop is Front-End-Agnostic}
+\label{sec:exp_loop}
+
+We next isolate the closed loop via a $2\times2$ (front-end $\times$ loop) study
+in the regime where Theorem~2's prior-accuracy condition holds: low SNR ($5$~dB),
+slowly varying targets ($K=6$). Table~\ref{tab:loop2x2}
+shows the tracker-aided refinement \emph{lowers the localization error of both
+front-ends}---COP $0.71^\circ\!\to\!0.31^\circ$ ($-56\%$), MUSIC
+$0.09^\circ\!\to\!0.05^\circ$ ($-44\%$)---confirming the closed loop as a
+front-end-agnostic principle, exactly as Theorem~2 predicts, not a COP-specific
+trick. The larger COP gain pays down precisely the fourth-order variance penalty
+of the higher-order front-end (\S\ref{sec:signal_model}), realizing HOS's extended
+aperture and Gaussian-noise immunity at a variance approaching second-order
+MUSIC's---the synergy of HOS made practical \emph{within} a closed loop that is the
+paper's central message. (In this determined regime the lower-variance MUSIC is the
+more accurate front-end, consistent with \S\ref{sec:exp_underdet}.)
+
+\begin{table}[t]
+\centering
+\caption{$2\times2$ front-end $\times$ loop (stationary, SNR$=5$~dB, $K=6$).}
+\label{tab:loop2x2}
+\small
+\begin{tabular}{@{}lcc@{}}
+\toprule
+Front-end & open-loop locRMSE & closed-loop locRMSE \\
+\midrule
+COP   & $0.71\pm0.02$ & $\mathbf{0.31\pm0.01}$ \\
+MUSIC & $0.09\pm0.00$ & $\mathbf{0.05\pm0.00}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+This gain persists across the determined regime. Fig.~\ref{fig:snrdet} sweeps SNR
+at $K=6$: the closed loop halves COP's localization error at \emph{every} SNR,
+while MUSIC's gain is large at low SNR and vanishes as SNR grows---precisely
+Theorem~2's $1/(1{+}\kappa)$ behaviour, since the prior helps most when the data
+subspace is noisy ($\kappa$ large). COP benefits more at all SNR because its
+fourth-order variance keeps $\kappa$ large. Hence the closed loop helps \emph{even
+where MUSIC is applicable}, and the \emph{deployed} gated variant (GCL) matches the
+full loop throughout (its velocity gate engages for these slow targets), so the
+practical system attains the gain. MUSIC is therefore a first-class front-end of
+the proposed gated loop---indeed the \emph{preferred} one in the determined regime,
+where its lower variance makes it more accurate than COP---so the recommended
+system selects the front-end by regime (COP when $K>M{-}1$, MUSIC otherwise) within
+the same closed loop.
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_snr_determined.png}
+\caption{Determined regime ($K=6<M{-}1$): localization RMSE vs.\ SNR for COP and
+MUSIC (open- and closed-loop) plus the deployed gated closed loop (GCL), which overlaps
+the full closed loop ($30$ trials, $95\%$ CIs). The closed loop helps both
+front-ends---most at low SNR---and helps COP at every SNR because its higher-order
+variance keeps the prior informative.}
+\label{fig:snrdet}
+\end{figure}
+
+\subsection{The Gate: No-Harm and Identity Under Motion}
+\label{sec:exp_gate}
+
+The temporal accumulation that drives the closed-loop gain is valid only for
+slowly varying targets: for fast targets it smears the moving sources and the
+accumulating loop \emph{collapses} (on a $K=4$, $2.5^\circ$/scan crossing the full
+closed loop drops $P_d$ from $80.4\%$ to $14.6\%$; $60.3\%\!\to\!44.6\%$
+underdetermined, and MUSIC's loop degrades identically). The gate of
+Algorithm~\ref{alg:gate} prevents this: under motion it disables accumulation and
+feeds back the constant-velocity \emph{prediction} $\theta+\dot{\theta}\,\Delta t$
+(so Theorem~2's bias $\|\mat{b}\|$ is governed by the prediction error, not the
+displacement), making the refinement \emph{safe at arbitrary speed}---on the same
+crossing it matches open-loop COP across SNR$\,\in\{0,5,15\}$~dB
+($P_d=77.9$--$79.4\%$ vs.\ $78.3$--$80.4\%$, no collapse). The deployed system thus
+accumulates for slow targets (the gain of \S\ref{sec:exp_loop}) and falls back
+otherwise, improving estimation when the prior is informative and never degrading
+it.
+
+Beyond doing no harm, the motion-compensated loop yields a genuine \emph{identity}
+benefit for moving targets: on the underdetermined moving scenario ($K=10$), at
+matched detection ($P_d\approx52\%$) and localization, the prediction-aligned
+estimates stabilize data association through crossings, reducing label switches
+from $214\pm9$ to $181\pm10$ ($-15\%$, non-overlapping CIs). For moving targets the
+closed loop's value is thus \emph{track continuity}, not per-scan localization
+(which the tracker's own filtering already optimizes)---complementing its detection
+gain when underdetermined and its estimation gain at low SNR.
+
+Table~\ref{tab:cl_efficacy} consolidates these results into a single statement of
+the closed loop's efficacy. The temporal feedback delivers a \emph{concrete,
+quantified gain in every regime where the prior is informative}: it restores
+identifiability where the open-loop bound diverges (Theorem~1), \emph{halves}
+COP's low-SNR localization error ($-56\%$), and \emph{cuts moving-target identity
+switches by $15\%$}---while the validation gate (Theorem~2) and the
+motion-compensated prior guarantee it \emph{never degrades} the open-loop baseline
+where the prior is not. This asymmetry---real gains when the prior helps, provable
+no-harm when it does not---is the practical case for closing the loop.
+
+\begin{table}[t]
+\centering
+\caption{Operating guide: the best front-end and the closed loop's (gated) effect
+by regime, consolidating the efficacy and regime summaries. Quantified gains carry
+$95\%$ CIs and are substantiated in the cited theorem/section; the gate guarantees
+no degradation where the prior is uninformative.}
+\label{tab:cl_efficacy}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lll@{}}
+\toprule
+Regime & Best front-end & Closed-loop (gated) effect \\
+\midrule
+Underdet.\ $K{>}M{-}1$ & COP (higher-order) & identifiability: PCRB diverges$\,\to\,$\textbf{finite} (Thm~1) \\
+Determined $K{\le}M{-}1$ & MUSIC (2nd-order) & helps if prior accurate \\
+Low SNR, slow & either & strong: locRMSE $\mathbf{-56\%}$ COP, $\mathbf{-44\%}$ MUSIC \\
+Moving, $K{=}10$ & COP & track continuity: switches $\mathbf{-15\%}$ \\
+Fast motion & open-loop (gated off) & \textbf{no harm} vs.\ baseline \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{The Tracking Back-End Is Interchangeable (Back-End-Agnostic)}
+\label{sec:exp_cross}
+
+We evaluate the tracking back-end on the COP front-end ($K=4$ crossing targets,
+$30$ scans, $40$ trials), comparing our track-oriented TO-PHD against the standard
+GM-PHD~\cite{vo2006gmphd}, the labeled multi-Bernoulli (LMB)
+filter~\cite{vo2014lmb}, and the full $\delta$-GLMB filter~\cite{vo2013glmb}
+(efficient Gibbs truncation of~\cite{vo2017efficient})---the SOTA labeled-RFS
+trackers. Table~\ref{tab:ablation} shows all three
+\emph{labeled} filters cut identity switches by an order of magnitude over the
+unlabeled GM-PHD ($17$--$37$ vs.\ $385$, which coalesces tracks at crossings) at
+comparable detection ($80$--$82\%$): the full $\delta$-GLMB attains the cleanest
+identity ($17\pm2$ switches) and sharpest localization ($0.91^\circ$), LMB the best
+aggregate GOSPA, and TO-PHD a competitive lightweight alternative. The framework is
+thus \emph{back-end-agnostic}---the closed-loop front-end drives any RFS tracker,
+trading computation for identity accuracy. (This determined crossing stresses
+identity; COP's front-end advantage lies in the underdetermined regime of
+\S\ref{sec:exp_underdet}.)
+
+\begin{table}[t]
+\centering
+\caption{Tracking back-end ablation on the COP front-end ($K{=}4$ crossing, $40$ trials, $95\%$ CIs). All three labeled filters cut switches by an order of magnitude ($10$--$23\times$) vs.\ GM-PHD; $\delta$-GLMB gives the cleanest identity and sharpest localization, LMB the best aggregate GOSPA.}
+\label{tab:ablation}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Back-end & $P_d$ (\%) & locRMSE ($^\circ$) & GOSPA ($^\circ$) & Switches \\
+\midrule
+Standard GM-PHD~\cite{vo2006gmphd} & $82.3\pm0.7$ & $1.35\pm0.08$ & $6.12\pm0.14$ & $385\pm8$ \\
+TO-PHD (ours)                      & $80.4\pm0.6$ & $1.03\pm0.09$ & $5.42\pm0.21$ & $37\pm6$ \\
+LMB~\cite{vo2014lmb}               & $81.6\pm0.8$ & $0.96\pm0.07$ & $\mathbf{5.22\pm0.17}$ & $24\pm3$ \\
+$\delta$-GLMB~\cite{vo2013glmb,vo2017efficient} & $80.6\pm0.8$ & $\mathbf{0.91\pm0.07}$ & $5.35\pm0.17$ & $\mathbf{17\pm2}$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Physics-Based CA Motion Improves Every Back-End}
+\label{sec:exp_ca}
+Back-end agnosticism also exposes the \emph{motion model} as a design choice. For
+\emph{maneuvering} targets (angular tracks with non-zero curvature, typical of
+ballistic threats off-boresight), a physics-based constant-acceleration (CA) model
+decisively beats the constant-velocity (CV) default. On a $K=4$ sinusoidal-maneuver
+scenario (SNR $6$~dB, Table~\ref{tab:maneuver}), CA cuts localization error by
+$45$--$53\%$ for \emph{all three} back-ends---TO-PHD $1.41^\circ\!\to\!0.66^\circ$,
+LMB $1.36^\circ\!\to\!0.66^\circ$, $\delta$-GLMB $1.21^\circ\!\to\!0.67^\circ$---all
+converging to ${\approx}0.66^\circ$ as the matched motion model becomes the dominant
+factor. For the labeled-RFS trackers CA additionally collapses identity switches
+(LMB $3.9\!\to\!1.2$, $\delta$-GLMB $13.1\!\to\!1.8$), while the unlabeled TO-PHD's
+switches are statistically unchanged; tellingly, \emph{CV} $\delta$-GLMB trails even
+the CV TO-PHD, its joint association misled by lagging predictions. The physics
+benefit is thus genuinely \emph{back-end-agnostic}. Our recommended deployed
+configuration is therefore the \emph{gated closed-loop front-end driving a
+physics-based (CA) SOTA labeled-RFS back-end} (instantiated with $\delta$-GLMB):
+agnostic in both estimator and tracker, gated for safety, and matched to the
+target dynamics.
+
+\begin{table}[t]
+\centering
+\caption{Physics-based CA motion for \emph{maneuvering} targets ($K=4$ sinusoidal maneuver, SNR $6$~dB, $30$ trials, $95\%$ CIs). CA halves localization error for \emph{every} back-end (all $\to\!\approx\!0.66^\circ$); the labeled-RFS trackers (LMB, $\delta$-GLMB) additionally cut identity switches, while the unlabeled TO-PHD's switches are statistically unchanged.}
+\label{tab:maneuver}
+\small
+\resizebox{\columnwidth}{!}{%
+\begin{tabular}{@{}lcccc@{}}
+\toprule
+Back-end (motion) & $P_d$ (\%) & locRMSE ($^\circ$) & GOSPA ($^\circ$) & Switches \\
+\midrule
+TO-PHD (CV)        & $96.8\pm0.9$ & $1.41\pm0.03$ & $3.12\pm0.10$ & $6.7\pm2.9$ \\
+TO-PHD (CA)        & $98.4\pm0.6$ & $\mathbf{0.66\pm0.04}$ & $\mathbf{1.45\pm0.12}$ & $8.2\pm4.0$ \\
+LMB (CV)           & $95.1\pm1.0$ & $1.36\pm0.04$ & $3.07\pm0.14$ & $3.9\pm1.7$ \\
+LMB (CA)           & $98.0\pm1.0$ & $\mathbf{0.66\pm0.06}$ & $\mathbf{1.45\pm0.16}$ & $\mathbf{1.2\pm1.2}$ \\
+$\delta$-GLMB (CV) & $85.9\pm1.1$ & $1.21\pm0.07$ & $4.28\pm0.17$ & $13.1\pm2.1$ \\
+$\delta$-GLMB (CA) & $97.5\pm1.1$ & $\mathbf{0.67\pm0.06}$ & $\mathbf{1.62\pm0.23}$ & $\mathbf{1.8\pm1.0}$ \\
+\bottomrule
+\end{tabular}}
+\end{table}
+
+\subsection{Front-End Loop and SOTA Back-End Compose Under the Gate}
+\label{sec:exp_compose}
+Since the loop is front-end-agnostic (\S\ref{sec:exp_loop}) and the back-end
+interchangeable, we confirm the two combine without conflict
+(Table~\ref{tab:compose}). Composition is regime-dependent: in the low-SNR slow
+regime the loop sharpens $\delta$-GLMB's localization
+($0.68^\circ\!\to\!0.47^\circ$), but at a fast crossing an \emph{ungated} loop
+\emph{degrades} it ($1.55^\circ$ vs.\ $0.90^\circ$), as the prediction-guided
+front-end and the tracker's association amplify each other's errors. The gate
+(Algorithm~\ref{alg:gate}) resolves this---engaging only when the prior is
+reliable---so the gated system gains where the prior helps and falls back
+\emph{exactly} to open-loop under motion (last column), extending Theorem~2's
+no-harm guarantee from the front-end to the \emph{complete system}. The operating
+regimes are consolidated in Table~\ref{tab:cl_efficacy}.
+
+\begin{table}[t]
+\centering
+\caption{Gated closed-loop front-end $\times$ SOTA $\delta$-GLMB back-end ($30$ trials, $95\%$ CIs). ``Ungated'' is the best naive loop per regime (full accumulation when slow, motion-compensated when fast). The gate captures the localization gain where the prior is reliable and falls back exactly to open-loop under motion; the ungated loop---lowest error when stationary---is not deployable across regimes.}
+\label{tab:compose}
+\small
+\begin{tabular}{@{}llccc@{}}
+\toprule
+Regime & Metric & open & ungated & gated \\
+\midrule
+Stationary, $5$~dB & locRMSE ($^\circ$) & $0.68$ & $0.34$ & $\mathbf{0.47}$ \\
+Crossing, $15$~dB & locRMSE ($^\circ$) & $0.90$ & $1.55$ & $\mathbf{0.90}$ \\
+Crossing, $15$~dB & switches & $17.5$ & $27.8$ & $\mathbf{17.5}$ \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\subsection{Validation of the Theory}
+\label{sec:exp_theory}
+
+Fig.~\ref{fig:theory} validates both theorems. \textbf{(a)~Closed-loop posterior CRB (Theorem~1):} the open-loop (data-only) bound diverges as $K$ approaches the virtual-array limit $M_v{-}1$, whereas the closed-loop PCRB~\eqref{eq:pcrb} stays bounded by the prior information $1/\lambda_{\min}(\mat{J}_{k|k-1})$---confirming that the temporal prior restores identifiability---while the two coincide in the well-determined regime. \textbf{(b,c)~Minimum-variance refinement (Theorem~2):} the fused subspace MSE matches the predicted factor $1/(1{+}\kappa)$ for an unbiased prior~(b), and the biased-case break-even lands exactly at $\|\mat{b}\|^2=D(\sigma_e^2+\sigma_p^2)$~(c), where the validation gate keeps the fused MSE at or below the data-only MSE.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\linewidth]{figures/fig_theory_validation.png}
+\caption{Validation of the two central theorems. (a)~Theorem~1: the open-loop
+bound diverges at the virtual-array limit $K{=}M_v{-}1$ while the closed-loop PCRB
+stays finite, bounded by the prior information (near-parity when well-determined).
+(b)~Theorem~2, unbiased prior: the fused subspace MSE follows $1/(1+\kappa)$.
+(c)~Theorem~2, biased prior: the break-even is exactly
+$\|\mat{b}\|^2=D(\sigma_e^2+\sigma_p^2)$, where the gated estimator clamps to and
+never exceeds the data-only MSE.}
+\label{fig:theory}
+\end{figure*}
+
+\section{Conclusion}
+\label{sec:conclusion}
+
+This paper proposed a \emph{gated closed-loop subspace--RFS framework} (Fig.~\ref{fig:system}) that couples subspace DOA estimation with RFS-based multi-target tracking and, unlike prior open-loop cascades, makes the coupling itself the object of design and analysis. The central message is that the tracker's temporal prediction is information the open-loop pipeline discards, and that feeding it back is provably beneficial \emph{in a characterized regime} rather than uniformly. Concretely (Table~\ref{tab:cl_efficacy}), the closed loop restores identifiability where the data-only bound diverges (Theorem~1), halves COP's low-SNR localization error ($-56\%$), and cuts moving-target identity switches by $15\%$, while a validation gate and a motion-compensated prior guarantee it never degrades the open-loop baseline.
+
+The contributions are threefold. \emph{(i)}~A gated closed-loop architecture, established as both front-end- and back-end-agnostic by a CI-backed Monte-Carlo evaluation (up to $500$ trials) against MUSIC, closed-loop MUSIC, LMB, and $\delta$-GLMB baselines, with the gate guaranteeing exact open-loop fallback under motion. \emph{(ii)}~Underdetermined tracking capability: COP-RFS detects more targets than the MUSIC--PHD cascade when $K>M{-}1$, the labeled back-ends cut identity switches by an order of magnitude over the unlabeled GM-PHD, and physics-based CA motion sharpens every back-end under maneuver---with the operating regime (low SNR / slow motion for the estimation gain, $K>M{-}1$ for the detection gain) explicitly delineated rather than uniform superiority claimed; SD-COP extends operation toward the super-underdetermined regime. \emph{(iii)}~Supporting theory: a posterior CRB for the complete coupled estimator--tracker (Theorem~1) proves the temporal prior restores identifiability exactly where the data-only bound diverges, and the T-COP refinement is a basis-invariant, minimum-variance Grassmann fusion (Theorem~2) under an explicit prior-accuracy condition that the validation gate enforces.
+
+The recommended deployed system---a gated closed-loop front-end (higher-order COP when underdetermined, covariance MUSIC when determined) driving a physics-based, interchangeable SOTA back-end (here $\delta$-GLMB)---is thus agnostic in both the estimator and the tracker, with the loop gated for safety and the motion model matched to the target dynamics. The proposed framework is particularly relevant to defense, speech enhancement, and communications applications where multiple targets must be simultaneously detected and tracked using compact sensor arrays.
+
+Future directions include: (i)~extension to 2-D (azimuth--elevation) DOA with uniform rectangular arrays for full spatial tracking; (ii)~environment-adaptive motion models accounting for altitude-dependent atmospheric density and drag coefficients in defense scenarios; and (iii)~real-time embedded implementation with operational radar hardware.
+
+% Acknowledgment
+\section*{Acknowledgment}
+This work utilized Claude (Anthropic) as an AI assistant for code development, experimental automation, and manuscript preparation including \LaTeX{} formatting and text editing. All scientific content, theoretical derivations, algorithmic design, and experimental interpretation were solely conducted by the authors.
+
+% References
+\bibliographystyle{IEEEtran}
+\bibliography{closed_loop_subspace_rfs}
+
+\end{document}

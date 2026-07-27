@@ -1,0 +1,49 @@
+\documentclass[11pt]{letter}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\signature{Jin Ho Choi}
+\address{SmartEAR AI \\ Daegu, South Korea \\ jinhochoi@smartear.co.kr}
+\begin{document}
+\begin{letter}{Editor-in-Chief \\ IEEE Transactions on Aerospace and Electronic Systems}
+\opening{Dear Editor-in-Chief,}
+
+We submit our manuscript, ``A Closed-Loop Subspace--RFS Framework for
+Multi-Target DOA Tracking,'' for consideration as a regular paper in the IEEE
+Transactions on Aerospace and Electronic Systems.
+
+The paper addresses a core TAES problem---multi-target direction-of-arrival
+(DOA) tracking with compact sensor arrays---and its contributions sit squarely
+in the Transactions' scope of target tracking, random-finite-set (RFS)
+filtering, and radar systems:
+
+\begin{itemize}
+\item \textbf{A gated closed-loop architecture} that replaces the standard
+  open-loop estimator-to-tracker cascade: the RFS tracker's motion-compensated
+  prediction is fed back through a two-stage validation gate to refine the DOA
+  estimator's signal subspace. The gate guarantees exact fallback to the
+  open-loop estimate, so the deployed system never underperforms the cascade it
+  replaces; at low SNR it lowers localization error by up to $56\%$, and under
+  target motion it cuts track identity switches by $15\%$.
+\item \textbf{Underdetermined tracking capability}: with a higher-order-cumulant
+  front-end (COP), a compact $M{=}8$ array tracks $K{=}10>M{-}1$ targets,
+  detecting significantly more targets than a MUSIC--PHD cascade. The back-end
+  is interchangeable across track-oriented PHD, labeled multi-Bernoulli (LMB),
+  and $\delta$-GLMB filters, and a physics-based constant-acceleration motion
+  model makes the $\delta$-GLMB back-end best under maneuver.
+\item \textbf{Supporting guarantees}: a posterior Cram\'er--Rao bound for the
+  complete closed loop (identifiability is restored exactly where the data-only
+  bound diverges) and a minimum-variance subspace-fusion proof with a
+  gate-enforced benefit condition.
+\end{itemize}
+
+The evaluation is Monte-Carlo throughout (up to $500$ trials with $95\%$
+confidence intervals), against MUSIC, closed-loop MUSIC, LMB, and $\delta$-GLMB
+baselines, and we explicitly delineate the operating regime of each ingredient
+rather than claiming uniform superiority.
+
+This manuscript is original, has not been published, and is not under
+consideration by any other journal. Thank you for considering our work.
+
+\closing{Sincerely,}
+\end{letter}
+\end{document}

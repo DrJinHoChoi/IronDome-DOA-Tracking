@@ -1,0 +1,256 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath,amssymb}
+\usepackage{xcolor}
+\usepackage{enumitem}
+\usepackage{hyperref}
+\newcommand{\rc}[1]{\textit{\textcolor{blue}{#1}}}      % reviewer comment
+\newcommand{\reply}{\par\noindent\textbf{Response:}\ }
+\newcommand{\chg}[1]{\textcolor{red}{#1}}               % change pointer
+\title{Response to Reviewers\\\large Resubmission of T-SP-35123-2026}
+\date{}
+\begin{document}
+\maketitle
+
+We thank the Associate Editor and the three reviewers for their detailed and
+constructive evaluations. This is a substantially revised resubmission. In
+response to the central concern shared by all reviewers---that the original
+manuscript read as an \emph{integration} of existing methods---we have
+\textbf{reframed the paper around the closed-loop coupling itself as a
+front-end-agnostic principle}, and made the contributions \textbf{theoretical}:
+a posterior Cram\'er--Rao bound for the complete closed loop (Theorem~1) and a
+minimum-variance guarantee for the tracker-aided subspace refinement
+(Theorem~2). We have also \textbf{corrected every flagged derivation}, replaced
+the unsupported ``exact'' CRLB and the heuristic convergence bound, and
+\textbf{re-run all experiments with up to $500$ Monte-Carlo trials and $95\%$
+confidence intervals}, adding a closed-loop-MUSIC baseline, a
+$2\times2$ (front-end $\times$ loop) study, and a back-end ablation against the
+LMB and $\delta$-GLMB labeled-RFS filters. Crucially, we now \textbf{delineate
+the operating regime} in which the higher-order front-end helps rather than
+claiming uniform superiority. Concretely, the revised experiments
+\textbf{quantify the closed loop's efficacy} (consolidated in a new efficacy
+table): it restores identifiability where the data-only bound diverges
+(Theorem~1), lowers COP localization error by $56\%$ (MUSIC's by $44\%$) at low
+SNR, and reduces moving-target identity switches by $15\%$ at matched detection,
+while a validation gate and a motion-compensated prior guarantee it
+\emph{never degrades} the open-loop baseline.
+
+\paragraph{Summary of major changes.}
+\begin{enumerate}[leftmargin=*]
+\item \textbf{New title and framing}: ``A Closed-Loop Subspace--RFS Framework
+  for Multi-Target DOA Tracking.'' The closed-loop refinement is shown to be
+  front-end-agnostic and is instantiated with both COP (cumulant) and MUSIC
+  (covariance) front-ends.
+\item \textbf{Theorem~1 (closed-loop posterior CRB)} via the
+  Tichavsk\'y--Muravchik--Nehorai recursion: proves the temporal prior strictly
+  tightens the bound and restores identifiability where the data-only bound
+  diverges. Replaces the former ``exact'' static cumulant CRLB.
+\item \textbf{Theorem~2 (minimum-variance refinement)}: recasts T-COP refinement
+  as a basis-invariant inverse-variance fusion on the Grassmann manifold with an
+  explicit prior-accuracy condition, enforced by a validation gate.
+\item \textbf{Corrected derivations}: effective sample size (Kish), velocity
+  gating (no double counting), cumulant-model assumptions, and the cumulant-noise
+  covariance ($\mathbf\Sigma_c\neq\sigma_c^2\mathbf I$).
+\item \textbf{Honest re-evaluation}: Monte-Carlo (up to $500$ trials) with CIs; GOSPA
+  decomposition and matched-pair localization RMSE; MUSIC and closed-loop-MUSIC
+  baselines; explicit regime delineation.
+\item \textbf{Back-end renamed} to track-oriented PHD (TO-PHD) with an honest
+  statement of its relation to the exact GM-PHD recursion.
+\item \textbf{Back-end-agnostic with physics-based motion, plus robustness
+  sweeps}: the framework drives LMB and full $\delta$-GLMB back-ends, and a
+  physics-based constant-acceleration $\delta$-GLMB is best for maneuvering
+  targets (our recommended deployed configuration). New sweeps confirm the gains
+  hold across source count $K$ (the determined$\to$underdetermined transition at
+  $M{-}1$) and across non-Gaussian source signal types, with the expected
+  higher-order-statistics limit for purely Gaussian sources.
+\end{enumerate}
+
+\hrule
+\section*{Reviewer 1}
+
+\rc{R1.1 The theoretical concepts employed are all separately well-established;
+the manuscript does not clearly separate what is fundamentally new.}
+\reply We agree this was the core weakness. We have reframed the paper so the
+contribution is the \emph{closed-loop coupling}, now backed by two theorems
+(Sec.~VI) that did not exist in the prior version. We further show the closed loop
+is front-end-agnostic (it improves both COP and MUSIC), which establishes it as a
+general principle rather than a specific combination. Contributions are now
+stated as two theory results plus one practical capability. To preempt the
+concern that these reduce to known results, each theorem now \emph{explicitly
+demarcates} the classical machinery it builds on (the
+Tichavsk\'y--Muravchik--Nehorai posterior-CRB recursion; best-linear-unbiased
+estimation) from the new content it yields---an identifiability phase transition
+in the underdetermined cumulant regime (Theorem~1, where the data-only bound
+\emph{diverges} while the closed-loop bound stays finite) and a gauge-invariant,
+gate-enforceable minimum-variance subspace fusion (Theorem~2)---neither of which a
+static CRB or a heuristic closed loop can provide.
+
+\rc{R1.2 Several mechanisms (T-COP, SD-COP, COP-spectrum birth, velocity-gated
+merging) appear heuristic or only lightly justified; present derivations/proofs
+more completely.}
+\reply T-COP is now derived as the BLUE on the Grassmann tangent space with a
+proof of minimum variance and an explicit benefit condition (Theorem~2). The
+velocity-gated merge is corrected (Sec.~IV-D) and its role is tied to Theorem~2's
+gate. The COP-spectrum birth is \emph{downgraded to an empirical detection
+score}; we no longer claim Neyman--Pearson optimality. SD-COP is explicitly
+labeled a \emph{supporting} extension (Sec.~III-C).
+
+\rc{R1.3 The CRLB section does not develop a new CRLB for the complete
+closed-loop COP-RFS tracking framework.}
+\reply Addressed directly by Theorem~1, the posterior CRB for the coupled
+estimator--tracker, validated against Monte-Carlo simulation (Sec.~VII).
+
+\rc{R1.4 Compare different state-of-the-art tracking approaches.}
+\reply We added a \emph{closed-loop MUSIC} baseline, a $2\times2$ (front-end
+$\times$ loop) ablation, and a \emph{tracking back-end ablation against the
+labeled multi-Bernoulli (LMB) and full $\delta$-GLMB filters}---state-of-the-art
+identity-aware RFS trackers---in addition to MUSIC, Capon, ESPRIT, and the
+MUSIC--PHD cascade (Sec.~VII). All three labeled trackers (our TO-PHD, LMB, and
+$\delta$-GLMB) cut identity switches by an order of magnitude over the standard
+GM-PHD, with the full $\delta$-GLMB and LMB the most accurate, which both
+fairly benchmarks our back-end and shows the framework is back-end-agnostic.
+Sparse/SBL DOA methods are cited and discussed as related work.
+
+\rc{R1.5 The reference list is somewhat limited for a full TSP paper.}
+\reply We broadened the references---posterior CRB (Tichavsk\'y \emph{et al.},
+1998), SBL for DOA (Wipf--Rao 2004; Gerstoft \emph{et al.} 2016),
+labeled-RFS/$\delta$-GLMB (Vo--Vo 2013), and Grassmann geometry
+(Edelman \emph{et al.} 1998)---each with a DOI in the manuscript bibliography.
+
+\rc{R1.6 Significantly overlength; more suitable as a focused letter, or a good
+TSP paper with strengthened theory and novelty positioning.}
+\reply We chose the latter---a full-length TSP paper with strengthened theory. The paper
+is reorganized around the two theorems and the underdetermined capability;
+lightly-justified mechanisms and redundant experiments were compressed and the
+novelty positioning rewritten (Abstract, Sec.~I), while the two new theorems, the
+SOTA labeled-RFS ($\delta$-GLMB/LMB) baselines, and the expanded Monte-Carlo
+evaluation account for the length. The result is a focused $12$-page paper
+(two-column IEEE format), within the regular-paper length for the Transactions.
+
+\hrule
+\section*{Reviewer 2}
+
+\rc{R2.1 Novelty lies mainly at the level of algorithmic integration; isolate and
+validate the individual contributions of T-COP, SD-COP, the modified tracker, and
+the closed-loop architecture.}
+\reply The closed-loop architecture is now the central, theoretically
+characterized contribution (Theorems~1--2). We added a $2\times2$
+(front-end~$\times$~loop) ablation that isolates the closed-loop effect from the
+front-end effect, showing the loop helps \emph{both} COP and MUSIC, while the
+COP front-end's distinct value is confined to the underdetermined regime.
+
+\rc{R2.2 T-COP subspace interpolation (Eq.~13) is basis-dependent; sign/phase/
+unitary transformations give different refined subspaces.}
+\reply Correct. Eq.~(13) is replaced by an orthogonal-Procrustes alignment
+followed by an inverse-variance fusion reported through the projector
+$\mathbf P_s=\mathbf U_s\mathbf U_s^H$, which is invariant to the basis gauge
+$\mathbf U_s\mapsto\mathbf U_s\mathbf Q$ (Sec.~III-B, Theorem~2).
+
+\rc{R2.3 SD-COP's super-underdetermined claim is supported mainly by simulation.}
+\reply SD-COP is now a supporting extension, connected to the corollary of
+Theorem~1: sources beyond the static virtual-array limit remain identifiable once
+the temporal prior makes the predicted information positive definite on the
+data-unresolved subspace.
+
+\rc{R2.4 Fig.~12 caption says ``tracks all targets'' while the text says
+``majority''; $P_d=60\%$ vs $51\%$ is a limited improvement without confidence
+intervals; Table~I shows MUSIC+Physics beating COP+Physics; avoid ``substantially
+outperforms''/``tracks all''.}
+\reply All overclaims removed. We now report means with $95\%$ CIs over up to
+$500$ trials. The underdetermined detection advantage is $P_d=60.3\%\pm0.2$ vs.
+$51.9\%\pm0.1$ (non-overlapping CIs). We explicitly state that in the
+\emph{determined} regime MUSIC is superior (lower GOSPA and localization error),
+and we frame COP's advantage as specific to $K>M-1$. ``substantially
+outperforms''/``tracks all'' are deleted throughout.
+
+\rc{R2.5 Add stronger baselines: SBL/sparse reconstruction for DOA; LMB/
+$\delta$-GLMB for identity-aware tracking. Increase Monte-Carlo trials.}
+\reply Key experiments now use up to $500$ Monte-Carlo trials with $95\%$ CIs (up
+to a $50\times$ increase over the prior $10$). \emph{Both} requested identity-aware
+trackers are now implemented and compared: we benchmark the proposed
+track-oriented PHD against the standard GM-PHD, the \emph{labeled multi-Bernoulli
+(LMB) filter}, and the \emph{full $\delta$-GLMB filter} (Vo--Vo 2013; Gibbs
+implementation of Vo--Vo--Hoang 2017) (Sec.~VII back-end ablation, Table on
+crossing targets): all three labeled trackers reduce identity switches by an order
+of magnitude over the GM-PHD, with the full $\delta$-GLMB giving the cleanest
+identity (fewest switches) and sharpest localization, LMB the best aggregate
+GOSPA, and the TO-PHD a competitive lightweight alternative---fairly benchmarking
+our back-end against the state of the art. A closed-loop-MUSIC front-end is also
+added. Sparse/SBL DOA
+methods are cited and discussed as related work; we focus the quantitative
+front-end comparison on the most directly comparable subspace estimators (MUSIC,
+closed-loop MUSIC).
+
+\hrule
+\section*{Reviewer 3}
+
+\rc{R3.1 The derivation from the raw cumulant tensor to
+$\mathbf C_{2\rho}=\mathbf A_v\mathbf\Gamma_s\mathbf A_v^H$ is incomplete /
+oversimplified.}
+\reply We now state the conditions (A1 independence, A2 non-Gaussianity, A3
+nonzero $2\rho$-order autocumulants) under which the tensor reduces to the
+Hermitian Toeplitz model with full-column-rank $\mathbf A_v$, with citations to
+the established construction (Sec.~II-B).
+
+\rc{R3.2 Eq.~(5) assumes a diagonal $\mathbf\Gamma_s$ requiring independent
+non-Gaussian sources; for Gaussian/weakly non-Gaussian sources the gain
+vanishes.}
+\reply Stated explicitly: under (A1)--(A3) cross-cumulants vanish giving the
+diagonal $\mathbf\Gamma_s$, and for Gaussian/vanishing-cumulant sources the gain
+degenerates to the classical $M-1$ limit (Sec.~II-B).
+
+\rc{R3.3 Effective sample size should scale as $(\sum w_i)^2/\sum w_i^2$, not
+$T(1-\alpha^n)/(1-\alpha)$; Eq.~(10) overestimates it.}
+\reply Corrected to the Kish effective sample size,
+$T_{\mathrm{eff}}=(\sum w_i)^2/\sum w_i^2 \to T(1+\alpha)/(1-\alpha)$ (Eq.~10).
+We note the corrected expression and that the naive geometric sum is not the
+effective sample size.
+
+\rc{R3.4 Eq.~(13) linear interpolation of subspace bases is basis-dependent and
+not a principled Grassmann interpolation.}
+\reply Addressed identically to R2.2: Procrustes alignment + inverse-variance
+fusion on the Grassmann tangent space, proven minimum-variance (Theorem~2).
+
+\rc{R3.5 Replacing the PHD update by Hungarian + single-measurement Kalman
+changes the recursion without a new posterior-intensity derivation; it is closer
+to heuristic track-before-update association.}
+\reply We agree and now \emph{name it accordingly}: a track-oriented PHD
+(TO-PHD). A new paragraph (Sec.~IV) states precisely that the matched
+single-measurement update is a track-oriented, marginal-association
+approximation (the PHD analogue of MHT/GNN), not the exact GM-PHD corrector, and
+that it reduces to the GM-PHD when the gate is fully opened.
+
+\rc{R3.6 Eq.~(25) uses the full-state difference with $\mathbf P_i^{-1}$ and then
+gates velocity separately, double-counting velocity.}
+\reply Corrected: we use the position sub-block $(\theta_i-\theta_j)^2/
+[\mathbf P_i]_{11}$ and gate velocity separately, with an explicit note that a
+full-state Mahalanobis term would double-count the velocity (Sec.~IV-D).
+
+\rc{R3.7 The ``exact'' higher-order CRLB substitutes a virtual steering matrix
+into a covariance-based form; cumulant-domain noise is not white
+($\sigma_c^2\mathbf I$).}
+\reply The ``exact'' claim is removed. We present the static cumulant CRLB as an
+approximate white-noise surrogate, give the general Slepian--Bangs form with the
+non-white $\mathbf\Sigma_c$, and provide the rigorous closed-loop bound in
+Theorem~1.
+
+\rc{R3.8 Proposition~1 lacks treatment of missed detections/clutter/multiple
+targets; Proposition~2's Neyman--Pearson ``sufficient statistic'' claim has no
+probability model; Theorem~1's convergence bound is heuristic.}
+\reply Proposition~1 now includes the detection/clutter factor
+$p_D^2(1-p_{\mathrm{fa}})$. Proposition~2 is removed; COP-spectrum birth is now
+presented as a heuristic detection score without an optimality claim. The former
+heuristic convergence ``Theorem~1'' is removed and replaced by the
+contraction-to-PCRB-floor statement implied by Theorems~1--2.
+
+\rc{R3.9 Very few Monte-Carlo trials (e.g., 10); ``tracks all'' vs.\ $\sim60\%$
+detection is internally inconsistent.}
+\reply All key results now use $\geq500$ trials with $95\%$ CIs, and the
+inconsistency is removed (Sec.~VII).
+
+\rc{R3.10 Several components are inherited or used heuristically; the closed-loop
+theoretical contribution is not convincingly established.}
+\reply The closed-loop contribution is now established by Theorems~1--2 and an
+ablation isolating it from the front-end, and validated against simulation.
+
+\end{document}

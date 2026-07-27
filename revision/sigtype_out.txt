@@ -1,0 +1,8 @@
+=== signal-type HOS sweep (K=10>M-1=7, SNR=15dB): Pd(%) / GOSPA(deg) ===
+non_stationary  : COP-RFS Pd=68.5+-1.3 G=13.19 | MUSIC-PHD Pd=18.6+-2.0 G=18.11
+missile         : COP-RFS Pd=30.1+-2.1 G=18.33 | MUSIC-PHD Pd=16.2+-1.9 G=18.23
+fm              : COP-RFS Pd=79.2+-1.9 G=11.14 | MUSIC-PHD Pd=16.1+-1.5 G=18.08
+chirp           : COP-RFS Pd=76.9+-1.7 G=11.73 | MUSIC-PHD Pd=14.9+-1.4 G=18.29
+psk             : COP-RFS Pd=62.7+-1.2 G=14.31 | MUSIC-PHD Pd=21.2+-1.3 G=17.77
+stationary      : COP-RFS Pd=31.7+-1.9 G=18.08 | MUSIC-PHD Pd=15.3+-1.3 G=18.25
+saved C:\Users\jinho\IronDome-DOA-Tracking\revision\fig_sigtype.png
